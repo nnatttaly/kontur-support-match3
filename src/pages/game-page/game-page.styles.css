@@ -6,6 +6,12 @@
   flex: 1;
 }
 
+.game-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .game-info {
   display: flex;
   justify-content: space-between;
@@ -21,4 +27,10 @@
   align-items: flex-start;
   justify-content: center;
   gap: 20px;
+}
+
+.game-field-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }

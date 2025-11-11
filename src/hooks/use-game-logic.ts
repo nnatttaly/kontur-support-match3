@@ -1,6 +1,11 @@
 import { useState, useCallback } from "react";
-import { Board, Position, Match, Goal } from "types";
-import { ANIMATION_DURATION, INITIAL_MOVES, INITIAL_GOALS } from "consts";
+import { Board, Position, Match, Goal, Bonus } from "types";
+import {
+  ANIMATION_DURATION,
+  INITIAL_MOVES,
+  INITIAL_GOALS,
+  INITIAL_BONUSES,
+} from "consts";
 import {
   createInitialBoard,
   findAllMatches,
@@ -21,6 +26,25 @@ export const useGameLogic = () => {
   const [score, setScore] = useState(0);
   const [moves, setMoves] = useState(INITIAL_MOVES);
   const [goals, setGoals] = useState<Goal[]>(INITIAL_GOALS);
+  const [bonuses, setBonuses] = useState<Bonus[]>(INITIAL_BONUSES);
+
+  const useBonus = useCallback((type: Bonus["type"]) => {
+    setBonuses((prevBonuses) => {
+      const newBonuses = [...prevBonuses];
+      const bonusIndex = newBonuses.findIndex((bonus) => bonus.type === type);
+
+      if (bonusIndex !== -1 && newBonuses[bonusIndex].count > 0) {
+        newBonuses[bonusIndex] = {
+          ...newBonuses[bonusIndex],
+          count: newBonuses[bonusIndex].count - 1,
+        };
+
+        // TODO: Здесь будет логика применения бонуса
+      }
+
+      return newBonuses;
+    });
+  }, []);
 
   const updateGoals = useCallback((foundMatches: Match[]) => {
     setGoals((prevGoals) => {
@@ -175,9 +199,11 @@ export const useGameLogic = () => {
     score,
     moves,
     goals,
+    bonuses,
     handleCellClick,
     handleDragStart,
     handleDragOver,
+    useBonus,
     resetSelection: () => setSelectedPosition(null),
   };
 };
