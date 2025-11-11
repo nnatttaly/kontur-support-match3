@@ -1,9 +1,9 @@
-.score-container {
+.moves-container {
   display: flex;
-  justify-content: flex-start;
+  justify-content: flex-end;
 }
 
-.score {
+.moves {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -18,13 +18,13 @@
   box-sizing: border-box;
 }
 
-.score-icon {
+.moves-icon {
   width: 20px;
   height: 20px;
   object-fit: contain;
 }
 
-.score-value {
+.moves-value {
   font-size: 18px;
   font-weight: 600;
   color: #333;

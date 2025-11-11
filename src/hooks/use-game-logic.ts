@@ -1,6 +1,9 @@
 import { useState, useCallback } from "react";
 import { Board, Position, Match } from "types";
-import { ANIMATION_DURATION } from "consts";
+import {
+  ANIMATION_DURATION,
+  INITIAL_MOVES,
+} from "consts";
 import {
   createInitialBoard,
   findAllMatches,
@@ -19,6 +22,7 @@ export const useGameLogic = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [matches, setMatches] = useState<Match[]>([]);
   const [score, setScore] = useState(0);
+  const [moves, setMoves] = useState(INITIAL_MOVES);
 
   const areAdjacent = useCallback((pos1: Position, pos2: Position): boolean => {
     const rowDiff = Math.abs(pos1.row - pos2.row);
@@ -73,7 +77,7 @@ export const useGameLogic = () => {
 
   const swapFigures = useCallback(
     async (pos1: Position, pos2: Position): Promise<boolean> => {
-      if (isSwapping || isAnimating) return false;
+      if (isSwapping || isAnimating || moves <= 0) return false;
 
       setIsSwapping(true);
       setIsAnimating(true);
@@ -93,17 +97,19 @@ export const useGameLogic = () => {
       await new Promise((resolve) => setTimeout(resolve, ANIMATION_DURATION));
       setIsSwapping(false);
 
+      setMoves((prevMoves) => prevMoves - 1);
+
       await processMatches(newBoard);
       setIsAnimating(false);
 
       return true;
     },
-    [board, isSwapping, isAnimating, processMatches]
+    [board, isSwapping, isAnimating, moves, processMatches]
   );
 
   const handleCellClick = useCallback(
     (position: Position) => {
-      if (isSwapping || isAnimating) return;
+      if (isSwapping || isAnimating || moves <= 0) return;
 
       if (!selectedPosition) {
         setSelectedPosition(position);
@@ -114,27 +120,27 @@ export const useGameLogic = () => {
         setSelectedPosition(null);
       }
     },
-    [selectedPosition, isSwapping, isAnimating, areAdjacent, swapFigures]
+    [selectedPosition, isSwapping, isAnimating, moves, areAdjacent, swapFigures]
   );
 
   const handleDragStart = useCallback(
     (position: Position) => {
-      if (isSwapping || isAnimating) return;
+      if (isSwapping || isAnimating || moves <= 0) return;
       setSelectedPosition(position);
     },
-    [isSwapping, isAnimating]
+    [isSwapping, isAnimating, moves]
   );
 
   const handleDragOver = useCallback(
     (position: Position) => {
-      if (!selectedPosition || isSwapping || isAnimating) return;
+      if (!selectedPosition || isSwapping || isAnimating || moves <= 0) return;
 
       if (areAdjacent(selectedPosition, position)) {
         swapFigures(selectedPosition, position);
         setSelectedPosition(null);
       }
     },
-    [selectedPosition, isSwapping, isAnimating, areAdjacent, swapFigures]
+    [selectedPosition, isSwapping, isAnimating, moves, areAdjacent, swapFigures]
   );
 
   return {
@@ -144,6 +150,7 @@ export const useGameLogic = () => {
     isAnimating,
     matches,
     score,
+    moves,
     handleCellClick,
     handleDragStart,
     handleDragOver,

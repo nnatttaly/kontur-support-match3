@@ -1,19 +1,24 @@
 import { Cell } from "@components/game-field/cell/cell";
-import { Score } from "@components/score/score";
-import { useGameLogic } from "@hooks/use-game-logic";
+import { Board, Position, Match } from "types";
 import "./game-field.styles.css";
 
-export const GameField = () => {
-  const {
-    board,
-    selectedPosition,
-    matches,
-    score,
-    handleCellClick,
-    handleDragStart,
-    handleDragOver,
-  } = useGameLogic();
+type GameFieldProps = {
+  board: Board;
+  selectedPosition: Position | null;
+  matches: Match[];
+  onCellClick: (position: Position) => void;
+  onDragStart: (position: Position) => void;
+  onDragOver: (position: Position) => void;
+};
 
+export const GameField = ({
+  board,
+  selectedPosition,
+  matches,
+  onCellClick,
+  onDragStart,
+  onDragOver,
+}: GameFieldProps) => {
   const isPartOfMatch = (row: number, col: number): boolean => {
     return matches.some((match) =>
       match.positions.some((pos) => pos.row === row && pos.col === col)
@@ -21,27 +26,24 @@ export const GameField = () => {
   };
 
   return (
-    <>
-      <Score score={score} />
-      <div className="field">
-        {board.map((row, rowIndex) =>
-          row.map((figure, colIndex) => (
-            <Cell
-              key={`${rowIndex}-${colIndex}`}
-              figure={figure}
-              position={{ row: rowIndex, col: colIndex }}
-              isSelected={
-                selectedPosition?.row === rowIndex &&
-                selectedPosition?.col === colIndex
-              }
-              isMatched={isPartOfMatch(rowIndex, colIndex)}
-              onClick={handleCellClick}
-              onDragStart={handleDragStart}
-              onDragOver={handleDragOver}
-            />
-          ))
-        )}
-      </div>
-    </>
+    <div className="field">
+      {board.map((row, rowIndex) =>
+        row.map((figure, colIndex) => (
+          <Cell
+            key={`${rowIndex}-${colIndex}`}
+            figure={figure}
+            position={{ row: rowIndex, col: colIndex }}
+            isSelected={
+              selectedPosition?.row === rowIndex &&
+              selectedPosition?.col === colIndex
+            }
+            isMatched={isPartOfMatch(rowIndex, colIndex)}
+            onClick={onCellClick}
+            onDragStart={onDragStart}
+            onDragOver={onDragOver}
+          />
+        ))
+      )}
+    </div>
   );
 };
