@@ -27,6 +27,8 @@
       "@pages/*": ["pages/*"],
       "@components/*": ["components/*"],
       "@mocks/*": ["mocks/*"],
+      "@hooks/*": ["hooks/*"],
+      "@utils/*": ["utils/*"],
       "types/*": ["types/*"],
       "consts/*": ["consts/*"]
     }
