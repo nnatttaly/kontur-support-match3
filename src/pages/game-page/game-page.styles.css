@@ -10,9 +10,15 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
-  max-width: 500px;
-  margin: 0 auto 20px auto;
-  padding: 0 24px;
+  width: 440px; 
+  margin: 0 0 20px 180px;
+  padding: 0;
   box-sizing: border-box;
+}
+
+.game-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
 }

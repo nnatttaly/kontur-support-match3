@@ -1,9 +1,6 @@
 import { useState, useCallback } from "react";
-import { Board, Position, Match } from "types";
-import {
-  ANIMATION_DURATION,
-  INITIAL_MOVES,
-} from "consts";
+import { Board, Position, Match, Goal } from "types";
+import { ANIMATION_DURATION, INITIAL_MOVES, INITIAL_GOALS } from "consts";
 import {
   createInitialBoard,
   findAllMatches,
@@ -23,6 +20,30 @@ export const useGameLogic = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [score, setScore] = useState(0);
   const [moves, setMoves] = useState(INITIAL_MOVES);
+  const [goals, setGoals] = useState<Goal[]>(INITIAL_GOALS);
+
+  const updateGoals = useCallback((foundMatches: Match[]) => {
+    setGoals((prevGoals) => {
+      const newGoals = [...prevGoals];
+
+      foundMatches.forEach((match) => {
+        const goalIndex = newGoals.findIndex(
+          (goal) => goal.figure === match.figure
+        );
+        if (goalIndex !== -1) {
+          newGoals[goalIndex] = {
+            ...newGoals[goalIndex],
+            collected: Math.min(
+              newGoals[goalIndex].collected + match.positions.length,
+              newGoals[goalIndex].target
+            ),
+          };
+        }
+      });
+
+      return newGoals;
+    });
+  }, []);
 
   const areAdjacent = useCallback((pos1: Position, pos2: Position): boolean => {
     const rowDiff = Math.abs(pos1.row - pos2.row);
@@ -43,6 +64,8 @@ export const useGameLogic = () => {
           hasMatches = false;
           break;
         }
+
+        updateGoals(foundMatches);
 
         foundMatches.forEach((match) => {
           roundScore += match.positions.length * 10;
@@ -72,7 +95,7 @@ export const useGameLogic = () => {
 
       return boardToProcess;
     },
-    []
+    [updateGoals]
   );
 
   const swapFigures = useCallback(
@@ -151,6 +174,7 @@ export const useGameLogic = () => {
     matches,
     score,
     moves,
+    goals,
     handleCellClick,
     handleDragStart,
     handleDragOver,
