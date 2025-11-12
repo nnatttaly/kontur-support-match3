@@ -1,9 +1,6 @@
-import { Board, Position, Figure, Match, FIGURES } from "types";
+import { Board, Position, Match } from "types";
 import { BOARD_ROWS, BOARD_COLS, MIN_MATCH_LENGTH } from "consts";
-
-export const getRandomFigure = (): Figure => {
-  return FIGURES[Math.floor(Math.random() * FIGURES.length)];
-};
+import { getRandomFigure } from "@utils/common-utils";
 
 export const isValidPosition = (position: Position): boolean => {
   return (

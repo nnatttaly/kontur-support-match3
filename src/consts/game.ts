@@ -9,6 +9,6 @@ export const INITIAL_GOALS: Goal[] = [
   { figure: "apple", target: 12, collected: 0 },
 ];
 export const INITIAL_BONUSES: Bonus[] = [
-  { type: "globe", count: 3 },
+  { type: "friendlyTeam", count: 3 },
   { type: "barbell", count: 2 },
 ];

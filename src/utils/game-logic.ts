@@ -1,13 +1,14 @@
 import { Board, Figure } from "types";
 import { BOARD_ROWS, BOARD_COLS } from "consts";
+import { getRandomFigure } from "@utils/common-utils";
 import {
-  getRandomFigure,
   findAllMatches,
   updateBoardAfterMatches,
   applyGravity,
   fillEmptySlots,
   willCreateMatch,
-} from "./game-utils";
+} from "@utils/game-utils";
+import { shuffleBoardWithoutMatches } from "@utils/board-utils";
 
 export const createInitialBoard = (): Board => {
   const board: Board = [];
@@ -50,10 +51,10 @@ export const createInitialBoard = (): Board => {
 };
 
 export {
-  getRandomFigure,
   findAllMatches,
   updateBoardAfterMatches,
   applyGravity,
   fillEmptySlots,
   willCreateMatch,
+  shuffleBoardWithoutMatches,
 };
