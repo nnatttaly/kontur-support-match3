@@ -1,20 +1,22 @@
 import { Position, Bonus } from "types";
-import { useBoardState } from "./use-board-state";
-import { useGameState } from "./use-game-state";
-import { useGoals } from "./use-goals";
-import { useBonuses } from "./use-bonuses";
-import { useGameActions } from "./use-game-actions";
+import { useBoardState } from "@hooks/use-board-state";
+import { useGameState } from "@hooks/use-game-state";
+import { useGoals } from "@hooks/use-goals";
+import { useBonuses } from "@hooks/use-bonuses";
+import { useGameActions } from "@hooks/use-game-actions";
 
 export const useGameLogic = () => {
   const { board, setBoard } = useBoardState();
   const gameState = useGameState();
 
   const { updateGoals } = useGoals(gameState.setGoals);
-  const { handleBonus } = useBonuses(
+  const { handleBonus, deactivateBonus } = useBonuses(
     gameState.setBonuses,
     setBoard,
     gameState.setIsAnimating,
-    gameState.setModifiers
+    gameState.setModifiers,
+    gameState.activeBonus,
+    gameState.setActiveBonus
   );
   const { areAdjacent, swapFigures } = useGameActions(
     board,
@@ -25,7 +27,9 @@ export const useGameLogic = () => {
     gameState.setScore,
     updateGoals,
     gameState.modifiers,
-    gameState.setModifiers
+    gameState.setModifiers,
+    gameState.setActiveBonus,
+    gameState.setBonuses
   );
 
   const handleCellClick = (position: Position) => {
@@ -90,11 +94,13 @@ export const useGameLogic = () => {
     moves: gameState.moves,
     goals: gameState.goals,
     bonuses: gameState.bonuses,
+    activeBonus: gameState.activeBonus,
 
     handleCellClick,
     handleDragStart,
     handleDragOver,
     useBonus: handleUseBonus,
+    deactivateBonus,
     resetSelection,
   };
 };

@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Position, Match, Goal, Bonus, GameModifiers } from "types";
+import {
+  Position,
+  Match,
+  Goal,
+  Bonus,
+  GameModifiers,
+  ActiveBonus,
+} from "types";
 import { INITIAL_MOVES, INITIAL_GOALS, INITIAL_BONUSES } from "consts";
 
 const initialModifiers: GameModifiers = {
@@ -18,7 +25,8 @@ export const useGameState = () => {
   const [moves, setMoves] = useState(INITIAL_MOVES);
   const [goals, setGoals] = useState<Goal[]>(INITIAL_GOALS);
   const [bonuses, setBonuses] = useState<Bonus[]>(INITIAL_BONUSES);
-  const [modifiers, setModifiers] = useState<GameModifiers>(initialModifiers); // Добавляем модификаторы
+  const [modifiers, setModifiers] = useState<GameModifiers>(initialModifiers);
+  const [activeBonus, setActiveBonus] = useState<ActiveBonus | null>(null); // Добавляем активный бонус
 
   return {
     selectedPosition,
@@ -39,5 +47,7 @@ export const useGameState = () => {
     setBonuses,
     modifiers,
     setModifiers,
+    activeBonus,
+    setActiveBonus,
   };
 };

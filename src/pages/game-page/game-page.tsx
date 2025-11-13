@@ -29,6 +29,7 @@ export default function GamePage() {
             />
             <Bonuses
               bonuses={gameLogic.bonuses}
+              activeBonus={gameLogic.activeBonus}
               onUseBonus={gameLogic.useBonus}
             />
           </div>

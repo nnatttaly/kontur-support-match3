@@ -4,32 +4,59 @@
   align-items: center;
   position: relative;
   cursor: pointer;
-  transition: transform 0.2s ease;
-}
-
-.bonus-item:hover {
-  transform: scale(1.05);
+  padding: 12px 8px;
+  width: 90px;
+  box-sizing: border-box;
 }
 
 .bonus-item--disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
-.bonus-item--disabled:hover {
-  transform: none;
+.bonus-item--toggleable {
+  cursor: pointer;
 }
 
 .bonus-circle {
-  width: 60px;
-  height: 60px;
+  width: 68px;
+  height: 68px;
   background: linear-gradient(135deg, #2291ff 0%, #844bec 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
   border: 3px solid white;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.bonus-item:not(.bonus-item--disabled):hover .bonus-circle {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 20px rgba(0, 0, 0, 0.15),
+    inset 0 1px 1px rgba(255, 255, 255, 0.2);
+}
+
+.bonus-item--active .bonus-circle {
+  border: 3px solid #ffd700;
+  box-shadow: 
+    0 0 0 2px rgba(255, 215, 0, 0.4),
+    0 0 0 4px rgba(255, 215, 0, 0.2),
+    0 6px 24px rgba(255, 215, 0, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+}
+
+.bonus-item--active:not(.bonus-item--disabled):hover .bonus-circle {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 0 0 2px rgba(255, 215, 0, 0.5),
+    0 0 0 4px rgba(255, 215, 0, 0.3),
+    0 8px 28px rgba(255, 215, 0, 0.4),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 
 .bonus-icon {
@@ -37,22 +64,72 @@
   height: 32px;
   object-fit: contain;
   filter: brightness(0) invert(1);
+  transition: all 0.3s ease;
 }
 
 .bonus-count {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  width: 28px;
-  height: 28px;
+  bottom: -3px;
+  right: -9px;
+  width: 27px;
+  height: 27px;
   background: #fe4c4c;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 11px;
+  font-weight: 700;
   border: 2px solid white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+  transition: all 0.3s ease;
+}
+
+.bonus-item--active .bonus-count {
+  opacity: 0;
+  transform: scale(0.8);
+}
+
+.bonus-name {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+  text-align: center;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: color 0.3s ease;
+}
+
+.bonus-item--active .bonus-name {
+  color: #667eea;
+}
+
+@keyframes elegantGlow {
+  0% {
+    box-shadow: 
+      0 0 0 2px rgba(255, 215, 0, 0.4),
+      0 0 0 4px rgba(255, 215, 0, 0.2),
+      0 6px 24px rgba(255, 215, 0, 0.3),
+      inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 2px rgba(255, 215, 0, 0.6),
+      0 0 0 4px rgba(255, 215, 0, 0.3),
+      0 8px 28px rgba(255, 215, 0, 0.4),
+      inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  }
+  100% {
+    box-shadow: 
+      0 0 0 2px rgba(255, 215, 0, 0.4),
+      0 0 0 4px rgba(255, 215, 0, 0.2),
+      0 6px 24px rgba(255, 215, 0, 0.3),
+      inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  }
+}
+
+.bonus-item--active .bonus-circle {
+  animation: elegantGlow 2.5s ease-in-out infinite;
 }

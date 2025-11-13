@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Board, Position, Match, GameModifiers } from "types";
+import { Board, Position, Match, GameModifiers, ActiveBonus, Bonus } from "types";
 import { ANIMATION_DURATION } from "consts";
 import {
   findAllMatches,
@@ -19,7 +19,9 @@ export const useGameActions = (
   setScore: (updater: (score: number) => number) => void,
   updateGoals: (matches: Match[], modifiers: GameModifiers) => void,
   modifiers: GameModifiers,
-  setModifiers: (modifiers: GameModifiers) => void
+  setModifiers: (modifiers: GameModifiers) => void,
+  setActiveBonus: (bonus: ActiveBonus | null) => void,
+  setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void
 ) => {
   const areAdjacent = useCallback((pos1: Position, pos2: Position): boolean => {
     const rowDiff = Math.abs(pos1.row - pos2.row);
@@ -77,11 +79,38 @@ export const useGameActions = (
 
       if (usedCareerGrowth) {
         setModifiers(resetCareerGrowthModifiers());
+        setActiveBonus(null);
+
+        setBonuses((prevBonuses) => {
+          const newBonuses = [...prevBonuses];
+          const bonusIndex = newBonuses.findIndex(
+            (bonus) => bonus.type === "careerGrowth"
+          );
+
+          if (bonusIndex !== -1 && newBonuses[bonusIndex].count > 0) {
+            newBonuses[bonusIndex] = {
+              ...newBonuses[bonusIndex],
+              count: newBonuses[bonusIndex].count - 1,
+            };
+          }
+
+          return newBonuses;
+        });
+
       }
 
       return boardToProcess;
     },
-    [setBoard, setMatches, setScore, updateGoals, modifiers, setModifiers]
+    [
+      setBoard,
+      setMatches,
+      setScore,
+      updateGoals,
+      modifiers,
+      setModifiers,
+      setActiveBonus,
+      setBonuses,
+    ]
   );
 
   const swapFigures = useCallback(
