@@ -1,5 +1,5 @@
 import { Bonus, ActiveBonus } from "types";
-import { BONUS_PATHS, BONUS_NAMES } from "consts";
+import { BONUS_PATHS } from "consts";
 import "./bonus-item.styles.css";
 
 type BonusItemProps = {
@@ -33,7 +33,6 @@ export const BonusItem = ({ bonus, activeBonus, onUse }: BonusItemProps) => {
         <img src={BONUS_PATHS[type]} alt={type} className="bonus-icon" />
         <div className="bonus-count">{count}</div>
       </div>
-      <div className="bonus-name">{BONUS_NAMES[type]}</div>
     </div>
   );
 };
