@@ -1,0 +1,141 @@
+import { useState, useEffect, useRef } from "react";
+import { LevelState, BonusType, Board, GameState } from "types";
+import { LEVELS } from "consts";
+import { getLevelGoals, getLevelMoves} from "@utils/level-utils";
+import { createInitialBoard } from "@utils/game-logic";
+
+type UseLevelManagementProps = {
+  setBoard: (board: Board) => void;
+  gameState: GameState;
+};
+
+export const useLevelManagement = ({
+  setBoard,
+  gameState,
+}: UseLevelManagementProps) => {
+  const isLevelInitialized = useRef(false);
+
+  const [levelState, setLevelState] = useState<LevelState>({
+    currentLevel: 1,
+    isLevelComplete: false,
+    isLevelTransition: true,
+    selectedBonuses: [],
+  });
+
+  const currentLevel =
+    LEVELS.find((level) => level.id === levelState.currentLevel) || LEVELS[0];
+
+  useEffect(() => {
+    if (
+      levelState.isLevelTransition ||
+      levelState.isLevelComplete ||
+      !isLevelInitialized.current
+    ) {
+      return;
+    }
+
+    const allGoalsCompleted = gameState.goals.every(
+      (goal) => goal.collected >= goal.target
+    );
+
+
+    if (allGoalsCompleted) {
+
+      setLevelState((prev) => ({
+        ...prev,
+        isLevelComplete: true,
+        isLevelTransition: true,
+      }));
+
+      isLevelInitialized.current = false;
+    }
+  }, [
+    gameState.goals,
+    levelState.isLevelTransition,
+    levelState.isLevelComplete,
+    levelState.currentLevel,
+  ]);
+
+  useEffect(() => {
+    if (levelState.isLevelTransition) {
+      isLevelInitialized.current = false;
+      return;
+    }
+
+    if (isLevelInitialized.current) return;
+
+    const levelGoals = getLevelGoals(levelState.currentLevel);
+    const levelMoves = getLevelMoves(levelState.currentLevel);
+
+    gameState.setGoals(() =>
+      levelGoals.map((goal) => ({ ...goal, collected: 0 }))
+    );
+    gameState.setMoves(() => levelMoves);
+    gameState.setScore(() => 0);
+    gameState.setMatches([]);
+    gameState.setSelectedPosition(null);
+    gameState.setIsSwapping(false);
+    gameState.setIsAnimating(false);
+    gameState.setActiveBonus(null);
+    gameState.setModifiers({
+      doublePoints: false,
+      doubleGoalProgress: false,
+      extraMoves: 0,
+    });
+
+    if (levelState.selectedBonuses.length > 0) {
+      const selectedBonusesWithCount = levelState.selectedBonuses.map(
+        (type) => ({
+          type,
+          count: 3,
+        })
+      );
+      gameState.setBonuses(() => selectedBonusesWithCount);
+    } else {
+      gameState.setBonuses(() => []);
+    }
+
+    const newBoard = createInitialBoard();
+    setBoard(newBoard);
+
+    isLevelInitialized.current = true;
+  }, [
+    levelState.currentLevel,
+    levelState.isLevelTransition,
+    levelState.selectedBonuses,
+    setBoard,
+    gameState,
+  ]);
+
+  const handleLevelStart = (selectedBonuses: BonusType[]) => {
+
+    let nextLevel: number;
+
+    if (levelState.isLevelComplete) {
+      nextLevel = levelState.currentLevel + 1;
+    } else {
+      nextLevel = 1;
+    }
+
+    const nextLevelData = LEVELS.find((level) => level.id === nextLevel);
+
+    if (!nextLevelData) {
+      return;
+    }
+
+    setLevelState({
+      currentLevel: nextLevel,
+      isLevelComplete: false,
+      isLevelTransition: false,
+      selectedBonuses,
+    });
+
+    isLevelInitialized.current = false;
+  };
+
+  return {
+    levelState,
+    currentLevel,
+    handleLevelStart,
+  };
+};

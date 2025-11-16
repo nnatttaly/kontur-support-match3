@@ -9,3 +9,4 @@ export * from "./game-modifiers.js";
 export * from "./active-bonus.js";
 export * from "./level-state.js";
 export * from "./level.js";
+export * from "./game-state.js";
