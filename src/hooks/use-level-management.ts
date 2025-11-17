@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { LevelState, BonusType, Board, GameState } from "types";
 import { LEVELS } from "consts";
-import { getLevelGoals, getLevelMoves} from "@utils/level-utils";
+import { getLevelGoals, getLevelMoves } from "@utils/level-utils";
 import { createInitialBoard } from "@utils/game-logic";
 
 type UseLevelManagementProps = {
@@ -103,17 +103,19 @@ export const useLevelManagement = ({
       gameState.setBonuses(() => []);
     }
 
-    const newBoard = createInitialBoard();
+    const newBoard = createInitialBoard(currentLevel);
     setBoard(newBoard);
 
     isLevelInitialized.current = true;
     setCompletionTriggered(false);
+
   }, [
     levelState.currentLevel,
     levelState.isLevelTransition,
     levelState.selectedBonuses,
     setBoard,
     gameState,
+    currentLevel,
   ]);
 
   const handleLevelStart = (selectedBonuses: BonusType[]) => {

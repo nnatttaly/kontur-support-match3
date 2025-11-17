@@ -1,6 +1,5 @@
 import { Board, Position, Match } from "types";
 import { BOARD_ROWS, BOARD_COLS, MIN_MATCH_LENGTH } from "consts";
-import { getRandomFigure } from "@utils/common-utils";
 
 export const isValidPosition = (position: Position): boolean => {
   return (
@@ -67,7 +66,7 @@ export const findAllMatches = (board: Board): Match[] => {
           positions.push({ row: row + i, col });
         }
         matches.push({ positions, figure });
-        row += matchLength; 
+        row += matchLength;
       } else {
         row++;
       }
@@ -94,27 +93,30 @@ export const getUniquePositions = (matches: Match[]): Position[] => {
   return positions;
 };
 
-export const willCreateMatch = (board: Board, pos1: Position, pos2: Position): boolean => {
+export const willCreateMatch = (
+  board: Board,
+  pos1: Position,
+  pos2: Position
+): boolean => {
   if (!board[pos1.row][pos1.col] || !board[pos2.row][pos2.col]) {
     return false;
   }
 
-  const testBoard = board.map(row => [...row]);
+  const testBoard = board.map((row) => [...row]);
   const temp = testBoard[pos1.row][pos1.col];
   testBoard[pos1.row][pos1.col] = testBoard[pos2.row][pos2.col];
   testBoard[pos2.row][pos2.col] = temp;
 
   const matches = findAllMatches(testBoard);
-  
+
   return matches.length > 0;
 };
 
 export const updateBoardAfterMatches = (board: Board): Board => {
-  const newBoard = board.map(row => [...row]);
+  const newBoard = board.map((row) => [...row]);
   const matches = findAllMatches(newBoard);
-  
-  
-  matches.forEach(match => {
+
+  matches.forEach((match) => {
     match.positions.forEach(({ row, col }) => {
       newBoard[row][col] = null;
     });
@@ -142,16 +144,3 @@ export const applyGravity = (board: Board): Board => {
   return newBoard;
 };
 
-export const fillEmptySlots = (board: Board): Board => {
-  const newBoard = board.map((row) => [...row]);
-
-  for (let col = 0; col < BOARD_COLS; col++) {
-    for (let row = 0; row < BOARD_ROWS; row++) {
-      if (newBoard[row][col] === null) {
-        newBoard[row][col] = getRandomFigure();
-      }
-    }
-  }
-
-  return newBoard;
-};

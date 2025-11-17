@@ -10,3 +10,5 @@ export * from "./active-bonus.js";
 export * from "./level-state.js";
 export * from "./level.js";
 export * from "./game-state.js";
+export * from "./special-cell.js";
+export * from "./board-cell.js";

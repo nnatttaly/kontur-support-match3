@@ -1,14 +1,25 @@
-import { Board, Figure } from "types";
+import { Board, Figure, Level } from "types";
 import { BOARD_ROWS, BOARD_COLS } from "consts";
 import { findAllMatches } from "@utils/game-logic";
 
-export const shuffleBoardWithoutMatches = (originalBoard: Board): Board => {
+export const shuffleBoardWithoutMatches = (
+  originalBoard: Board,
+  level?: Level
+): Board => {
   const allFigures: Figure[] = [];
+  const availableFigures = level?.availableFigures || [
+    "pencil",
+    "questionBook",
+    "openBook",
+    "briefcase",
+    "bonnet",
+  ];
+
 
   for (let row = 0; row < BOARD_ROWS; row++) {
     for (let col = 0; col < BOARD_COLS; col++) {
       const figure = originalBoard[row][col];
-      if (figure) {
+      if (figure && availableFigures.includes(figure)) {
         allFigures.push(figure);
       }
     }

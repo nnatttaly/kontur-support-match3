@@ -38,6 +38,7 @@ export default function GamePage() {
               board={gameLogic.board}
               selectedPosition={gameLogic.selectedPosition}
               matches={gameLogic.matches}
+              specialCells={gameLogic.specialCells}
               onCellClick={gameLogic.handleCellClick}
               onDragStart={gameLogic.handleDragStart}
               onDragOver={gameLogic.handleDragOver}

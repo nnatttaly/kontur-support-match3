@@ -1,5 +1,14 @@
 import { useCallback } from "react";
-import { Board, Match, GameModifiers, ActiveBonus, Bonus, Goal } from "types";
+import {
+  Board,
+  Match,
+  GameModifiers,
+  ActiveBonus,
+  Bonus,
+  Goal,
+  Level,
+  SpecialCell,
+} from "types";
 import { ANIMATION_DURATION } from "consts";
 import {
   findAllMatches,
@@ -13,23 +22,42 @@ import {
   calculateRoundScore,
 } from "@utils/modifiers-utils";
 
-export const useMatchProcessing = (
-  setBoard: (board: Board) => void,
-  setMatches: (matches: Match[]) => void,
-  setScore: (updater: (score: number) => number) => void,
-  setGoals: (updater: (goals: Goal[]) => Goal[]) => void,
-  modifiers: GameModifiers,
-  setModifiers: (modifiers: GameModifiers) => void,
-  activeBonus: ActiveBonus | null,
-  setActiveBonus: (bonus: ActiveBonus | null) => void,
-  setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void
-) => {
+type UseMatchProcessingProps = {
+  setBoard: (board: Board) => void;
+  setMatches: (matches: Match[]) => void;
+  setScore: (updater: (score: number) => number) => void;
+  setGoals: (updater: (goals: Goal[]) => Goal[]) => void;
+  modifiers: GameModifiers;
+  setModifiers: (modifiers: GameModifiers) => void;
+  activeBonus: ActiveBonus | null;
+  setActiveBonus: (bonus: ActiveBonus | null) => void;
+  setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
+  currentLevel?: Level;
+  onSpecialCellsUpdate?: (specialCells: SpecialCell[]) => void;
+};
+
+export const useMatchProcessing = ({
+  setBoard,
+  setMatches,
+  setScore,
+  setGoals,
+  modifiers,
+  setModifiers,
+  activeBonus,
+  setActiveBonus,
+  setBonuses,
+  currentLevel,
+  onSpecialCellsUpdate,
+}: UseMatchProcessingProps) => {
   const processMatches = useCallback(
     async (currentBoard: Board): Promise<Board> => {
       let boardToProcess = currentBoard;
       let hasMatches = true;
       let totalRoundScore = 0;
       let usedModifiers = false;
+
+      const initialSpecialCells = currentLevel?.specialCells || [];
+      const updatedSpecialCells = [...initialSpecialCells];
 
       while (hasMatches) {
         const foundMatches = findAllMatches(boardToProcess);
@@ -39,9 +67,77 @@ export const useMatchProcessing = (
           break;
         }
 
-        setGoals((prevGoals) =>
-          updateGoalsWithModifiers(prevGoals, foundMatches, modifiers)
-        );
+        let collectedGoldenCellsInThisRound = 0;
+
+        foundMatches.forEach((match) => {
+          match.positions.forEach((position) => {
+            const specialCellIndex = updatedSpecialCells.findIndex(
+              (cell) =>
+                cell.row === position.row &&
+                cell.col === position.col &&
+                cell.isActive
+            );
+
+            if (specialCellIndex !== -1) {
+
+              updatedSpecialCells[specialCellIndex] = {
+                ...updatedSpecialCells[specialCellIndex],
+                isActive: false,
+              };
+              collectedGoldenCellsInThisRound++;
+            }
+          });
+        });
+
+        if (onSpecialCellsUpdate && updatedSpecialCells.length > 0) {
+          onSpecialCellsUpdate(updatedSpecialCells);
+        }
+
+        if (collectedGoldenCellsInThisRound > 0) {
+          setGoals((prevGoals) => {
+            const newGoals = [...prevGoals];
+            const goldenGoalIndex = newGoals.findIndex(
+              (goal) => goal.figure === "goldenCell"
+            );
+
+            if (goldenGoalIndex !== -1) {
+              const progressIncrease = modifiers.doubleGoalProgress
+                ? collectedGoldenCellsInThisRound * 2
+                : collectedGoldenCellsInThisRound;
+
+              const newCollected = Math.min(
+                newGoals[goldenGoalIndex].collected + progressIncrease,
+                newGoals[goldenGoalIndex].target
+              );
+
+              newGoals[goldenGoalIndex] = {
+                ...newGoals[goldenGoalIndex],
+                collected: newCollected,
+              };
+            }
+
+            return newGoals;
+          });
+        }
+
+        setGoals((prevGoals) => {
+          const goalsWithoutGolden = prevGoals.filter(
+            (goal) => goal.figure !== "goldenCell"
+          );
+          const updatedGoals = updateGoalsWithModifiers(
+            goalsWithoutGolden,
+            foundMatches,
+            modifiers
+          );
+
+          const goldenGoal = prevGoals.find(
+            (goal) => goal.figure === "goldenCell"
+          );
+          if (goldenGoal) {
+            return [...updatedGoals, goldenGoal];
+          }
+          return updatedGoals;
+        });
 
         const roundScore = calculateRoundScore(foundMatches, modifiers);
         totalRoundScore += roundScore;
@@ -63,7 +159,14 @@ export const useMatchProcessing = (
         setBoard(boardToProcess);
         await new Promise((resolve) => setTimeout(resolve, ANIMATION_DURATION));
 
-        boardToProcess = fillEmptySlots(boardToProcess);
+        const tempLevel = currentLevel
+          ? {
+              ...currentLevel,
+              specialCells: updatedSpecialCells,
+            }
+          : undefined;
+
+        boardToProcess = fillEmptySlots(boardToProcess, tempLevel);
         setBoard(boardToProcess);
         await new Promise((resolve) => setTimeout(resolve, ANIMATION_DURATION));
       }
@@ -112,6 +215,8 @@ export const useMatchProcessing = (
       setActiveBonus,
       setBonuses,
       activeBonus,
+      currentLevel,
+      onSpecialCellsUpdate,
     ]
   );
 

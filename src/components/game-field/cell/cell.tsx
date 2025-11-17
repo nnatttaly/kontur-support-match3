@@ -1,4 +1,4 @@
-import { Figure, Position } from "types";
+import { Figure, Position, SpecialCell } from "types";
 import { FIGURE_PATHS } from "consts";
 import "./cell.styles.css";
 
@@ -7,6 +7,7 @@ type CellProps = {
   position: Position;
   isSelected: boolean;
   isMatched: boolean;
+  specialCell?: SpecialCell;
   onClick: (position: Position) => void;
   onDragStart: (position: Position) => void;
   onDragOver: (position: Position) => void;
@@ -17,6 +18,7 @@ export const Cell = ({
   position,
   isSelected,
   isMatched,
+  specialCell,
   onClick,
   onDragStart,
   onDragOver,
@@ -40,6 +42,9 @@ export const Cell = ({
         ${isSelected ? "cell--selected" : ""}
         ${isMatched ? "cell--matched" : ""}
         ${!figure ? "cell--empty" : ""}
+        ${
+          specialCell ? `cell--${specialCell.type}` : ""
+        }
       `}
       onClick={handleClick}
       onMouseDown={handleMouseDown}

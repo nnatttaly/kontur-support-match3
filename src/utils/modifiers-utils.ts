@@ -22,6 +22,10 @@ export const updateGoalsWithModifiers = (
   const newGoals = [...goals];
 
   matches.forEach((match) => {
+    if (match.figure === "goldenCell") {
+      return;
+    }
+
     const goalIndex = newGoals.findIndex(
       (goal) => goal.figure === match.figure
     );
@@ -51,6 +55,10 @@ export const calculateRoundScore = (
   let roundScore = 0;
 
   matches.forEach((match) => {
+    if (match.figure === "goldenCell") {
+      return;
+    }
+
     const baseScore = match.positions.length * 10;
     const modifiedScore = applyModifiersToScore(baseScore, modifiers);
     roundScore += modifiedScore;

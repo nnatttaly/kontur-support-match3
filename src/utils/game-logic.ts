@@ -1,17 +1,23 @@
-import { Board, Figure } from "types";
+import { Board, Figure, Level } from "types";
 import { BOARD_ROWS, BOARD_COLS } from "consts";
-import { getRandomFigure } from "@utils/common-utils";
 import {
   findAllMatches,
   updateBoardAfterMatches,
   applyGravity,
-  fillEmptySlots,
   willCreateMatch,
 } from "@utils/game-utils";
 import { shuffleBoardWithoutMatches } from "@utils/board-utils";
 
-export const createInitialBoard = (): Board => {
+export const createInitialBoard = (level?: Level): Board => {
   const board: Board = [];
+  const availableFigures = level?.availableFigures || [
+    "pencil",
+    "questionBook",
+    "openBook",
+    "briefcase",
+    "bonnet",
+  ];
+
 
   for (let row = 0; row < BOARD_ROWS; row++) {
     const boardRow: (Figure | null)[] = [];
@@ -21,7 +27,8 @@ export const createInitialBoard = (): Board => {
       let validFigure = false;
 
       while (!validFigure && attempts < 50) {
-        figure = getRandomFigure();
+        figure =
+          availableFigures[Math.floor(Math.random() * availableFigures.length)];
         attempts++;
 
         const horizontalMatch =
@@ -41,7 +48,10 @@ export const createInitialBoard = (): Board => {
       }
 
       if (!validFigure) {
-        boardRow.push(getRandomFigure());
+        const randomFigure =
+          availableFigures[Math.floor(Math.random() * availableFigures.length)];
+        boardRow.push(randomFigure);
+
       }
     }
     board.push(boardRow);
@@ -55,11 +65,33 @@ export const createInitialBoard = (): Board => {
   return board;
 };
 
+export const fillEmptySlots = (board: Board, level?: Level): Board => {
+  const newBoard = board.map((row) => [...row]);
+  const availableFigures = level?.availableFigures || [
+    "pencil",
+    "questionBook",
+    "openBook",
+    "briefcase",
+    "bonnet",
+  ];
+
+  for (let col = 0; col < BOARD_COLS; col++) {
+    for (let row = 0; row < BOARD_ROWS; row++) {
+      if (newBoard[row][col] === null) {
+        const randomFigure =
+          availableFigures[Math.floor(Math.random() * availableFigures.length)];
+        newBoard[row][col] = randomFigure;
+      }
+    }
+  }
+
+  return newBoard;
+};
+
 export {
   findAllMatches,
   updateBoardAfterMatches,
   applyGravity,
-  fillEmptySlots,
   willCreateMatch,
   shuffleBoardWithoutMatches,
 };
