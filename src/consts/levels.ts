@@ -68,6 +68,41 @@ export const LEVELS: Level[] = [
       { row: 3, col: 5 },
     ],
   },
+  {
+    id: 4,
+    name: "Эксперт",
+    description: "Растёшь над собой!",
+    goals: [
+      { figure: "star", target: 5, collected: 0 }, // Цель - собрать 5 звезд
+      {
+        figure: "goldenCell",
+        target: 10,
+        collected: 0,
+      }
+    ],
+    moves: 23,
+    availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
+    starPositions: [
+      // Начальные позиции звезд
+      { row: 0, col: 1 },
+      { row: 1, col: 2 },
+      { row: 0, col: 3 },
+      { row: 1, col: 4 },
+      { row: 0, col: 5 },
+    ],
+    specialCells: [
+      { row: 3, col: 0, type: "golden", isActive: true },
+      { row: 2, col: 1, type: "golden", isActive: true },
+      { row: 4, col: 1, type: "golden", isActive: true },
+      { row: 3, col: 2, type: "golden", isActive: true },
+      { row: 2, col: 3, type: "golden", isActive: true },
+      { row: 4, col: 3, type: "golden", isActive: true },
+      { row: 3, col: 4, type: "golden", isActive: true },
+      { row: 2, col: 5, type: "golden", isActive: true },
+      { row: 4, col: 5, type: "golden", isActive: true },
+      { row: 3, col: 6, type: "golden", isActive: true },
+    ],
+  },
 ];
 
 export const LEVEL_NAMES: Record<number, string> = {
