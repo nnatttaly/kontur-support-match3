@@ -58,12 +58,11 @@
 }
 
 .cell--golden {
-  background: linear-gradient(135deg, #ffe44b, #ffed4e);
+  background: linear-gradient(135deg, #ECC440, #FFFA8A);
   box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .cell--golden:hover {
-  background: linear-gradient(135deg, #ffdf00, #fff152);
   transform: scale(1.05);
 }
 
