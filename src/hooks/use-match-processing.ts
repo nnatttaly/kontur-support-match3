@@ -240,7 +240,7 @@ export const useMatchProcessing = ({
           setBoard(boardToProcess);
 
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
-          if (lvl?.id == 5) {
+          if (lvl?.id == 1) {
             const result = applyHorizontalGravity(boardToProcess);
             boardToProcess = result.board
             setBoard(boardToProcess);
