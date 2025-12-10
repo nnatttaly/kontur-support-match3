@@ -5,6 +5,7 @@ import {
   resetCareerGrowthModifiers,
 } from "./career-growth";
 import { applySportCompensationEffect } from "./sport-compensation";
+import { applyKnowledgeBaseEffect } from "./knowledge-base";
 
 export type BonusEffect = {
   apply: (board: Board) => Board;
@@ -32,6 +33,13 @@ export const BONUS_EFFECTS: Record<BonusType, BonusEffect> = {
     isInstant: true,
     onApply: (setMoves) => {
       setMoves((prevMoves) => prevMoves + 1);
+    },
+  },
+  knowledgeBase: {
+    apply: applyKnowledgeBaseEffect,
+    isInstant: true,
+    onApply: (setMoves) => {
+      setMoves((prevMoves) => prevMoves + 2);
     },
   },
 };

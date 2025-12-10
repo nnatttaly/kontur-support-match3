@@ -10,6 +10,7 @@ export const LEVELS: Level[] = [
       { figure: "bonnet", target: 3, collected: 0 },
       { figure: "briefcase", target: 3, collected: 0 },
     ],
+    bonuses: ["knowledgeBase", "friendlyTeam", "sportCompensation"],
     moves: 21,
     availableFigures: [
       "pencil",
@@ -30,6 +31,7 @@ export const LEVELS: Level[] = [
         collected: 0,
       },
     ],
+    bonuses: ["knowledgeBase", "friendlyTeam", "sportCompensation"],
     moves: 22,
     availableFigures: [
       "roundMessage",
@@ -57,6 +59,7 @@ export const LEVELS: Level[] = [
     goals: [
       { figure: "star", target: 5, collected: 0 }, // Цель - собрать 5 звезд
     ],
+    bonuses: ["careerGrowth", "friendlyTeam", "sportCompensation"],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
     starPositions: [
@@ -80,6 +83,7 @@ export const LEVELS: Level[] = [
         collected: 0,
       }
     ],
+    bonuses: ["careerGrowth", "friendlyTeam", "sportCompensation"],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
     diamondPositions: [
@@ -114,6 +118,7 @@ export const LEVELS: Level[] = [
         collected: 0,
       }
     ],
+    bonuses: ["careerGrowth", "friendlyTeam", "sportCompensation"],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
     teamPositions: [
