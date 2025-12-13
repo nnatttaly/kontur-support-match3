@@ -1,6 +1,8 @@
 import { Figure, Position, SpecialCell } from "types";
 import { FIGURE_PATHS } from "consts";
+import { CELL_SIZE, BIG_FIGURE_SIZE } from "consts";
 import "./cell.styles.css";
+import { isTeamImage } from "@utils/game-utils";
 
 type CellProps = {
   figure: Figure | null;
@@ -36,6 +38,7 @@ export const Cell = ({
   };
 
   const isStar = figure === "star";
+  const offset = (BIG_FIGURE_SIZE - CELL_SIZE) / 2;
 
   return (
     <div
@@ -53,14 +56,21 @@ export const Cell = ({
       onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}
     >
-      {figure && (
-        <img
-          src={FIGURE_PATHS[figure]}
-          alt={figure}
-          className={`figure ${isStar ? "figure--star" : ""}`}
-          draggable="false"
-        />
-      )}
+      <div className="cell-content">
+        {figure && (
+          <img
+            src={FIGURE_PATHS[figure]}
+            alt={figure}
+            className={`
+              figure
+              ${isStar ? "figure--star" : ""}
+              ${figure ==="team" || isTeamImage(figure) ? "figure--big" : ""}
+              ${isTeamImage(figure) ? "figure--big--image" : ""}
+            `}
+            draggable="false"
+          />
+        )}
+      </div>
     </div>
   );
 };

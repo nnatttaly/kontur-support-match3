@@ -1,4 +1,4 @@
-import { Board, Position, Match } from "types";
+import { Board, Position, Match, Figure } from "types";
 import { BOARD_ROWS, BOARD_COLS, MIN_MATCH_LENGTH } from "consts";
 
 export const willCreateMatch = (
@@ -20,6 +20,11 @@ export const willCreateMatch = (
   return matches.length > 0;
 };
 
+export const isTeamImage = (figure: Figure | null): boolean => {
+  if (!figure) return false;
+  return figure === "teamImage0" || figure === "teamImage1" || figure === "teamImage2" || figure === "teamImage3";
+}
+
 export const findAllMatches = (board: Board): Match[] => {
   const matches: Match[] = [];
 
@@ -27,7 +32,7 @@ export const findAllMatches = (board: Board): Match[] => {
     let col = 0;
     while (col < BOARD_COLS - 2) {
       const figure = board[row][col];
-      if (!figure || figure === "star") {
+      if (!figure || figure === "star" || board[row][col] === "diamond" || figure === "team" || isTeamImage(figure)) {
         col++;
         continue;
       }
@@ -57,7 +62,7 @@ export const findAllMatches = (board: Board): Match[] => {
     let row = 0;
     while (row < BOARD_ROWS - 2) {
       const figure = board[row][col];
-      if (!figure || figure === "star") {
+      if (!figure || figure === "star" || board[row][col] === "diamond" || figure === "team" || isTeamImage(figure)) {
         row++;
         continue;
       }
@@ -108,7 +113,10 @@ export const applyGravity = (board: Board): Board => {
     for (let row = BOARD_ROWS - 1; row >= 0; row--) {
       if (newBoard[row][col] === null) {
         emptySlots++;
+      } else if (newBoard[row][col] === "team" || isTeamImage(newBoard[row][col])) {
+        emptySlots = 0;
       } else if (emptySlots > 0) {
+        console.log(newBoard[row][col]);
         newBoard[row + emptySlots][col] = newBoard[row][col];
         newBoard[row][col] = null;
       }
@@ -116,6 +124,75 @@ export const applyGravity = (board: Board): Board => {
   }
 
   return newBoard;
+};
+
+export const applyHorizontalGravity = (board: Board): {board: Board, isChanged: boolean} => {
+  const newBoard: Board = board.map(row => [...row]);
+  let isChanged = false;
+  for (const rowIndex of [5, 4]) {
+    if (rowIndex >= BOARD_ROWS) continue;
+
+    const row = [...newBoard[rowIndex]];
+
+    // Проходим слева направо, затем справа налево для корректного смещения
+    for (let col = 3; col < BOARD_COLS; col++) {
+      const cell = row[col];
+      if (!cell || cell === "teamCell" || cell === "team" || isTeamImage(cell)) continue;
+
+      let targetCol = 3;
+
+      if (col === targetCol) continue;
+
+      // Определяем шаг: +1 если двигаемся вправо, -1 если влево
+      const step = -1;
+      let currentCol = col;
+
+      while (currentCol !== targetCol) {
+        const nextCol = currentCol + step;
+
+        if (!row[nextCol]) {
+          row[nextCol] = row[currentCol];
+          row[currentCol] = null;
+          currentCol = nextCol;
+          isChanged = true;
+        } else {
+          // следующая клетка занята — останавливаемся
+          break;
+        }
+      }
+    }
+
+    for (let col = 2; col >=0; col--) {
+      const cell = row[col];
+      if (!cell || cell === "teamCell" || cell === "team" || isTeamImage(cell)) continue;
+
+      let targetCol = 2;
+
+      if (col === targetCol) continue;
+
+      // Определяем шаг: +1 если двигаемся вправо, -1 если влево
+      const step = 1;
+      let currentCol = col;
+
+      while (currentCol !== targetCol) {
+        const nextCol = currentCol + step;
+
+        if (!row[nextCol]) {
+          row[nextCol] = row[currentCol];
+          row[currentCol] = null;
+          currentCol = nextCol;
+          isChanged = true;
+        } else {
+          // следующая клетка занята — останавливаемся
+          break;
+        }
+      }
+    }
+
+    newBoard[rowIndex] = row;
+  }
+
+  return {board: newBoard, isChanged};
 };
 
 export const isValidPosition = (position: Position): boolean => {

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BonusType } from "types";
-import { LEVEL_NAMES } from "consts/levels";
+import { LEVEL_NAMES, LEVELS } from "consts/levels";
 import { PromotionHeader } from "./promotion-header";
 import { BonusSelectionCard } from "./bonus-selection-card";
 import "./level-transition.styles.css";
@@ -18,12 +18,8 @@ export const LevelTransition = ({
 }: LevelTransitionProps) => {
   const [selectedBonuses, setSelectedBonuses] = useState<BonusType[]>([]);
 
-  const availableBonuses: BonusType[] = [
-    "friendlyTeam",
-    "careerGrowth",
-    "sportCompensation",
-  ];
-
+  const availableBonuses = LEVELS[currentLevel].bonuses
+  
   const currentLevelName =
     LEVEL_NAMES[currentLevel] || `Уровень ${currentLevel}`;
   const nextLevelName = LEVEL_NAMES[nextLevel] || `Уровень ${nextLevel}`;

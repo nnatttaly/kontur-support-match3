@@ -1,6 +1,6 @@
 export type SpecialCell = {
   row: number;
   col: number;
-  type: "golden";
+  type: "golden" | "team";
   isActive: boolean;
 };

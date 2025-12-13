@@ -5,6 +5,8 @@ import {
   updateBoardAfterMatches,
   applyGravity,
   willCreateMatch,
+  applyHorizontalGravity,
+  isTeamImage
 } from "@utils/game-utils";
 import { shuffleBoardWithoutMatches } from "@utils/board-utils";
 
@@ -29,10 +31,29 @@ export const createInitialBoard = (level?: Level): Board => {
       }
     });
   }
+  if (level?.diamondPositions) {
+    level.diamondPositions.forEach((position: Position) => {
+      if (position.row < BOARD_ROWS && position.col < BOARD_COLS) {
+        board[position.row][position.col] = "diamond";
+      }
+    });
+  }
+  if (level?.teamPositions) {
+    level.teamPositions.forEach((position: Position) => {
+      if (position.row < BOARD_ROWS && position.col < BOARD_COLS) {
+        board[position.row][position.col] = "team";
+      }
+    });
+  }
+
+  if (level?.teamImagePosition) {
+        board[level.teamImagePosition.row][level.teamImagePosition.col] = "teamImage0";
+  }
 
   for (let row = 0; row < BOARD_ROWS; row++) {
     for (let col = 0; col < BOARD_COLS; col++) {
-      if (board[row][col] === "star") continue;
+      if (board[row][col] === "star" || board[row][col] === "diamond" || board[row][col] === "team" ||
+          isTeamImage(board[row][col])) continue;
 
       let figure: Figure;
       let attempts = 0;
@@ -43,7 +64,7 @@ export const createInitialBoard = (level?: Level): Board => {
           availableFigures[Math.floor(Math.random() * availableFigures.length)];
         attempts++;
 
-        if (figure === "star") continue;
+        if (figure === "star" || board[row][col] === "diamond" ||  figure === "team" ||  isTeamImage(figure)) continue;
 
         const horizontalMatch =
           col >= 2 &&
@@ -64,7 +85,8 @@ export const createInitialBoard = (level?: Level): Board => {
       if (!validFigure) {
         const randomFigure =
           availableFigures[Math.floor(Math.random() * availableFigures.length)];
-        board[row][col] = randomFigure === "star" ? "pencil" : randomFigure;
+        board[row][col] = randomFigure === "star" || randomFigure === "diamond" || randomFigure === "team" ||
+                          isTeamImage(randomFigure) ? "pencil" : randomFigure;
       }
     }
   }
@@ -90,14 +112,16 @@ export const fillEmptySlots = (board: Board, level?: Level): Board => {
   for (let col = 0; col < BOARD_COLS; col++) {
     for (let row = 0; row < BOARD_ROWS; row++) {
       if (newBoard[row][col] === null) {
-        const figuresWithoutStars = availableFigures.filter(
-          (fig) => fig !== "star"
+        const figuresWithoutStarsAndDiamondsAndTeam = availableFigures.filter(
+          (fig) => fig !== "star" && fig != "diamond" && fig !== "team" && !isTeamImage(fig)
         );
         const randomFigure =
-          figuresWithoutStars[
-            Math.floor(Math.random() * figuresWithoutStars.length)
+          figuresWithoutStarsAndDiamondsAndTeam[
+            Math.floor(Math.random() * figuresWithoutStarsAndDiamondsAndTeam.length)
           ];
         newBoard[row][col] = randomFigure;
+      } else {
+        break;
       }
     }
   }
@@ -111,4 +135,5 @@ export {
   applyGravity,
   willCreateMatch,
   shuffleBoardWithoutMatches,
+  applyHorizontalGravity,
 };

@@ -22,10 +22,12 @@ export const updateGoalsWithModifiers = (
   const newGoals = [...goals];
 
   matches.forEach((match) => {
-    if (match.figure === "goldenCell") {
+    // goldenCell не даёт прогресса
+    if (match.figure === "goldenCell" || match.figure === "teamCell") {
       return;
     }
 
+    // обычные фигуры
     const goalIndex = newGoals.findIndex(
       (goal) => goal.figure === match.figure
     );
@@ -55,7 +57,7 @@ export const calculateRoundScore = (
   let roundScore = 0;
 
   matches.forEach((match) => {
-    if (match.figure === "goldenCell") {
+    if (match.figure === "goldenCell" || match.figure === "teamCell") {
       return;
     }
 

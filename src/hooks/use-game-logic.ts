@@ -36,6 +36,9 @@ export const useGameLogic = () => {
       }
     : undefined;
 
+  // -----------------------
+  // ВАЖНО: добавляем setGoals (gameState.setGoals)
+  // -----------------------
   const { handleBonus, deactivateBonus } = useBonuses(
     gameState.setBonuses,
     setBoard,
@@ -43,7 +46,8 @@ export const useGameLogic = () => {
     gameState.activeBonus,
     gameState.setActiveBonus,
     gameState.setMoves,
-    gameState.setModifiers
+    gameState.setModifiers,
+    gameState.setGoals // <-- новый аргумент
   );
 
   const { areAdjacent, swapFigures } = useGameActions({
@@ -85,6 +89,16 @@ export const useGameLogic = () => {
     swapFigures,
     handleBonus,
     board,
+
+    // -----------------------
+    // ВАЖНО: прокидываем gameState.activeBonus (а не незадекларированную переменную)
+    // -----------------------
+    activeBonus: gameState.activeBonus,
+    setActiveBonus: gameState.setActiveBonus,
+    setBonuses: gameState.setBonuses,
+    setBoard,
+    setIsAnimating: gameState.setIsAnimating,
+    setMoves: gameState.setMoves,
   });
 
   return {
