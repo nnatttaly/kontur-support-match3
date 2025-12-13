@@ -11,7 +11,7 @@ import {
   Goal 
 } from "types";
 import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
-import { applyGravity, fillEmptySlots } from "@utils/game-logic";
+import { applyGravity, fillEmptySlots, findAllMatches } from "@utils/game-logic";
 
 type UseInputHandlersProps = {
   levelState: LevelState;
@@ -88,7 +88,7 @@ export const useInputHandlers = ({
       setBoard([...board]);
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      // 4. обработать матчи, если они есть
+      // 4. обработать возможные матчи, если они есть
       if (processMatches) {
         await processMatches(board);
       }
@@ -110,7 +110,7 @@ export const useInputHandlers = ({
     }
 
     // --- TARGETED BONUS HANDLING ---
-    if (activeBonus && activeBonus.isActive) {
+    if (activeBonus && activeBonus.isActive && activeBonus.type !== "careerGrowth") {
       const effect = BONUS_EFFECTS[activeBonus.type];
       if (effect?.applyAt) {
         // remoteWork: однонажатие в точке
@@ -166,7 +166,8 @@ export const useInputHandlers = ({
     ) {
       return;
     }
-    if (activeBonus && activeBonus.isActive) {
+    // Разрешаем перетаскивание при активном career-growth
+    if (activeBonus && activeBonus.isActive && activeBonus.type !== "careerGrowth") {
       return;
     }
     gameState.setSelectedPosition(position);
@@ -182,7 +183,8 @@ export const useInputHandlers = ({
     ) {
       return;
     }
-    if (activeBonus && activeBonus.isActive) {
+    // Разрешаем перетаскивание при активном career-growth
+    if (activeBonus && activeBonus.isActive && activeBonus.type !== "careerGrowth") {
       return;
     }
     if (areAdjacent(gameState.selectedPosition, position)) {

@@ -36,17 +36,6 @@ export const useGameLogic = () => {
       }
     : undefined;
 
-  const { handleBonus, deactivateBonus } = useBonuses(
-    gameState.setBonuses,
-    setBoard,
-    gameState.setIsAnimating,
-    gameState.activeBonus,
-    gameState.setActiveBonus,
-    gameState.setMoves,
-    gameState.setModifiers,
-    gameState.setGoals
-  );
-
   const { areAdjacent, swapFigures, processMatches } = useGameActions({
     board,
     setBoard,
@@ -62,6 +51,18 @@ export const useGameLogic = () => {
     setBonuses: gameState.setBonuses,
     currentLevel: currentLevelWithSpecialCells,
     onSpecialCellsUpdate: setCurrentSpecialCells,
+  });
+
+  const { handleBonus, deactivateBonus } = useBonuses({
+    setBonuses: gameState.setBonuses,
+    setBoard,
+    setIsAnimating: gameState.setIsAnimating,
+    activeBonus: gameState.activeBonus,
+    setActiveBonus: gameState.setActiveBonus,
+    setMoves: gameState.setMoves,
+    setModifiers: gameState.setModifiers,
+    setGoals: gameState.setGoals,
+    processMatches, // Передаем processMatches в useBonuses
   });
 
   const {
@@ -92,8 +93,8 @@ export const useGameLogic = () => {
     setBoard,
     setIsAnimating: gameState.setIsAnimating,
     setMoves: gameState.setMoves,
-    setGoals: gameState.setGoals, // Важно: добавить эту строку
-    processMatches, // Передаем processMatches
+    setGoals: gameState.setGoals,
+    processMatches, // Передаем processMatches в useInputHandlers
   });
 
   return {

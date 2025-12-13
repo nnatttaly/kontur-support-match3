@@ -7,16 +7,29 @@ import {
   findAllMatches,
 } from "@utils/game-logic";
 
-export const useBonuses = (
-  setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void,
-  setBoard: (board: Board) => void,
-  setIsAnimating: (animating: boolean) => void,
-  activeBonus: ActiveBonus | null,
-  setActiveBonus: (bonus: ActiveBonus | null) => void,
-  setMoves: (updater: (moves: number) => number) => void,
-  setModifiers: (modifiers: GameModifiers) => void,
-  setGoals: (updater: (goals: Goal[]) => Goal[]) => void
-) => {
+type UseBonusesProps = {
+  setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
+  setBoard: (board: Board) => void;
+  setIsAnimating: (animating: boolean) => void;
+  activeBonus: ActiveBonus | null;
+  setActiveBonus: (bonus: ActiveBonus | null) => void;
+  setMoves: (updater: (moves: number) => number) => void;
+  setModifiers: (modifiers: GameModifiers) => void;
+  setGoals: (updater: (goals: Goal[]) => Goal[]) => void;
+  processMatches?: (board: Board) => Promise<Board>;
+};
+
+export const useBonuses = ({
+  setBonuses,
+  setBoard,
+  setIsAnimating,
+  activeBonus,
+  setActiveBonus,
+  setMoves,
+  setModifiers,
+  setGoals,
+  processMatches,
+}: UseBonusesProps) => {
   /**
    * ✅ ЗАКОНЧЕННЫЙ ЦИКЛ ОБНОВЛЕНИЯ ПОЛЯ
    * работает даже без матчей
@@ -52,6 +65,14 @@ export const useBonuses = (
         if (idx === -1 || prev[idx].count <= 0) return prev;
 
         if (!effect.isInstant) {
+          // Если бонус уже активен - деактивируем его
+          if (activeBonus?.type === type) {
+            setActiveBonus(null);
+            effect?.reset && setModifiers(effect.reset());
+            return prev;
+          }
+          
+          // Активируем новый бонус
           setActiveBonus({ type, isActive: true });
           if (effect.applyModifiers) {
             setModifiers(effect.applyModifiers());
@@ -70,14 +91,14 @@ export const useBonuses = (
 
       const boardWithHoles = effect.apply(board);
 
-      applyBonusBoardUpdate(boardWithHoles, effect).then((finalBoard) => {
+      applyBonusBoardUpdate(boardWithHoles, effect).then(async (finalBoard) => {
         // Вызов коллбэков
         effect.onApply?.(setMoves);
         effect.onApplyGoals?.(setGoals);
 
-        // 🔥 если после бонуса есть матчи — они ДОПОЛНИТЕЛЬНЫ
-        if (findAllMatches(finalBoard).length > 0) {
-          // ничего не делаем — match-цикл сам подхватит
+        // 🔥 если после бонуса есть матчи — обрабатываем их
+        if (findAllMatches(finalBoard).length > 0 && processMatches) {
+          await processMatches(finalBoard);
         }
 
         setTimeout(() => {
@@ -93,6 +114,8 @@ export const useBonuses = (
       setModifiers,
       setGoals,
       setActiveBonus,
+      activeBonus,
+      processMatches,
     ]
   );
 

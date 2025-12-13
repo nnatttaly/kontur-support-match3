@@ -1,7 +1,3 @@
-// Updated useMatchProcessing with corrected team/golden logic
-// - golden: counts per-cell in matches, deactivates each cell
-// - team: counts once per match (1), never deactivates and never removed from board
-
 import { useCallback } from "react";
 import {
   Board,
@@ -20,7 +16,7 @@ import {
   updateBoardAfterMatches,
   applyGravity,
   fillEmptySlots,
-  applyHorizontalGravity
+  applyHorizontalGravity,
 } from "@utils/game-logic";
 import { BONUS_EFFECTS } from "@utils/bonus-effects";
 import {
@@ -72,12 +68,12 @@ export const useMatchProcessing = ({
 
         if (foundMatches.length > 0) {
           // -------------------------------------
-          // PROCESS GOLDEN + TEAM CELLS IN MATCHS
+          // PROCESS GOLDEN + TEAM CELLS IN MATCHES
           // -------------------------------------
           let collectedGolden = 0;
           let collectedTeam = 0;
 
-          // Соберём список team-pozitions (чтобы гарантированно оставлять их на доске)
+          // Соберём список team-positions (чтобы гарантированно оставлять их на доске)
           const teamPositionsInThisRound: Position[] = [];
 
           // Для подсчёта team: считаем не по клеткам, а по матчам:
@@ -169,42 +165,39 @@ export const useMatchProcessing = ({
           }
 
           // -------------------------------------
-          // UPDATE GOALS FOR NORMAL MATCHES
+          // UPDATE GOALS FOR NORMAL MATCHES (КОМБИНАЦИИ)
           // -------------------------------------
-          setGoals((prevGoals) => {
-            const nonSpecial = prevGoals.filter(
-              (g) => !["goldenCell", "teamCell", "star", "diamond"].includes(g.figure)
-            );
-            const updated = updateGoalsWithModifiers(nonSpecial, foundMatches, modifiers);
-
-            const goldenGoal = prevGoals.find((g) => g.figure === "goldenCell");
-            const teamGoal = prevGoals.find((g) => g.figure === "teamCell");
-            const starGoal = prevGoals.find((g) => g.figure === "star");
-            const diamondGoal = prevGoals.find((g) => g.figure === "diamond");
-
-            const result = [...updated];
-            if (goldenGoal) result.push(goldenGoal);
-            if (teamGoal) {
-              if (teamGoal.collected >= 12 && teamImageProgressionCounter < 3) {
-                teamImageProgressionCounter = 3;
-                boardToProcess = progressTeamHappyThree(boardToProcess);
-                setBoard(boardToProcess);
-              } else if (teamGoal.collected >= 8 && teamImageProgressionCounter < 2){
-                teamImageProgressionCounter = 2;
-                boardToProcess = progressTeamHappyTwo(boardToProcess);
-                setBoard(boardToProcess);
-              } else if (teamGoal.collected >= 4 && teamImageProgressionCounter < 1){
-                teamImageProgressionCounter = 1;
-                boardToProcess = progressTeamHappyOne(boardToProcess);
-                setBoard(boardToProcess);
-              }
-              result.push(teamGoal);
-            }
-            if (starGoal) result.push(starGoal);
-            if (diamondGoal) result.push(diamondGoal);
-
-            return result;
-          });
+          if (foundMatches.length > 0) {
+            setGoals((prevGoals) => {
+              // Создаем копию целей для обновления
+              const updatedGoals = [...prevGoals];
+              
+              // Создаем карту подсчета фигур
+              const figureCountMap = new Map<string, number>();
+              
+              // Подсчитываем все фигуры в матчах
+              foundMatches.forEach(match => {
+                match.positions.forEach(pos => {
+                  const figure = boardToProcess[pos.row][pos.col];
+                  if (figure && figure !== "teamCell" && figure !== "goldenCell") {
+                    const count = figureCountMap.get(figure) || 0;
+                    figureCountMap.set(figure, count + 1);
+                  }
+                });
+              });
+              
+              // Обновляем каждую цель
+              updatedGoals.forEach(goal => {
+                if (figureCountMap.has(goal.figure)) {
+                  const count = figureCountMap.get(goal.figure)!;
+                  const increment = modifiers.doubleGoalProgress ? count * 2 : count;
+                  goal.collected = Math.min(goal.collected + increment, goal.target);
+                }
+              });
+              
+              return updatedGoals;
+            });
+          }
 
           const roundScore = calculateRoundScore(foundMatches, modifiers);
           totalRoundScore += roundScore;
@@ -213,11 +206,6 @@ export const useMatchProcessing = ({
 
           setMatches(foundMatches);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
-
-          // ---------------------------
-          // BEFORE REMOVAL: ensure team cells are tracked (we will restore them after removal)
-          // ---------------------------
-          // uniqueTeamPositions contains positions of team-cells that were part of matches this pass
 
           // ---------------------------
           // REMOVE NORMAL MATCHES (board ops)
@@ -255,13 +243,21 @@ export const useMatchProcessing = ({
             }
           }
 
-          // push updated board after restoring team cells
+          // Восстанавливаем team cells на доске
+          updatedSpecialCells.forEach((sc) => {
+            if (sc.type === "team" && sc.isActive !== false) {
+              if (boardToProcess[sc.row] && boardToProcess[sc.row][sc.col] === null) {
+                boardToProcess[sc.row][sc.col] = "teamCell";
+              }
+            }
+          });
+
           setBoard([...boardToProcess]);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
         }
 
         // ---------------------------
-        // PROCESS DIAMONDS (как STAR)
+        // PROCESS DIAMONDS
         // ---------------------------
         let diamondsToRemove: Position[] = [];
         for (let col = 0; col < boardToProcess[0].length; col++) {
@@ -307,7 +303,7 @@ export const useMatchProcessing = ({
 
 
         // ---------------------------
-        // PROCESS STARS AS BEFORE
+        // PROCESS STARS
         // ---------------------------
         let starsToRemove: Position[] = [];
         for (let col = 0; col < boardToProcess[0].length; col++) {
@@ -347,9 +343,9 @@ export const useMatchProcessing = ({
           setBoard([...boardToProcess]);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
-          // After fill, also ensure team cells are present (in case they were affected)
+          // After fill, ensure team cells are present
           updatedSpecialCells.forEach((sc) => {
-            if (sc.type === "team") {
+            if (sc.type === "team" && sc.isActive !== false) {
               if (boardToProcess[sc.row]) {
                 boardToProcess[sc.row][sc.col] = boardToProcess[sc.row][sc.col] ?? "teamCell";
               }
