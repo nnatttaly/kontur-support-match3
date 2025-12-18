@@ -9,6 +9,7 @@ type CellProps = {
   isSelected: boolean;
   isModernProductsSource: boolean;
   isMatched: boolean;
+  isBlocked: boolean;
   specialCell?: SpecialCell;
   onClick: (position: Position) => void;
   onDragStart: (position: Position) => void;
@@ -21,24 +22,29 @@ export const Cell = ({
   isSelected,
   isModernProductsSource,
   isMatched,
+  isBlocked,
   specialCell,
   onClick,
   onDragStart,
   onDragOver,
 }: CellProps) => {
   const handleClick = () => {
+    if (isBlocked) return;
     onClick(position);
   };
 
   const handleMouseDown = () => {
+    if (isBlocked) return;
     onDragStart(position);
   };
 
   const handleMouseEnter = () => {
+    if (isBlocked) return;
     onDragOver(position);
   };
 
   const isStar = figure === "star";
+  const isTeamBigFigure = figure && (figure === "team" || isTeamImage(figure));
 
   return (
     <div
@@ -50,10 +56,12 @@ export const Cell = ({
         ${!figure ? "cell--empty" : ""} 
         ${specialCell ? `cell--${specialCell.type}` : ""} 
         ${isStar ? "cell--star" : ""}
+        ${isBlocked ? "cell--blocked" : ""}
       `}
       onClick={handleClick}
       onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}
+      style={{ pointerEvents: isBlocked ? 'none' : 'auto' }}
     >
       <div className="cell-content">
         {figure && (
@@ -63,11 +71,7 @@ export const Cell = ({
             className={`
               figure 
               ${isStar ? "figure--star" : ""} 
-              ${
-                figure === "team" || isTeamImage(figure)
-                  ? "figure--big"
-                  : ""
-              } 
+              ${isTeamBigFigure ? "figure--big" : ""}
               ${isTeamImage(figure) ? "figure--big--image" : ""}
             `}
             draggable="false"

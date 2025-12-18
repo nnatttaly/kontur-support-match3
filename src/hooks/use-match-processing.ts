@@ -163,12 +163,11 @@ export const useMatchProcessing = ({
                 
                 // Обновляем изображение команды в зависимости от прогресса
                 if (currentLevel?.id === 5) {
-                  const progress = newCollected / next[idx].target;
-                  if (progress >= 1) {
+                  if (newCollected >= 12) {
                     boardToProcess = progressTeamHappyThree(boardToProcess);
-                  } else if (progress >= 0.66) {
+                  } else if (newCollected >= 8) {
                     boardToProcess = progressTeamHappyTwo(boardToProcess);
-                  } else if (progress >= 0.33) {
+                  } else if (newCollected >= 4) {
                     boardToProcess = progressTeamHappyOne(boardToProcess);
                   }
                   setBoard([...boardToProcess]);

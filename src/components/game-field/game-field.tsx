@@ -1,5 +1,6 @@
 import { Cell } from "@components/game-field/cell/cell";
 import { Board, Position, Match, SpecialCell } from "types";
+import { isBigFigure } from "@utils/game-utils";
 import "./game-field.styles.css";
 
 type GameFieldProps = {
@@ -40,6 +41,19 @@ export const GameField = ({
     );
   };
 
+  // Функция для определения, заблокирована ли клетка большой иконкой
+  const isCellBlocked = (row: number, col: number): boolean => {
+    // Проверяем все соседние клетки на наличие большой иконки
+
+    const figure = board[row][col];
+
+    if (figure && isBigFigure(figure)) {
+      return true;
+    }
+
+    return false;
+  };
+
   return (
     <div className="field">
       {board.map((row, rowIndex) =>
@@ -53,6 +67,9 @@ export const GameField = ({
             activeBonusType === "modernProducts" &&
             modernProductsSourcePos?.row === rowIndex &&
             modernProductsSourcePos?.col === colIndex;
+          
+          const isBlocked = isCellBlocked(rowIndex, colIndex);
+          const isMatched = isPartOfMatch(rowIndex, colIndex);
 
           return (
             <Cell
@@ -61,7 +78,8 @@ export const GameField = ({
               position={{ row: rowIndex, col: colIndex }}
               isSelected={isSelected}
               isModernProductsSource={isModernProductsSource}
-              isMatched={isPartOfMatch(rowIndex, colIndex)}
+              isMatched={isMatched}
+              isBlocked={isBlocked}
               specialCell={specialCell}
               onClick={onCellClick}
               onDragStart={onDragStart}
