@@ -44,6 +44,7 @@ export const Cell = ({
   };
 
   const isStar = figure === "star";
+  const isTeamBigFigure = figure && (figure === "team" || isTeamImage(figure));
 
   return (
     <div
