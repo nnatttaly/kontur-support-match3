@@ -13,7 +13,7 @@ export default function GamePage() {
   if (gameLogic.levelState.isLevelTransition) {
     const nextLevel = gameLogic.levelState.isLevelComplete
       ? gameLogic.levelState.currentLevel + 1
-      : gameLogic.levelState.currentLevel;
+      : gameLogic.levelState.currentLevel + 1;
 
     return (
       <LevelTransition
