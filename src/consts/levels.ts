@@ -2,7 +2,7 @@ import { Level } from "types";
 
 export const LEVELS: Level[] = [
   {
-    id: 5,
+    id: 1,
     name: "Новичок",
     description: "Начни свой путь в IT!",
     goals: [
@@ -10,7 +10,7 @@ export const LEVELS: Level[] = [
       { figure: "bonnet", target: 3, collected: 0 },
       { figure: "briefcase", target: 3, collected: 0 },
     ],
-    bonuses: ["modernProducts", "friendlyTeam", "sportCompensation"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
+    bonuses: ["knowledgeBase", "friendlyTeam", "careerGrowth"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
     moves: 21,
     availableFigures: [
       "pencil",
@@ -64,7 +64,7 @@ export const LEVELS: Level[] = [
     ],
     bonuses: ["remoteWork", "sportCompensation", "itSphere"],
     moves: 23,
-    availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
+    availableFigures: ["roundMessage", "letter", "smartphone", "rectangleMessage", "phone"],
     starPositions: [
       // Начальные позиции звезд
       { row: 3, col: 1 },
@@ -88,7 +88,7 @@ export const LEVELS: Level[] = [
     ],
     bonuses: ["remoteWork", "dms", "itSphere"],
     moves: 23,
-    availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
+    availableFigures: ["roundMessage", "letter", "bulb", "rectangleMessage", "phone"],
     diamondPositions: [
       // Начальные позиции звезд
       { row: 0, col: 1 },
@@ -111,7 +111,7 @@ export const LEVELS: Level[] = [
     ],
   },
   {
-    id: 1,
+    id: 5,
     name: "Тимлид",
     description: "Растёшь над собой!",
     goals: [
@@ -123,7 +123,7 @@ export const LEVELS: Level[] = [
     ],
     bonuses: ["itSphere", "openGuide", "remoteWork"],
     moves: 23,
-    availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
+    availableFigures: ["question", "heart", "handshake", "kpi", "bulb"],
     teamPositions: [
       /*
       { row: 1, col: 1 },
@@ -142,7 +142,7 @@ export const LEVELS: Level[] = [
       { row: 3, col: 1 },
       { row: 2, col: 5 },
       { row: 3, col: 5 },
-       */
+      */
 
       { row: 2, col: 2 },
       { row: 2, col: 3 },
