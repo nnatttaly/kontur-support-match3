@@ -18,6 +18,11 @@ export const FIGURES = [
   "teamImage2",
   "teamImage3",
   "team",
+  "question",
+  "heart",
+  "handshake",
+  "kpi",
+  "bulb",
 ] as const;
 
 export type Figure = (typeof FIGURES)[number];

@@ -20,4 +20,9 @@ export const FIGURE_PATHS: Record<Figure, string> = {
   teamImage2: "src/assets/images/figures/teamHappy2.svg",
   teamImage3: "src/assets/images/figures/teamHappy3.svg",
   team: "src/assets/images/figures/happyTeam.svg",
+  question: "src/assets/images/figures/question.svg",
+  heart: "src/assets/images/figures/heart.svg",
+  handshake: "src/assets/images/figures/handshake.svg",
+  kpi: "src/assets/images/figures/kpi.svg",
+  bulb: "src/assets/images/figures/bulb.svg",
 };

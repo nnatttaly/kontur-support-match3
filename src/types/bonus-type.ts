@@ -7,5 +7,6 @@ export const BONUS_TYPES = [
   "openGuide",
   "modernProducts",
   "itSphere",
+  "dms"
 ] as const;
 export type BonusType = typeof BONUS_TYPES[number];

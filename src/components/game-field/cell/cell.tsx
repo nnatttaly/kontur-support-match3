@@ -1,6 +1,5 @@
 import { Figure, Position, SpecialCell } from "types";
 import { FIGURE_PATHS } from "consts";
-import { CELL_SIZE, BIG_FIGURE_SIZE } from "consts";
 import "./cell.styles.css";
 import { isTeamImage } from "@utils/game-utils";
 
@@ -8,7 +7,9 @@ type CellProps = {
   figure: Figure | null;
   position: Position;
   isSelected: boolean;
+  isModernProductsSource: boolean;
   isMatched: boolean;
+  isBlocked: boolean;
   specialCell?: SpecialCell;
   onClick: (position: Position) => void;
   onDragStart: (position: Position) => void;
@@ -19,42 +20,48 @@ export const Cell = ({
   figure,
   position,
   isSelected,
+  isModernProductsSource,
   isMatched,
+  isBlocked,
   specialCell,
   onClick,
   onDragStart,
   onDragOver,
 }: CellProps) => {
   const handleClick = () => {
+    if (isBlocked) return;
     onClick(position);
   };
 
   const handleMouseDown = () => {
+    if (isBlocked) return;
     onDragStart(position);
   };
 
   const handleMouseEnter = () => {
+    if (isBlocked) return;
     onDragOver(position);
   };
 
   const isStar = figure === "star";
-  const offset = (BIG_FIGURE_SIZE - CELL_SIZE) / 2;
+  const isTeamBigFigure = figure && (figure === "team" || isTeamImage(figure));
 
   return (
     <div
       className={`
         cell 
         ${isSelected ? "cell--selected" : ""}
-        ${
-          isMatched && !isStar ? "cell--matched" : ""
-        }
-        ${!figure ? "cell--empty" : ""}
-        ${specialCell ? `cell--${specialCell.type}` : ""}
+        ${isModernProductsSource ? "cell--modern-source" : ""}
+        ${isMatched && !isStar ? "cell--matched" : ""} 
+        ${!figure ? "cell--empty" : ""} 
+        ${specialCell ? `cell--${specialCell.type}` : ""} 
         ${isStar ? "cell--star" : ""}
+        ${isBlocked ? "cell--blocked" : ""}
       `}
       onClick={handleClick}
       onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}
+      style={{ pointerEvents: isBlocked ? 'none' : 'auto' }}
     >
       <div className="cell-content">
         {figure && (
@@ -62,9 +69,9 @@ export const Cell = ({
             src={FIGURE_PATHS[figure]}
             alt={figure}
             className={`
-              figure
-              ${isStar ? "figure--star" : ""}
-              ${figure ==="team" || isTeamImage(figure) ? "figure--big" : ""}
+              figure 
+              ${isStar ? "figure--star" : ""} 
+              ${isTeamBigFigure ? "figure--big" : ""}
               ${isTeamImage(figure) ? "figure--big--image" : ""}
             `}
             draggable="false"

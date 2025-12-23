@@ -10,11 +10,8 @@ import { SpecialCell, Level } from "types";
 export const useGameLogic = () => {
   const { board, setBoard } = useBoardState();
   const gameState = useGameState();
-
-  const [currentSpecialCells, setCurrentSpecialCells] = useState<SpecialCell[]>(
-    []
-  );
-
+  const [currentSpecialCells, setCurrentSpecialCells] = useState<SpecialCell[]>([]);
+  
   const { levelState, currentLevel, handleLevelStart } = useLevelManagement({
     setBoard,
     gameState,
@@ -36,21 +33,7 @@ export const useGameLogic = () => {
       }
     : undefined;
 
-  // -----------------------
-  // ВАЖНО: добавляем setGoals (gameState.setGoals)
-  // -----------------------
-  const { handleBonus, deactivateBonus } = useBonuses(
-    gameState.setBonuses,
-    setBoard,
-    gameState.setIsAnimating,
-    gameState.activeBonus,
-    gameState.setActiveBonus,
-    gameState.setMoves,
-    gameState.setModifiers,
-    gameState.setGoals // <-- новый аргумент
-  );
-
-  const { areAdjacent, swapFigures } = useGameActions({
+  const { areAdjacent, swapFigures, processMatches } = useGameActions({
     board,
     setBoard,
     setIsSwapping: gameState.setIsSwapping,
@@ -67,12 +50,25 @@ export const useGameLogic = () => {
     onSpecialCellsUpdate: setCurrentSpecialCells,
   });
 
-  const {
-    handleCellClick,
-    handleDragStart,
-    handleDragOver,
-    handleUseBonus,
+  const { handleBonus, deactivateBonus } = useBonuses({
+    setBonuses: gameState.setBonuses,
+    setBoard,
+    setIsAnimating: gameState.setIsAnimating,
+    activeBonus: gameState.activeBonus,
+    setActiveBonus: gameState.setActiveBonus,
+    setMoves: gameState.setMoves,
+    setModifiers: gameState.setModifiers,
+    setGoals: gameState.setGoals,
+    processMatches,
+  });
+
+  const { 
+    handleCellClick, 
+    handleDragStart, 
+    handleDragOver, 
+    handleUseBonus, 
     resetSelection,
+    modernProductsSourcePos,
   } = useInputHandlers({
     levelState,
     gameState: {
@@ -84,26 +80,27 @@ export const useGameLogic = () => {
       setIsSwapping: gameState.setIsSwapping,
       setIsAnimating: gameState.setIsAnimating,
       setMoves: gameState.setMoves,
+      setMatches: gameState.setMatches,
     },
     areAdjacent,
     swapFigures,
     handleBonus,
     board,
-
-    // -----------------------
-    // ВАЖНО: прокидываем gameState.activeBonus (а не незадекларированную переменную)
-    // -----------------------
     activeBonus: gameState.activeBonus,
     setActiveBonus: gameState.setActiveBonus,
     setBonuses: gameState.setBonuses,
     setBoard,
     setIsAnimating: gameState.setIsAnimating,
     setMoves: gameState.setMoves,
+    setGoals: gameState.setGoals,
+    setMatches: gameState.setMatches,
+    processMatches,
   });
 
   return {
     board,
     selectedPosition: gameState.selectedPosition,
+    modernProductsSourcePos,
     isSwapping: gameState.isSwapping,
     isAnimating: gameState.isAnimating,
     matches: gameState.matches,
@@ -114,10 +111,8 @@ export const useGameLogic = () => {
     activeBonus: gameState.activeBonus,
     modifiers: gameState.modifiers,
     specialCells: currentSpecialCells,
-
     levelState,
     currentLevel: currentLevelWithSpecialCells,
-
     handleCellClick,
     handleDragStart,
     handleDragOver,

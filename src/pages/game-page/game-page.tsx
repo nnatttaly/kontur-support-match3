@@ -45,6 +45,8 @@ export default function GamePage() {
             <GameField
               board={gameLogic.board}
               selectedPosition={gameLogic.selectedPosition}
+              modernProductsSourcePos={gameLogic.modernProductsSourcePos}
+              activeBonusType={gameLogic.activeBonus?.type}
               matches={gameLogic.matches}
               specialCells={gameLogic.specialCells}
               onCellClick={gameLogic.handleCellClick}

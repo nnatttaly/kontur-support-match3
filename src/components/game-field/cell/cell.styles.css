@@ -26,7 +26,6 @@
   pointer-events: none;
 }
 
-
 .cell:hover {
   background-color: #f8f8f8;
   transform: scale(1.05);
@@ -41,10 +40,23 @@
   background-color: #e3f2fd;
   box-shadow: 0 0 0 2px #2196f3;
   transform: scale(1.1);
+  z-index: 1;
 }
 
-.cell--selected:has(.figure--big){
+.cell--selected:has(.figure--big) {
   box-shadow: 0 0 0 0px #f8f8f8;
+  transform: none;
+}
+
+.cell--modern-source {
+  background-color: #f3e5f5 !important;
+  box-shadow: 0 0 0 2px #9c27b0 !important;
+  transform: scale(1.1);
+  z-index: 1;
+}
+
+.cell--modern-source:has(.figure--big) {
+  box-shadow: 0 0 0 2px #9c27b0 !important;
   transform: none;
 }
 
@@ -67,8 +79,13 @@
 }
 
 .cell--golden.cell--selected {
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-  box-shadow: 0 0 0 2px #2196f3, inset 0 0 8px rgba(255, 215, 0, 0.4);
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb) !important;
+  box-shadow: 0 0 0 2px #2196f3, inset 0 0 8px rgba(255, 215, 0, 0.4) !important;
+}
+
+.cell--golden.cell--modern-source {
+  background: linear-gradient(135deg, #f3e5f5, #e1bee7) !important;
+  box-shadow: 0 0 0 2px #9c27b0, inset 0 0 8px rgba(255, 215, 0, 0.4) !important;
 }
 
 .cell--golden.cell--matched {
@@ -86,8 +103,13 @@
 }
 
 .cell--team.cell--selected {
-  background: #e3f2fd;
-  box-shadow: 0 0 0 2px #2196f3;
+  background: #e3f2fd !important;
+  box-shadow: 0 0 0 2px #2196f3 !important;
+}
+
+.cell--team.cell--modern-source {
+  background: #f3e5f5 !important;
+  box-shadow: 0 0 0 2px #9c27b0 !important;
 }
 
 .cell--team.cell--matched {
@@ -116,6 +138,7 @@
   position: absolute;
   top: -68px;
   left: -112px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .cell--selected .figure {
@@ -126,45 +149,63 @@
   transform: none !important;
 }
 
+.cell--modern-source .figure {
+  transform: scale(1.2);
+}
+
+.cell--modern-source .figure--big {
+  transform: none !important;
+}
+
 @keyframes matchAnimation {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes goldenMatchAnimation {
-  0% { 
+  0% {
     transform: scale(1);
     box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.6);
   }
-  50% { 
+  50% {
     transform: scale(1.15);
     box-shadow: inset 0 0 20px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4);
   }
-  100% { 
+  100% {
     transform: scale(1);
     box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.6);
   }
 }
 
 @keyframes teamMatchAnimation {
-  0% { 
+  0% {
     transform: scale(1);
     box-shadow: inset 0 0 12px rgba(158, 255, 134, 0.6);
   }
-  50% { 
+  50% {
     transform: scale(1.15);
     box-shadow: inset 0 0 20px rgba(158, 255, 134, 0.8), 0 0 20px rgba(158, 255, 134, 0.4);
   }
-  100% { 
+  100% {
     transform: scale(1);
     box-shadow: inset 0 0 12px rgba(158, 255, 134, 0.6);
   }
 }
 
 @keyframes fallAnimation {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(0); }
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .cell.falling .figure {
@@ -176,7 +217,13 @@
 }
 
 @keyframes starPulse {
-  0% { transform: scale(1) rotate(0deg); }
-  50% { transform: scale(1.1) rotate(5deg); }
-  100% { transform: scale(1) rotate(0deg); }
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
 }

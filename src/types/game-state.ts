@@ -22,11 +22,15 @@ export type GameMovesState = {
 
 export type GameBoardState = {
   selectedPosition: Position | null;
+  setSelectedPosition: (pos: Position | null) => void;
   isSwapping: boolean;
-  isAnimating: boolean;
-  setSelectedPosition: (position: Position | null) => void;
   setIsSwapping: (swapping: boolean) => void;
+  isAnimating: boolean;
   setIsAnimating: (animating: boolean) => void;
+  matches: Match[];
+  setMatches: (matches: Match[]) => void;
+  score: number;
+  setScore: (updater: (score: number) => number) => void;
 };
 
 export type GameMatchesState = {

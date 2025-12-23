@@ -1,70 +1,63 @@
-import { GameModifiers, Match, Goal } from "types";
+import { Goal, Match, GameModifiers } from "types";
 
-export const applyModifiersToScore = (
-  baseScore: number,
-  modifiers: GameModifiers
-): number => {
-  return modifiers.doublePoints ? baseScore * 2 : baseScore;
-};
-
-export const applyModifiersToGoalProgress = (
-  progress: number,
-  modifiers: GameModifiers
-): number => {
-  return modifiers.doubleGoalProgress ? progress * 2 : progress;
-};
-
+/**
+ * Обновляет цели на основе найденных матчей
+ */
 export const updateGoalsWithModifiers = (
   goals: Goal[],
   matches: Match[],
-  modifiers: GameModifiers
+  modifiers: GameModifiers,
+  board: any
 ): Goal[] => {
-  const newGoals = [...goals];
-
-  matches.forEach((match) => {
-    // goldenCell не даёт прогресса
-    if (match.figure === "goldenCell" || match.figure === "teamCell") {
-      return;
-    }
-
-    // обычные фигуры
-    const goalIndex = newGoals.findIndex(
-      (goal) => goal.figure === match.figure
-    );
-    if (goalIndex !== -1) {
-      const baseProgress = match.positions.length;
-      const modifiedProgress = applyModifiersToGoalProgress(
-        baseProgress,
-        modifiers
-      );
-      newGoals[goalIndex] = {
-        ...newGoals[goalIndex],
-        collected: Math.min(
-          newGoals[goalIndex].collected + modifiedProgress,
-          newGoals[goalIndex].target
-        ),
-      };
+  const updatedGoals = goals.map(goal => ({ ...goal }));
+  
+  // Создаем карту подсчета фигур
+  const figureCountMap = new Map<string, number>();
+  
+  // Подсчитываем все фигуры в матчах
+  matches.forEach(match => {
+    match.positions.forEach(pos => {
+      const figure = board[pos.row][pos.col];
+      if (figure && figure !== "teamCell" && figure !== "goldenCell") {
+        const currentCount = figureCountMap.get(figure) || 0;
+        figureCountMap.set(figure, currentCount + 1);
+      }
+    });
+  });
+  
+  // Обновляем цели
+  updatedGoals.forEach(goal => {
+    const count = figureCountMap.get(goal.figure);
+    if (count !== undefined) {
+      const increment = modifiers.doubleGoalProgress ? count * 2 : count;
+      goal.collected = Math.min(goal.collected + increment, goal.target);
     }
   });
-
-  return newGoals;
+  
+  return updatedGoals;
 };
 
 export const calculateRoundScore = (
   matches: Match[],
   modifiers: GameModifiers
 ): number => {
-  let roundScore = 0;
-
-  matches.forEach((match) => {
-    if (match.figure === "goldenCell" || match.figure === "teamCell") {
-      return;
+  let score = 0;
+  
+  matches.forEach(match => {
+    // Базовые очки: 10 за каждую фигуру в матче
+    score += match.positions.length * 10;
+    
+    // Бонус за длинные матчи
+    if (match.positions.length >= 5) {
+      score += 50;
+    } else if (match.positions.length >= 4) {
+      score += 20;
     }
-
-    const baseScore = match.positions.length * 10;
-    const modifiedScore = applyModifiersToScore(baseScore, modifiers);
-    roundScore += modifiedScore;
   });
-
-  return roundScore;
+  
+  if (modifiers.doublePoints) {
+    score *= 2;
+  }
+  
+  return score;
 };
