@@ -1,19 +1,73 @@
 import { useCallback } from "react";
-import { Bonus, Board, ActiveBonus, GameModifiers, Goal } from "types";
+import { Bonus, Board, ActiveBonus, GameModifiers, Goal, BonusType } from "types";
 import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
+import {
+  applyGravity,
+  fillEmptySlots,
+  findAllMatches,
+  applyHorizontalGravity,
+} from "@utils/game-logic";
+import { LEVELS } from "consts/levels";
 
-export const useBonuses = (
-  setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void,
-  setBoard: (board: Board) => void,
-  setIsAnimating: (animating: boolean) => void,
-  activeBonus: ActiveBonus | null,
-  setActiveBonus: (bonus: ActiveBonus | null) => void,
-  setMoves: (updater: (moves: number) => number) => void,
-  setModifiers: (modifiers: GameModifiers) => void,
+type UseBonusesProps = {
+  setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
+  setBoard: (board: Board) => void;
+  setIsAnimating: (animating: boolean) => void;
+  activeBonus: ActiveBonus | null;
+  setActiveBonus: (bonus: ActiveBonus | null) => void;
+  setMoves: (updater: (moves: number) => number) => void;
+  setModifiers: (modifiers: GameModifiers) => void;
+  setGoals: (updater: (goals: Goal[]) => Goal[]) => void;
+  processMatches?: (board: Board) => Promise<Board>;
+};
 
-  // 🔴 ВАЖНО: это ЧИСТЫЙ useState setter
-  setGoals: (updater: (goals: Goal[]) => Goal[]) => void
-) => {
+export const useBonuses = ({
+  setBonuses,
+  setBoard,
+  setIsAnimating,
+  activeBonus,
+  setActiveBonus,
+  setMoves,
+  setModifiers,
+  setGoals,
+  processMatches,
+}: UseBonusesProps) => {
+  /**
+   * ✅ ЗАКОНЧЕННЫЙ ЦИКЛ ОБНОВЛЕНИЯ ПОЛЯ
+   * работает даже без матчей
+   */
+  const applyBonusBoardUpdate = async (boardWithHoles: Board, bonusType: BonusType) => {
+    const bonusChange = [
+      "friendlyTeam",
+      "remoteWork",
+      "modernProducts",
+      "itSphere",
+    ];
+
+    if (bonusChange.includes(bonusType)) {
+      // 1. показываем удаление
+      setBoard([...boardWithHoles]);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 2. гравитация
+      let next = applyGravity(boardWithHoles);
+      setBoard([...next]);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 3. заполнение
+      next = fillEmptySlots(next);
+      setBoard([...next]);
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      return next;
+    }
+
+    return boardWithHoles;
+  };
+
+  /**
+   * Клик по иконке бонуса
+   */
   const handleBonus = useCallback(
     (type: Bonus["type"], board: Board) => {
       const effect = BONUS_EFFECTS[type];
@@ -24,6 +78,14 @@ export const useBonuses = (
         if (idx === -1 || prev[idx].count <= 0) return prev;
 
         if (!effect.isInstant) {
+          // Если бонус уже активен - деактивируем его
+          if (activeBonus?.type === type) {
+            setActiveBonus(null);
+            effect?.reset && setModifiers(effect.reset());
+            return prev;
+          }
+          
+          // Активируем новый бонус
           setActiveBonus({ type, isActive: true });
           if (effect.applyModifiers) {
             setModifiers(effect.applyModifiers());
@@ -38,16 +100,24 @@ export const useBonuses = (
 
       if (!effect.isInstant) return;
 
-      const newBoard = effect.apply(board);
-
-      effect.onApply?.(setMoves);
-      effect.onApplyGoals?.(setGoals); // ✅ openGuide работает ТУТ
-
       setIsAnimating(true);
-      setTimeout(() => {
-        setBoard(newBoard);
-        setIsAnimating(false);
-      }, 300);
+
+      const result = effect.apply(board);
+      console.log(type);
+      applyBonusBoardUpdate(result.board, type).then(async (finalBoard) => {
+        // Вызов коллбэков
+        effect.onApply?.(setMoves);
+        effect.onApplyGoals?.(setGoals);
+
+        // 🔥 если после бонуса есть матчи — обрабатываем их
+        if (findAllMatches(finalBoard).length > 0 && processMatches) {
+          await processMatches(finalBoard);
+        }
+
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 300);
+      });
     },
     [
       setBonuses,
@@ -57,9 +127,14 @@ export const useBonuses = (
       setModifiers,
       setGoals,
       setActiveBonus,
+      activeBonus,
+      processMatches,
     ]
   );
 
+  /**
+   * Отмена активного бонуса
+   */
   const deactivateBonus = useCallback(() => {
     if (!activeBonus) return;
     const effect = BONUS_EFFECTS[activeBonus.type];
@@ -67,5 +142,8 @@ export const useBonuses = (
     setActiveBonus(null);
   }, [activeBonus, setActiveBonus, setModifiers]);
 
-  return { handleBonus, deactivateBonus };
+  return {
+    handleBonus,
+    deactivateBonus,
+  };
 };

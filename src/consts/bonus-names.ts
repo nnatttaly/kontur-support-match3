@@ -9,4 +9,5 @@ export const BONUS_NAMES: Record<BonusType, string> = {
   openGuide: "Открытое руководство",
   modernProducts: "Современные продукты",
   itSphere: "IT-сфера",
+  dms: "ДМС",
 };

@@ -20,10 +20,28 @@ export const willCreateMatch = (
   return matches.length > 0;
 };
 
-export const isTeamImage = (figure: Figure | null): boolean => {
+export const isTeamImage = (figure: string | null): boolean => {
   if (!figure) return false;
-  return figure === "teamImage0" || figure === "teamImage1" || figure === "teamImage2" || figure === "teamImage3";
-}
+  return figure === "teamImage0" || 
+         figure === "teamImage1" || 
+         figure === "teamImage2" || 
+         figure === "teamImage3";
+};
+
+export const isBigFigure = (figure: Figure | null): boolean => {
+  if (!figure) return false;
+  return figure === "team" || isTeamImage(figure);
+};
+
+export const isSpecialFigure = (figure: Figure | null): boolean => {
+  if (!figure) return false;
+  return figure === "team" || 
+         figure === "teamCell" ||
+         figure === "goldenCell" ||
+         figure === "diamond" ||
+         figure === "star" ||
+         isTeamImage(figure);
+};
 
 export const findAllMatches = (board: Board): Match[] => {
   const matches: Match[] = [];
@@ -116,7 +134,6 @@ export const applyGravity = (board: Board): Board => {
       } else if (newBoard[row][col] === "team" || isTeamImage(newBoard[row][col])) {
         emptySlots = 0;
       } else if (emptySlots > 0) {
-        console.log(newBoard[row][col]);
         newBoard[row + emptySlots][col] = newBoard[row][col];
         newBoard[row][col] = null;
       }

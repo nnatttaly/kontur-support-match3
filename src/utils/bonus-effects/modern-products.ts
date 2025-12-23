@@ -1,12 +1,5 @@
-// utils/bonus-effects/modern-products.ts
 import { Board, Figure, Position } from "types";
 import { BOARD_ROWS, BOARD_COLS } from "consts";
-import {
-  findAllMatches,
-  updateBoardAfterMatches,
-  applyGravity,
-  fillEmptySlots,
-} from "@utils/game-logic";
 import { isTeamImage } from "@utils/game-utils";
 
 const forbidden = new Set<Figure>([
@@ -28,22 +21,7 @@ const isUsable = (f: Figure | null) => {
   return true;
 };
 
-/**
- * Общая обработка поля после изменений:
- * удаляем матчи → гравитация → заполнение пустых клеток
- * повторяем, пока есть совпадения.
- */
-const processBoardAfterChanges = (board: Board): Board => {
-  let b = board;
-  while (findAllMatches(b).length > 0) {
-    b = updateBoardAfterMatches(b);
-    b = applyGravity(b);
-    b = fillEmptySlots(b);
-  }
-  return b;
-};
-
-/** запасной: заменяет случайную обычную клетку на случайную обычную фигуру (совместимость) */
+/** запасной: заменяет случайную обычную клетку на случайную обычную фигуру */
 export const applyModernProductsEffect = (board: Board): Board => {
   const newBoard = board.map((r) => [...r]);
   const positions: Position[] = [];
@@ -60,15 +38,14 @@ export const applyModernProductsEffect = (board: Board): Board => {
   const source = otherPositions[Math.floor(Math.random() * otherPositions.length)];
   newBoard[pos.row][pos.col] = newBoard[source.row][source.col];
 
-  // После замены — обрабатываем возможные совпадения
-  return processBoardAfterChanges(newBoard);
+  // Возвращаем доску без обработки матчей
+  return newBoard;
 };
 
 /**
  * modernProducts two-step:
  * - если передан только sourcePos: ничего не меняет (логика выбора в hook)
- * - если передан sourcePos и targetPos: превращает фигуру в sourcePos в тип фигуры targetPos,
- *   затем удаляет получившиеся матчи, применяет гравитацию и заполняет пустые клетки.
+ * - если передан sourcePos и targetPos: превращает фигуру в sourcePos в тип фигуры targetPos.
  */
 export const applyModernProductsAt = (
   board: Board,
@@ -100,6 +77,6 @@ export const applyModernProductsAt = (
   const newBoard = board.map((r) => [...r]);
   newBoard[sr][sc] = targetFig; // превращаем исходную в тип целевой
 
-  // После замены — обрабатываем возможные совпадения + гравитация + заполнение
-  return processBoardAfterChanges(newBoard);
+  // Возвращаем доску без обработки матчей
+  return newBoard;
 };

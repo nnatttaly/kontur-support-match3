@@ -10,7 +10,7 @@ export const LEVELS: Level[] = [
       { figure: "bonnet", target: 3, collected: 0 },
       { figure: "briefcase", target: 3, collected: 0 },
     ],
-    bonuses: ["careerGrowth", "friendlyTeam", "sportCompensation"],
+    bonuses: ["knowledgeBase", "friendlyTeam", "careerGrowth"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
     moves: 21,
     availableFigures: [
       "pencil",
@@ -31,7 +31,10 @@ export const LEVELS: Level[] = [
         collected: 0,
       },
     ],
-    bonuses: ["openGuide", "modernProducts", "itSphere"],
+    // ["careerGrowth", "knowledgeBase", "sportCompensation"]
+    // ["openGuide", "remoteWork", "itSphere"]
+    // ["modernProducts", "friendlyTeam", "sportCompensation"]
+    bonuses: ["sportCompensation", "modernProducts", "remoteWork"],
     moves: 22,
     availableFigures: [
       "roundMessage",
@@ -59,9 +62,9 @@ export const LEVELS: Level[] = [
     goals: [
       { figure: "star", target: 5, collected: 0 }, // Цель - собрать 5 звезд
     ],
-    bonuses: ["careerGrowth", "friendlyTeam", "sportCompensation"],
+    bonuses: ["remoteWork", "sportCompensation", "itSphere"],
     moves: 23,
-    availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
+    availableFigures: ["roundMessage", "letter", "smartphone", "rectangleMessage", "phone"],
     starPositions: [
       // Начальные позиции звезд
       { row: 3, col: 1 },
@@ -83,9 +86,9 @@ export const LEVELS: Level[] = [
         collected: 0,
       }
     ],
-    bonuses: ["careerGrowth", "friendlyTeam", "sportCompensation"],
+    bonuses: ["remoteWork", "dms", "itSphere"],
     moves: 23,
-    availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
+    availableFigures: ["roundMessage", "letter", "bulb", "rectangleMessage", "phone"],
     diamondPositions: [
       // Начальные позиции звезд
       { row: 0, col: 1 },
@@ -118,10 +121,29 @@ export const LEVELS: Level[] = [
         collected: 0,
       }
     ],
-    bonuses: ["careerGrowth", "friendlyTeam", "sportCompensation"],
+    bonuses: ["itSphere", "openGuide", "remoteWork"],
     moves: 23,
-    availableFigures: ["roundMessage", "letter", "smartphone", "star", "phone"],
+    availableFigures: ["question", "heart", "handshake", "kpi", "bulb"],
     teamPositions: [
+      /*
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 1, col: 3 },
+      { row: 1, col: 4 },
+      { row: 1, col: 5 },
+
+      { row: 4, col: 1 },
+      { row: 4, col: 2 },
+      { row: 4, col: 3 },
+      { row: 4, col: 4 },
+      { row: 4, col: 5 },
+
+      { row: 2, col: 1 },
+      { row: 3, col: 1 },
+      { row: 2, col: 5 },
+      { row: 3, col: 5 },
+      */
+
       { row: 2, col: 2 },
       { row: 2, col: 3 },
       { row: 2, col: 4 },

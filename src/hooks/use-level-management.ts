@@ -19,7 +19,7 @@ export const useLevelManagement = ({
   const [completionTriggered, setCompletionTriggered] = useState(false);
 
   const [levelState, setLevelState] = useState<LevelState>({
-    currentLevel: 1,
+    currentLevel: 0,
     isLevelComplete: false,
     isLevelTransition: true,
     selectedBonuses: [],

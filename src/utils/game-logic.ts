@@ -101,6 +101,7 @@ export const createInitialBoard = (level?: Level): Board => {
 
 export const fillEmptySlots = (board: Board, level?: Level): Board => {
   const newBoard = board.map((row) => [...row]);
+
   const availableFigures = level?.availableFigures || [
     "pencil",
     "questionBook",
@@ -127,6 +128,91 @@ export const fillEmptySlots = (board: Board, level?: Level): Board => {
   }
 
   return newBoard;
+};
+
+// В файле game-logic/index.ts или отдельном файле
+
+export const hasPossibleMoves = (board: Board): boolean => {
+  const rows = board.length;
+  const cols = board[0].length;
+
+  // Фигуры, которые нельзя менять местами
+  const UNMOVABLE_FIGURES: Figure[] = [
+    "team",
+    "teamImage0",
+    "teamImage1",
+    "teamImage2",
+    "teamImage3",
+  ];
+
+  // Функция проверки, можно ли менять фигуру
+  const canSwapFigure = (figure: Figure | null): boolean => {
+    if (!figure) return false;
+    if (UNMOVABLE_FIGURES.includes(figure)) return false;
+    return true;
+  };
+
+  // Проверяем все возможные свапы между соседними клетками
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const currentFigure = board[row][col];
+      if (!canSwapFigure(currentFigure)) continue;
+
+      // Проверяем свап с правой клеткой
+      if (col < cols - 1) {
+        const rightFigure = board[row][col + 1];
+        if (canSwapFigure(rightFigure)) {
+          // Проверяем специальный случай: нельзя менять две звезды между собой
+          if (currentFigure === "star" && rightFigure === "star") {
+            continue;
+          }
+
+          if (currentFigure === "diamond" && rightFigure === "diamond") {
+            continue;
+          }
+
+          // Меняем фигуры местами
+          const tempBoard = board.map(r => [...r]);
+          tempBoard[row][col] = rightFigure;
+          tempBoard[row][col + 1] = currentFigure;
+          
+          // Проверяем, создает ли этот свап матч
+          const matchesAfterSwap = findAllMatches(tempBoard);
+          if (matchesAfterSwap.length > 0) {
+            return true;
+          }
+        }
+      }
+
+      // Проверяем свап с нижней клеткой
+      if (row < rows - 1) {
+        const bottomFigure = board[row + 1][col];
+        if (canSwapFigure(bottomFigure)) {
+          // Проверяем специальный случай: нельзя менять две звезды между собой
+          if (currentFigure === "star" && bottomFigure === "star") {
+            continue;
+          }
+
+          if (currentFigure === "diamond" && bottomFigure === "diamond") {
+            continue;
+          }
+
+          // Меняем фигуры местами
+          const tempBoard = board.map(r => [...r]);
+          tempBoard[row][col] = bottomFigure;
+          tempBoard[row + 1][col] = currentFigure;
+          
+          // Проверяем, создает ли этот свап матч
+          const matchesAfterSwap = findAllMatches(tempBoard);
+          if (matchesAfterSwap.length > 0) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
 };
 
 export {
