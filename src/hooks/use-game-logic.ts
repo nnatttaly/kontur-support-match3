@@ -60,6 +60,7 @@ export const useGameLogic = () => {
     setModifiers: gameState.setModifiers,
     setGoals: gameState.setGoals,
     processMatches,
+    currentLevelId: currentLevel?.id,
   });
 
   const { 

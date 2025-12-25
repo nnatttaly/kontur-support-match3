@@ -37,6 +37,9 @@ export const useLevelManagement = ({
       return;
     }
 
+    // Для 6 уровня не завершаем игру при выполнении целей
+    if (currentLevel.id === 6) return;
+
     const allGoalsCompleted = gameState.goals.every(
       (goal) => goal.collected >= goal.target
     );
@@ -61,6 +64,7 @@ export const useLevelManagement = ({
     levelState.currentLevel,
     isAnimating,
     completionTriggered,
+    currentLevel.id,
   ]);
 
   useEffect(() => {
@@ -119,7 +123,6 @@ export const useLevelManagement = ({
   ]);
 
   const handleLevelStart = (selectedBonuses: BonusType[]) => {
-
     let nextLevel: number;
 
     if (levelState.isLevelComplete) {

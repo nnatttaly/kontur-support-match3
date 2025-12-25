@@ -7,7 +7,7 @@ import {
   findAllMatches,
   applyHorizontalGravity,
 } from "@utils/game-logic";
-import { LEVELS } from "consts/levels";
+import { LEVELS } from "consts";
 
 type UseBonusesProps = {
   setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
@@ -19,6 +19,7 @@ type UseBonusesProps = {
   setModifiers: (modifiers: GameModifiers) => void;
   setGoals: (updater: (goals: Goal[]) => Goal[]) => void;
   processMatches?: (board: Board) => Promise<Board>;
+  currentLevelId?: number;
 };
 
 export const useBonuses = ({
@@ -31,6 +32,7 @@ export const useBonuses = ({
   setModifiers,
   setGoals,
   processMatches,
+  currentLevelId,
 }: UseBonusesProps) => {
   /**
    * ✅ ЗАКОНЧЕННЫЙ ЦИКЛ ОБНОВЛЕНИЯ ПОЛЯ
@@ -93,8 +95,23 @@ export const useBonuses = ({
           return prev;
         }
 
+        // Для instant бонусов уменьшаем количество и удаляем, если достигли 0 (только для 6 уровня)
         const next = [...prev];
-        next[idx] = { ...next[idx], count: next[idx].count - 1 };
+        if (idx !== -1 && next[idx].count > 0) {
+          const newCount = next[idx].count - 1;
+          
+          if (currentLevelId === 6) {
+            // В 6-м уровне удаляем бонус, если использований не осталось
+            if (newCount <= 0) {
+              next.splice(idx, 1);
+            } else {
+              next[idx] = { ...next[idx], count: newCount };
+            }
+          } else {
+            // В других уровнях просто уменьшаем количество
+            next[idx] = { ...next[idx], count: newCount };
+          }
+        }
         return next;
       });
 
@@ -129,6 +146,7 @@ export const useBonuses = ({
       setActiveBonus,
       activeBonus,
       processMatches,
+      currentLevelId,
     ]
   );
 

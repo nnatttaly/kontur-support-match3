@@ -21,4 +21,5 @@ export const BONUS_DESCRIPTIONS: Record<BonusType, string> = {
   openGuide: "Открытость руководства и прозрачность коммуникации",
   modernProducts: "Работа с современными технологиями и продуктами",
   itSphere: "Развитие в перспективной IT-сфере",
+  dms: "ДМС с выбором из двух страховых, психолог и реальный work-life balance",
 };

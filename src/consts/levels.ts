@@ -10,7 +10,7 @@ export const LEVELS: Level[] = [
       { figure: "bonnet", target: 3, collected: 0 },
       { figure: "briefcase", target: 3, collected: 0 },
     ],
-    bonuses: ["knowledgeBase", "friendlyTeam", "careerGrowth"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
+    bonuses: ["knowledgeBase", "openGuide", "careerGrowth"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
     moves: 21,
     availableFigures: [
       "pencil",
@@ -31,10 +31,7 @@ export const LEVELS: Level[] = [
         collected: 0,
       },
     ],
-    // ["careerGrowth", "knowledgeBase", "sportCompensation"]
-    // ["openGuide", "remoteWork", "itSphere"]
-    // ["modernProducts", "friendlyTeam", "sportCompensation"]
-    bonuses: ["sportCompensation", "modernProducts", "remoteWork"],
+    bonuses: ["sportCompensation", "openGuide", "remoteWork"], // ["sportCompensation", "modernProducts", "remoteWork"]
     moves: 22,
     availableFigures: [
       "roundMessage",
@@ -60,13 +57,12 @@ export const LEVELS: Level[] = [
     name: "Специалист",
     description: "Ты уже знаешь, как находить решения и собирать идеальные комбинации. Пора переходить на роль специалиста поддержки. Покажи своё мастерство — впереди новые вызовы!",
     goals: [
-      { figure: "star", target: 5, collected: 0 }, // Цель - собрать 5 звезд
+      { figure: "star", target: 5, collected: 0 },
     ],
-    bonuses: ["remoteWork", "sportCompensation", "itSphere"],
+    bonuses: ["remoteWork", "openGuide", "itSphere"], // ["remoteWork", "sportCompensation", "itSphere"]
     moves: 23,
     availableFigures: ["roundMessage", "letter", "smartphone", "rectangleMessage", "phone"],
     starPositions: [
-      // Начальные позиции звезд
       { row: 3, col: 1 },
       { row: 0, col: 2 },
       { row: 3, col: 3 },
@@ -77,20 +73,19 @@ export const LEVELS: Level[] = [
   {
     id: 4,
     name: "Эксперт",
-    description: "Эксперт — мастер поддержки, который способен справиться с любой задачей. Если ты хочешь глубже погружаться в продукты и быть тем самым человеком, к которому идут, когда “никто больше не смог” — этот путь для тебя.",
+    description: "Эксперт — мастер поддержки, который способен справиться с любой задачей. Если ты хочешь глубже погружаться в продукты и быть тем самым человеком, к которому идут, когда 'никто больше не смог' — этот путь для тебя.",
     goals: [
-      { figure: "diamond", target: 5, collected: 0 }, // Цель - собрать 5 звезд
+      { figure: "diamond", target: 5, collected: 0 },
       {
         figure: "goldenCell",
         target: 10,
         collected: 0,
       }
     ],
-    bonuses: ["remoteWork", "dms", "itSphere"],
+    bonuses: ["remoteWork", "openGuide", "itSphere"], // ["remoteWork", "dms", "itSphere"]
     moves: 23,
     availableFigures: ["roundMessage", "letter", "bulb", "rectangleMessage", "phone"],
     diamondPositions: [
-      // Начальные позиции звезд
       { row: 0, col: 1 },
       { row: 1, col: 2 },
       { row: 0, col: 3 },
@@ -113,7 +108,7 @@ export const LEVELS: Level[] = [
   {
     id: 5,
     name: "Тимлид",
-    description: "Тимлид — тот, кто организовывает работу группы консультантов, помогает им работать лучше и поддерживает по сложным вопросам от клиентов. Здесь не нужно самому общаться с клиентами.  Если тебе близко быть лидером, взаимодействовать и развивать других — выбирай этот путь.",
+    description: "Тимлид — тот, кто организовывает работу группы консультантов, помогает им работать лучше и поддерживает по сложным вопросам от клиентов. Здесь не нужно самому общаться с клиентами.  Если тебе близко быть лидером, взаимодействовать и развивать других — выбирай этот путь.",
     goals: [
       {
         figure: "teamCell",
@@ -121,29 +116,10 @@ export const LEVELS: Level[] = [
         collected: 0,
       }
     ],
-    bonuses: ["itSphere", "openGuide", "remoteWork"],
+    bonuses: ["itSphere", "openGuide", "remoteWork"], // ["itSphere", "openGuide", "remoteWork"]
     moves: 23,
     availableFigures: ["question", "heart", "handshake", "kpi", "bulb"],
     teamPositions: [
-      /*
-      { row: 1, col: 1 },
-      { row: 1, col: 2 },
-      { row: 1, col: 3 },
-      { row: 1, col: 4 },
-      { row: 1, col: 5 },
-
-      { row: 4, col: 1 },
-      { row: 4, col: 2 },
-      { row: 4, col: 3 },
-      { row: 4, col: 4 },
-      { row: 4, col: 5 },
-
-      { row: 2, col: 1 },
-      { row: 3, col: 1 },
-      { row: 2, col: 5 },
-      { row: 3, col: 5 },
-      */
-
       { row: 2, col: 2 },
       { row: 2, col: 3 },
       { row: 2, col: 4 },
@@ -164,6 +140,25 @@ export const LEVELS: Level[] = [
       { row: 3, col: 5, type: "team", isActive: true },
     ],
   },
+  {
+    id: 6,
+    name: "Бесконечный режим",
+    description: "Собирайте фигуры по три в ряд и получайте как можно больше очков! Выполняйте цели, чтобы получить случайные бонусы, и продолжайте улучшать свой результат.",
+    goals: [
+      { figure: "question", target: 8, collected: 0 },
+      { figure: "heart", target: 8, collected: 0 },
+      { figure: "handshake", target: 8, collected: 0 },
+    ],
+    bonuses: ["friendlyTeam", "sportCompensation", "knowledgeBase"],
+    moves: 25,
+    availableFigures: [
+      "question",
+      "heart",
+      "handshake",
+      "kpi",
+      "bulb",
+    ],
+  },
 ];
 
 export const LEVEL_NAMES: Record<number, string> = {
@@ -172,4 +167,5 @@ export const LEVEL_NAMES: Record<number, string> = {
   3: "Специалист",
   4: "Эксперт",
   5: "Тимлид",
+  6: "Бесконечный режим",
 };
