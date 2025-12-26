@@ -10,7 +10,7 @@ export const LEVELS: Level[] = [
       { figure: "bonnet", target: 3, collected: 0 },
       { figure: "briefcase", target: 3, collected: 0 },
     ],
-    bonuses: ["knowledgeBase", "openGuide", "careerGrowth"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
+    bonuses: ["knowledgeBase", "openGuide", "modernProducts"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
     moves: 21,
     availableFigures: [
       "pencil",

@@ -40,7 +40,7 @@ export const useLevelManagement = ({
     // Для 6-го уровня проверяем только количество ходов
     if (currentLevel.id === 6) {
       // Завершаем уровень, когда ходы закончились и нет активной анимации
-      if (gameState.moves <= 0 && !isAnimating && !completionTriggered) {
+      if (gameState.moves <= 0 && !isAnimating && !completionTriggered) { // тут заканчиваем бесконечный уровень
         console.log("6 уровень завершен: закончились ходы");
         setCompletionTriggered(true);
 

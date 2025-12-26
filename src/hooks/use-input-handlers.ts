@@ -3,6 +3,8 @@ import { Position, Bonus, Board, LevelState, ActiveBonus, Match, Figure } from "
 import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
 import { applyGravity, fillEmptySlots, findAllMatches, applyHorizontalGravity } from "@utils/game-logic";
 import { ANIMATION_DURATION, BOARD_ROWS, LEVELS } from "consts";
+import { progressTeamHappyOne, progressTeamHappyTwo, progressTeamHappyThree } from "@utils/game-team-utils";
+import { applyModernProductsAt } from "@utils/bonus-effects/modern-products";
 
 type GameBoardState = {
   selectedPosition: Position | null;
@@ -65,7 +67,7 @@ export const useInputHandlers = ({
     let hasSpecialFigures = false;
 
     // Проверяем и удаляем алмазы в нижнем ряду
-    for (let col = 0; col < boardCopy[0].length; col++) {
+    for (let col = 0; col < (boardCopy[0]?.length || 0); col++) {
       if (boardCopy[BOARD_ROWS - 1]?.[col] === "diamond") {
         boardCopy[BOARD_ROWS - 1][col] = null;
         hasSpecialFigures = true;
@@ -87,7 +89,7 @@ export const useInputHandlers = ({
     }
 
     // Проверяем и удаляем звезды в нижнем ряду
-    for (let col = 0; col < boardCopy[0].length; col++) {
+    for (let col = 0; col < (boardCopy[0]?.length || 0); col++) {
       if (boardCopy[BOARD_ROWS - 1]?.[col] === "star") {
         boardCopy[BOARD_ROWS - 1][col] = null;
         hasSpecialFigures = true;
@@ -117,6 +119,24 @@ export const useInputHandlers = ({
     matchedPositions: Position[],
     effect: any
   ) => {
+    console.log(`applyAndFinalizeBonus вызван для ${type}, matchedPositions:`, matchedPositions);
+    
+    // Для modernProducts: проверяем, что matchedPositions не пустой (фигура была изменена)
+    if (type === "modernProducts") {
+      console.log("ModernProducts: проверка matchedPositions");
+      if (matchedPositions.length === 0) {
+        console.log("ModernProducts: matchedPositions пустой, бонус не тратится");
+        setActiveBonus(null);
+        return;
+      }
+    }
+
+    // Для itSphere и remoteWork: если не было удалено ни одной фигуры, не тратим бонус
+    if ((type === "itSphere" || type === "remoteWork") && matchedPositions.length === 0) {
+      setActiveBonus(null);
+      return;
+    }
+
     // Уменьшаем количество бонусов и удаляем, если count=0 для 6-го уровня
     setBonuses((prev) => {
       const next = [...prev];
@@ -135,30 +155,25 @@ export const useInputHandlers = ({
     });
 
     effect?.onApply?.(setMoves);
-    
+
     // Для openGuide в 6-м уровне нужно проверить, выполнилась ли цель
     if (type === "openGuide" && levelState.currentLevel === 6) {
-      // Собираем информацию о выполненных целях после применения openGuide
       setGoals((prevGoals) => {
         const updatedGoals = [...prevGoals];
         const completedIndices: number[] = [];
         
-        // Проверяем, какие цели выполнились после применения openGuide
         updatedGoals.forEach((goal, index) => {
           if (goal.collected >= goal.target) {
             completedIndices.push(index);
           }
         });
 
-        // Если есть выполненные цели, заменяем их
         if (completedIndices.length > 0) {
           setOpenGuideCompleted(completedIndices);
           
           completedIndices.forEach((index) => {
             const currentFigures = updatedGoals.map(g => g.figure);
-            // Получаем случайную фигуру
             const newFigure = getRandomFigureForLevel6(LEVELS[5].availableFigures || [], currentFigures);
-            // Увеличиваем таргет на 1
             const newTarget = updatedGoals[index].target + 1;
             updatedGoals[index] = {
               figure: newFigure,
@@ -250,7 +265,6 @@ export const useInputHandlers = ({
         }
       }
 
-      console.log(LEVELS[levelState.currentLevel - 1].availableFigures);
       updatedBoard = fillEmptySlots(updatedBoard, LEVELS[levelState.currentLevel - 1]);
       setBoard([...updatedBoard]);
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -274,35 +288,95 @@ export const useInputHandlers = ({
       return;
     }
 
+    // Проверяем, что board существует
+    if (!board || !Array.isArray(board) || board.length === 0) {
+      console.warn('Board is not ready');
+      return;
+    }
+
     if (activeBonus && activeBonus.isActive && activeBonus.type !== "careerGrowth") {
+      if (activeBonus.type === "modernProducts") {
+        if (!modernProductsSourcePos) {
+          // Проверяем, что позиция валидна
+          if (!board[position.row] || board[position.row][position.col] === undefined) {
+            return;
+          }
+          const fig = board[position.row][position.col];
+          if (!fig) return;
+          setModernProductsSourcePos(position);
+          console.log("ModernProducts: выбрана первая фигура", fig, "в позиции", position);
+          return;
+        }
+
+        // Второй клик: применяем бонус
+        const sourcePos = modernProductsSourcePos;
+        
+        // Если кликнули на ту же клетку - снимаем выделение
+        if (sourcePos.row === position.row && sourcePos.col === position.col) {
+          console.log("ModernProducts: клик на ту же клетку, снимаем выделение");
+          setModernProductsSourcePos(null);
+          return;
+        }
+        
+        // Получаем фигуры
+        const sourceFig = board[sourcePos.row][sourcePos.col];
+        const targetFig = board[position.row][position.col];
+        
+        // Если тип фигур одинаковый - ничего не делаем
+        if (sourceFig === targetFig) {
+          console.log("ModernProducts: одинаковые фигуры, ничего не делаем");
+          setModernProductsSourcePos(null);
+          setActiveBonus(null);
+          return;
+        }
+        
+        // СРАЗУ сбрасываем выделение
+        setModernProductsSourcePos(null);
+        
+        console.log("ModernProducts: вызываем applyModernProductsAt напрямую с параметрами:", sourcePos, position);
+        
+        // Используем прямую импортированную функцию
+        const result = applyModernProductsAt(board, sourcePos as Position, position);
+        console.log("ModernProducts: результат от applyModernProductsAt:", result);
+        
+        // Проверяем, что результат валиден
+        if (!result || !result.board) {
+          console.log("ModernProducts: невалидный результат");
+          setActiveBonus(null);
+          return;
+        }
+
+        console.log("ModernProducts: применяем превращение", sourceFig, "->", targetFig);
+        console.log("matchedPositions из результата:", result.matchedPositions);
+        
+        // Используем фиктивный effect для вызова applyAndFinalizeBonus
+        const effect = BONUS_EFFECTS.modernProducts;
+        await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
+        return;
+      }
+      
       const effect = BONUS_EFFECTS[activeBonus.type];
       if (effect?.applyAt) {
         if (activeBonus.type === "remoteWork") {
           const result = effect.applyAt(board, position);
+          // Проверяем, были ли удалены фигуры
+          if (!result || !result.board || result.matchedPositions.length === 0) {
+            // Не тратим бонус
+            setActiveBonus(null);
+            return;
+          }
           await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
           return;
         }
 
         if (activeBonus.type === "itSphere") {
           const result = effect.applyAt(board, position);
-          await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
-          return;
-        }
-
-        if (activeBonus.type === "modernProducts") {
-          if (!modernProductsSourcePos) {
-            const fig = board[position.row][position.col];
-            if (!fig) return;
-            setModernProductsSourcePos(position);
+          // Проверяем, были ли удалены фигуры
+          if (!result || !result.board || result.matchedPositions.length === 0) {
+            // Не тратим бонус
+            setActiveBonus(null);
             return;
           }
-
-          // Второй клик: применяем бонус
-          const sourcePos = modernProductsSourcePos;
-          // СРАЗУ сбрасываем выделение
-          setModernProductsSourcePos(null);
-          
-          const result = effect.applyAt(board, sourcePos as Position, position);
           await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
           return;
         }
