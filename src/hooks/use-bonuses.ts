@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Bonus, Board, ActiveBonus, GameModifiers, Goal, BonusType } from "types";
+import { Bonus, Board, ActiveBonus, GameModifiers, Goal, BonusType, Figure } from "types";
 import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
 import {
   applyGravity,
@@ -34,6 +34,35 @@ export const useBonuses = ({
   processMatches,
   currentLevelId,
 }: UseBonusesProps) => {
+  const getRandomBonusForLevel6 = useCallback((): BonusType => {
+    const allBonuses: BonusType[] = [
+      "friendlyTeam",
+      "careerGrowth",
+      "sportCompensation",
+      "knowledgeBase",
+      "remoteWork",
+      "openGuide",
+      "modernProducts",
+      "itSphere",
+      "dms"
+    ];
+    return allBonuses[Math.floor(Math.random() * allBonuses.length)];
+  }, []);
+
+  const getRandomFigureForLevel6 = useCallback((availableFigures: Figure[], excludeFigures: Figure[] = []): Figure => {
+    const filteredFigures = availableFigures.filter(
+      fig => !["star", "diamond", "team", "teamImage0", "teamImage1", "teamImage2", "teamImage3", "goldenCell", "teamCell"].includes(fig)
+    );
+    
+    const availableFiltered = filteredFigures.filter(fig => !excludeFigures.includes(fig));
+    
+    if (availableFiltered.length > 0) {
+      return availableFiltered[Math.floor(Math.random() * availableFiltered.length)];
+    }
+    
+    return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
+  }, []);
+
   /**
    * ✅ ЗАКОНЧЕННЫЙ ЦИКЛ ОБНОВЛЕНИЯ ПОЛЯ
    * работает даже без матчей
@@ -121,20 +150,96 @@ export const useBonuses = ({
 
       const result = effect.apply(board);
       console.log(type);
-      applyBonusBoardUpdate(result.board, type).then(async (finalBoard) => {
-        // Вызов коллбэков
-        effect.onApply?.(setMoves);
+      
+      // Для openGuide в 6-м уровне обрабатываем выполнение целей специальным образом
+      if (type === "openGuide" && currentLevelId === 6) {
+        // Сначала применяем эффект openGuide
         effect.onApplyGoals?.(setGoals);
-
-        // 🔥 если после бонуса есть матчи — обрабатываем их
-        if (findAllMatches(finalBoard).length > 0 && processMatches) {
-          await processMatches(finalBoard);
-        }
-
+        
+        // Затем проверяем, есть ли выполненные цели и даем бонусы
         setTimeout(() => {
-          setIsAnimating(false);
-        }, 300);
-      });
+          setGoals((prevGoals) => {
+            const updatedGoals = [...prevGoals];
+            const completedIndices: number[] = [];
+            const newBonuses: BonusType[] = [];
+            
+            // Проверяем, какие цели выполнились
+            updatedGoals.forEach((goal, index) => {
+              if (goal.collected >= goal.target) {
+                completedIndices.push(index);
+                // Даем бонус за каждую выполненную цель
+                const randomBonus = getRandomBonusForLevel6();
+                newBonuses.push(randomBonus);
+              }
+            });
+
+            // Если есть выполненные цели, заменяем их
+            if (completedIndices.length > 0) {
+              completedIndices.forEach((index) => {
+                const currentFigures = updatedGoals.map(g => g.figure);
+                const newFigure = getRandomFigureForLevel6(LEVELS[5].availableFigures || [], currentFigures);
+                const newTarget = updatedGoals[index].target + 1;
+                updatedGoals[index] = {
+                  figure: newFigure,
+                  target: newTarget,
+                  collected: 0
+                };
+              });
+
+              // Добавляем бонусы (если есть место)
+              if (newBonuses.length > 0) {
+                setBonuses((prevBonuses) => {
+                  let updatedBonuses = [...prevBonuses];
+                  
+                  for (const bonusType of newBonuses) {
+                    const existingIndex = updatedBonuses.findIndex(b => b.type === bonusType);
+                    
+                    if (existingIndex !== -1) {
+                      updatedBonuses[existingIndex] = {
+                        ...updatedBonuses[existingIndex],
+                        count: Math.min(updatedBonuses[existingIndex].count + 1, 3)
+                      };
+                    } else if (updatedBonuses.length < 2) {
+                      updatedBonuses.push({ type: bonusType, count: 1 });
+                    }
+                  }
+                  
+                  return updatedBonuses;
+                });
+              }
+            }
+            
+            return updatedGoals;
+          });
+
+          // Продолжаем обычную обработку бонуса
+          applyBonusBoardUpdate(result.board, type).then(async (finalBoard) => {
+            effect.onApply?.(setMoves);
+
+            if (findAllMatches(finalBoard).length > 0 && processMatches) {
+              await processMatches(finalBoard);
+            }
+
+            setTimeout(() => {
+              setIsAnimating(false);
+            }, 300);
+          });
+        }, 100);
+      } else {
+        // Обычная обработка для других бонусов
+        applyBonusBoardUpdate(result.board, type).then(async (finalBoard) => {
+          effect.onApply?.(setMoves);
+          effect.onApplyGoals?.(setGoals);
+
+          if (findAllMatches(finalBoard).length > 0 && processMatches) {
+            await processMatches(finalBoard);
+          }
+
+          setTimeout(() => {
+            setIsAnimating(false);
+          }, 300);
+        });
+      }
     },
     [
       setBonuses,
@@ -147,6 +252,8 @@ export const useBonuses = ({
       activeBonus,
       processMatches,
       currentLevelId,
+      getRandomBonusForLevel6,
+      getRandomFigureForLevel6,
     ]
   );
 

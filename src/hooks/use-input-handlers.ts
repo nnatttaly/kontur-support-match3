@@ -57,6 +57,7 @@ export const useInputHandlers = ({
   processMatches,
 }: UseInputHandlersProps) => {
   const [modernProductsSourcePos, setModernProductsSourcePos] = useState<Position | null>(null);
+  const [openGuideCompleted, setOpenGuideCompleted] = useState<number[]>([]);
 
   // Функция для обработки алмазов и звезд в нижнем ряду
   const processSpecialFigures = (currentBoard: Board): { board: Board; hasSpecialFigures: boolean } => {
@@ -116,17 +117,62 @@ export const useInputHandlers = ({
     matchedPositions: Position[],
     effect: any
   ) => {
+    // Уменьшаем количество бонусов и удаляем, если count=0 для 6-го уровня
     setBonuses((prev) => {
       const next = [...prev];
       const idx = next.findIndex((b) => b.type === type);
       if (idx !== -1 && next[idx].count > 0) {
-        next[idx] = { ...next[idx], count: next[idx].count - 1 };
+        const newCount = next[idx].count - 1;
+        
+        // Для 6-го уровня удаляем бонус, если использований не осталось
+        if (levelState.currentLevel === 6 && newCount <= 0) {
+          next.splice(idx, 1);
+        } else {
+          next[idx] = { ...next[idx], count: newCount };
+        }
       }
       return next;
     });
 
     effect?.onApply?.(setMoves);
-    effect?.onApplyGoals?.(setGoals);
+    
+    // Для openGuide в 6-м уровне нужно проверить, выполнилась ли цель
+    if (type === "openGuide" && levelState.currentLevel === 6) {
+      // Собираем информацию о выполненных целях после применения openGuide
+      setGoals((prevGoals) => {
+        const updatedGoals = [...prevGoals];
+        const completedIndices: number[] = [];
+        
+        // Проверяем, какие цели выполнились после применения openGuide
+        updatedGoals.forEach((goal, index) => {
+          if (goal.collected >= goal.target) {
+            completedIndices.push(index);
+          }
+        });
+
+        // Если есть выполненные цели, заменяем их
+        if (completedIndices.length > 0) {
+          setOpenGuideCompleted(completedIndices);
+          
+          completedIndices.forEach((index) => {
+            const currentFigures = updatedGoals.map(g => g.figure);
+            // Получаем случайную фигуру
+            const newFigure = getRandomFigureForLevel6(LEVELS[5].availableFigures || [], currentFigures);
+            // Увеличиваем таргет на 1
+            const newTarget = updatedGoals[index].target + 1;
+            updatedGoals[index] = {
+              figure: newFigure,
+              target: newTarget,
+              collected: 0
+            };
+          });
+        }
+        
+        return updatedGoals;
+      });
+    } else {
+      effect?.onApplyGoals?.(setGoals);
+    }
 
     setIsAnimating(true);
     try {
@@ -332,6 +378,21 @@ export const useInputHandlers = ({
   const resetSelection = () => {
     gameState.setSelectedPosition(null);
     setModernProductsSourcePos(null);
+  };
+
+  // Вспомогательная функция для получения случайной фигуры для 6-го уровня
+  const getRandomFigureForLevel6 = (availableFigures: Figure[], excludeFigures: Figure[] = []): Figure => {
+    const filteredFigures = availableFigures.filter(
+      fig => !["star", "diamond", "team", "teamImage0", "teamImage1", "teamImage2", "teamImage3", "goldenCell", "teamCell"].includes(fig)
+    );
+    
+    const availableFiltered = filteredFigures.filter(fig => !excludeFigures.includes(fig));
+    
+    if (availableFiltered.length > 0) {
+      return availableFiltered[Math.floor(Math.random() * availableFiltered.length)];
+    }
+    
+    return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
   };
 
   return {

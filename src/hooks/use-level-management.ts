@@ -37,14 +37,33 @@ export const useLevelManagement = ({
       return;
     }
 
-    // Для 6 уровня не завершаем игру при выполнении целей
-    if (currentLevel.id === 6) return;
+    // Для 6-го уровня проверяем только количество ходов
+    if (currentLevel.id === 6) {
+      // Завершаем уровень, когда ходы закончились и нет активной анимации
+      if (gameState.moves <= 0 && !isAnimating && !completionTriggered) {
+        console.log("6 уровень завершен: закончились ходы");
+        setCompletionTriggered(true);
 
+        setTimeout(() => {
+          setLevelState((prev) => ({
+            ...prev,
+            isLevelComplete: true,
+            isLevelTransition: true,
+          }));
+          isLevelInitialized.current = false;
+          setCompletionTriggered(false);
+        }, 300);
+      }
+      return; // Не проверяем цели для 6-го уровня
+    }
+
+    // Для обычных уровней проверяем выполнение целей
     const allGoalsCompleted = gameState.goals.every(
       (goal) => goal.collected >= goal.target
     );
 
     if (allGoalsCompleted && !isAnimating && !completionTriggered) {
+      console.log("Уровень", currentLevel.id, "завершен: все цели выполнены");
       setCompletionTriggered(true);
 
       setTimeout(() => {
@@ -59,6 +78,7 @@ export const useLevelManagement = ({
     }
   }, [
     gameState.goals,
+    gameState.moves,
     levelState.isLevelTransition,
     levelState.isLevelComplete,
     levelState.currentLevel,

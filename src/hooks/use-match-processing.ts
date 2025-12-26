@@ -99,6 +99,10 @@ export const useMatchProcessing = ({
       const initialSpecialCells = currentLevel?.specialCells || [];
       const updatedSpecialCells: SpecialCell[] = [...initialSpecialCells];
 
+      // Переменные для отслеживания выполненных целей и бонусов за этот ход
+      const goalsCompletedThisTurn: Array<{index: number, oldTarget: number}> = [];
+      const bonusesFromCompletedGoals: BonusType[] = [];
+
       while (hasMatches) {
         const foundMatches = findAllMatches(boardToProcess);
 
@@ -215,7 +219,7 @@ export const useMatchProcessing = ({
           if (foundMatches.length > 0) {
             setGoals((prevGoals) => {
               const updatedGoals = [...prevGoals];
-              const figureCountMap = new Map<string, number>();
+              const figureCountMap = new Map<Figure, number>();
 
               foundMatches.forEach((match) => {
                 match.positions.forEach((pos) => {
@@ -233,14 +237,16 @@ export const useMatchProcessing = ({
 
               // Для 6 уровня: проверяем каждую цель отдельно
               if (currentLevel?.id === 6) {
-                const newBonuses: BonusType[] = [];
+                const completedInThisIteration: Array<{index: number, oldTarget: number}> = [];
+                const bonusesFromThisIteration: BonusType[] = [];
                 
                 updatedGoals.forEach((goal, index) => {
                   if (figureCountMap.has(goal.figure)) {
-                    const count = figureCountMap.get(goal.figure)!;
+                    const baseCount = figureCountMap.get(goal.figure)!;
                     const increment = modifiers.doubleGoalProgress
-                      ? count * 2
-                      : count;
+                      ? baseCount * 2
+                      : baseCount;
+                    
                     const oldCollected = goal.collected;
                     const newCollected = Math.min(
                       oldCollected + increment,
@@ -254,51 +260,38 @@ export const useMatchProcessing = ({
 
                     // Проверяем, была ли выполнена цель в этом ходе
                     if (oldCollected < goal.target && newCollected >= goal.target) {
-                      // Даем случайный бонус, если есть место
+                      completedInThisIteration.push({
+                        index,
+                        oldTarget: goal.target
+                      });
+                      // Даем случайный бонус за каждую выполненную цель
                       const randomBonus = getRandomBonus();
-                      newBonuses.push(randomBonus);
-                      
-                      // Сразу заменяем выполненную цель на новую
-                      const currentFigures = updatedGoals.map(g => g.figure);
-                      const newFigure = getRandomFigure(
-                        currentLevel.availableFigures || [],
-                        currentFigures
-                      );
-                      updatedGoals[index] = {
-                        figure: newFigure,
-                        target: 8 + Math.floor(Math.random() * 5),
-                        collected: 0
-                      };
+                      bonusesFromThisIteration.push(randomBonus);
                     }
                   }
                 });
 
-                // Добавляем бонусы, если есть место
-                if (newBonuses.length > 0) {
-                  setBonuses((prevBonuses) => {
-                    let updatedBonuses = [...prevBonuses];
-                    
-                    for (const bonusType of newBonuses) {
-                      // Максимум 2 разных бонуса
-                      if (updatedBonuses.length >= 2) break;
-                      
-                      // Проверяем, есть ли уже такой бонус
-                      const existingIndex = updatedBonuses.findIndex(b => b.type === bonusType);
-                      if (existingIndex !== -1) {
-                        // Увеличиваем количество существующего бонуса (макс 3)
-                        updatedBonuses[existingIndex] = {
-                          ...updatedBonuses[existingIndex],
-                          count: Math.min(updatedBonuses[existingIndex].count + 1, 3)
-                        };
-                      } else {
-                        // Добавляем новый бонус
-                        updatedBonuses.push({ type: bonusType, count: 1 });
-                      }
-                    }
-                    
-                    return updatedBonuses;
-                  });
-                }
+                // Сохраняем информацию о выполненных целях
+                goalsCompletedThisTurn.push(...completedInThisIteration);
+                bonusesFromCompletedGoals.push(...bonusesFromThisIteration);
+
+                // Заменяем выполненные цели на новые
+                completedInThisIteration.forEach(({index, oldTarget}) => {
+                  const currentFigures = updatedGoals.map(g => g.figure);
+                  const figuresInMatches = Array.from(figureCountMap.keys());
+                  const excludeFigures = [...currentFigures, ...figuresInMatches];
+                  
+                  const newFigure = getRandomFigure(
+                    currentLevel.availableFigures || [],
+                    excludeFigures
+                  );
+                  const newTarget = oldTarget + 1;
+                  updatedGoals[index] = {
+                    figure: newFigure,
+                    target: newTarget,
+                    collected: 0
+                  };
+                });
               } else {
                 // Для обычных уровней
                 updatedGoals.forEach((goal) => {
@@ -541,11 +534,12 @@ export const useMatchProcessing = ({
         setScore((prev) => prev + totalRoundScore);
       }
 
-      // RESET MODIFIERS AFTER BONUS
+      // RESET MODIFIERS AFTER BONUS - сначала сбрасываем бонусы с модификаторами (включая careerGrowth)
       if (usedModifiers && activeBonus) {
         const effect = BONUS_EFFECTS[activeBonus.type];
         if (effect.reset) setModifiers(effect.reset());
 
+        // Сначала удаляем активный бонус (освобождаем место)
         setActiveBonus(null);
 
         if (!effect.isInstant) {
@@ -553,7 +547,6 @@ export const useMatchProcessing = ({
             const next = [...prev];
             const i = next.findIndex((b) => b.type === activeBonus.type);
             if (i !== -1 && next[i].count > 0) {
-              // Уменьшаем количество использований
               const newCount = next[i].count - 1;
               
               if (currentLevel?.id === 6) {
@@ -564,11 +557,39 @@ export const useMatchProcessing = ({
                   next[i] = { ...next[i], count: newCount };
                 }
               } else {
-                // В других уровнях просто уменьшаем количество
                 next[i] = { ...next[i], count: newCount };
               }
             }
             return next;
+          });
+        }
+      }
+
+      // Только ПОСЛЕ того как мы уменьшили счетчик careerGrowth (и возможно удалили его)
+      // добавляем бонусы за выполненные цели в 6-м уровне
+      if (currentLevel?.id === 6 && goalsCompletedThisTurn.length > 0) {
+        // Сначала обновляем цели (заменяем выполненные на новые)
+        // Это уже сделано выше в setGoals, но нам нужно убедиться, что новые цели установлены
+        
+        // Теперь добавляем бонусы, если есть место
+        if (bonusesFromCompletedGoals.length > 0) {
+          setBonuses((prevBonuses) => {
+            let updatedBonuses = [...prevBonuses];
+            
+            for (const bonusType of bonusesFromCompletedGoals) {
+              const existingIndex = updatedBonuses.findIndex(b => b.type === bonusType);
+              
+              if (existingIndex !== -1) {
+                updatedBonuses[existingIndex] = {
+                  ...updatedBonuses[existingIndex],
+                  count: Math.min(updatedBonuses[existingIndex].count + 1, 3)
+                };
+              } else if (updatedBonuses.length < 2) {
+                updatedBonuses.push({ type: bonusType, count: 1 });
+              }
+            }
+            
+            return updatedBonuses;
           });
         }
       }
