@@ -160,12 +160,3 @@ export const LEVELS: Level[] = [
     ],
   },
 ];
-
-export const LEVEL_NAMES: Record<number, string> = {
-  1: "Новичок",
-  2: "Консультант",
-  3: "Специалист",
-  4: "Эксперт",
-  5: "Тимлид",
-  6: "Бесконечный режим",
-};

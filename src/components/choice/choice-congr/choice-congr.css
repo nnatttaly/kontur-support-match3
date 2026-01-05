@@ -1,0 +1,25 @@
+.header-container {
+  background-color: white;
+  border-radius: 30px;
+  padding: 30px 60px;
+  max-width: 600px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 40px;
+}
+
+.header-container h1 {
+  margin: 0 0 15px 0;
+  font-size: 32px;
+  color: #1a1a1a;
+}
+
+.header-container p {
+  margin: 5px 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.header-question {
+  font-weight: 500;
+}

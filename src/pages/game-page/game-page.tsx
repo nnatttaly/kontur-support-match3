@@ -3,7 +3,7 @@ import { Score } from "@components/score/score";
 import { Moves } from "@components/moves/moves";
 import { Goals } from "@components/goals/goals";
 import { Bonuses } from "@components/bonuses/bonuses";
-import { LevelTransition } from "@components/level-transition/level-transition";
+import { LevelTransition } from "@components/level-transition/level-transition/level-transition";
 import { useGameLogic } from "@hooks/use-game-logic";
 import "./game-page.styles.css";
 
@@ -11,14 +11,9 @@ export default function GamePage() {
   const gameLogic = useGameLogic();
 
   if (gameLogic.levelState.isLevelTransition) {
-    const nextLevel = gameLogic.levelState.isLevelComplete
-      ? gameLogic.levelState.currentLevel + 1
-      : gameLogic.levelState.currentLevel + 1;
-
     return (
       <LevelTransition
         currentLevel={gameLogic.levelState.currentLevel}
-        nextLevel={nextLevel}
         onLevelStart={gameLogic.handleLevelStart}
       />
     );

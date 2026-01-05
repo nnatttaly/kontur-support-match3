@@ -1,5 +1,5 @@
 import { BonusType } from "types";
-import { BonusGrid } from "./bonus-grid";
+import { BonusGrid } from "../bonus-grid/bonus-grid";
 import "./bonus-selection-card.styles.css";
 
 type BonusSelectionCardProps = {

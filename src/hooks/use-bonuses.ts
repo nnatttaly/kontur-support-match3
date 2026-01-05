@@ -5,7 +5,6 @@ import {
   applyGravity,
   fillEmptySlots,
   findAllMatches,
-  applyHorizontalGravity,
 } from "@utils/game-logic";
 import { LEVELS } from "consts";
 import { progressTeamHappyOne, progressTeamHappyTwo, progressTeamHappyThree } from "@utils/game-team-utils";
@@ -222,7 +221,7 @@ export const useBonuses = ({
               // Добавляем бонусы (если есть место)
               if (newBonuses.length > 0) {
                 setBonuses((prevBonuses) => {
-                  let updatedBonuses = [...prevBonuses];
+                  const updatedBonuses = [...prevBonuses];
                   
                   for (const bonusType of newBonuses) {
                     const existingIndex = updatedBonuses.findIndex(b => b.type === bonusType);
@@ -274,20 +273,7 @@ export const useBonuses = ({
         });
       }
     },
-    [
-      setBonuses,
-      setBoard,
-      setIsAnimating,
-      setMoves,
-      setModifiers,
-      setGoals,
-      setActiveBonus,
-      activeBonus,
-      processMatches,
-      currentLevelId,
-      getRandomBonusForLevel6,
-      getRandomFigureForLevel6,
-    ]
+    [setBonuses, setIsAnimating, currentLevelId, activeBonus?.type, setActiveBonus, setModifiers, setGoals, applyBonusBoardUpdate, getRandomBonusForLevel6, getRandomFigureForLevel6, setMoves, processMatches]
   );
 
   /**

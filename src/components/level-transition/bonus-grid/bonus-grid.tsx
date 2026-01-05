@@ -1,5 +1,5 @@
 import { BonusType } from "types";
-import { BonusGridItem } from "./bonus-grid-item";
+import { BonusGridItem } from "../bonus-grid-item/bonus-grid-item";
 import "./bonus-grid.styles.css";
 
 type BonusGridProps = {

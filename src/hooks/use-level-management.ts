@@ -142,14 +142,7 @@ export const useLevelManagement = ({
     currentLevel,
   ]);
 
-  const handleLevelStart = (selectedBonuses: BonusType[]) => {
-    let nextLevel: number;
-
-    if (levelState.isLevelComplete) {
-      nextLevel = levelState.currentLevel + 1;
-    } else {
-      nextLevel = 1;
-    }
+  const handleLevelStart = (nextLevel: number, selectedBonuses: BonusType[]) => {
 
     const nextLevelData = LEVELS.find((level) => level.id === nextLevel);
 
