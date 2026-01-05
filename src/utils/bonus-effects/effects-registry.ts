@@ -71,11 +71,8 @@ export const BONUS_EFFECTS: Record<BonusType, BonusEffect> = {
   },
 
   modernProducts: {
-    apply: (board) => ({ board: applyModernProductsEffect(board), matchedPositions: [] }),
-    applyAt: (board, pos1, pos2) => ({ 
-      board: applyModernProductsAt(board, pos1, pos2), 
-      matchedPositions: [] 
-    }),
+    apply: applyModernProductsEffect,
+    applyAt: applyModernProductsAt,
     isInstant: false,
   },
 

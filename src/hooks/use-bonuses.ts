@@ -7,6 +7,7 @@ import {
   findAllMatches,
 } from "@utils/game-logic";
 import { LEVELS } from "consts";
+import { progressTeamHappyOne, progressTeamHappyTwo, progressTeamHappyThree } from "@utils/game-team-utils";
 
 type UseBonusesProps = {
   setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
@@ -149,6 +150,38 @@ export const useBonuses = ({
 
       const result = effect.apply(board);
       console.log(type);
+      
+      // Для openGuide в 5-м уровне обновляем лица команды
+      if (type === "openGuide" && currentLevelId === 5) {
+        console.log("openGuide используется на 5 уровне");
+        
+        // Получаем текущее состояние целей для teamCell
+        setGoals((prevGoals) => {
+          const updatedGoals = [...prevGoals];
+          const teamGoal = updatedGoals.find((g) => g.figure === "teamCell");
+          console.log("teamGoal found:", teamGoal);
+          
+          if (teamGoal) {
+            const collected = teamGoal.collected + 3;
+            console.log("teamCell collected:", collected);
+            
+            if (collected >= 12) {
+              console.log("progressTeamHappyThree");
+              const newBoard = progressTeamHappyThree(board);
+              setBoard([...newBoard]);
+            } else if (collected >= 8) {
+              console.log("progressTeamHappyTwo");
+              const newBoard = progressTeamHappyTwo(board);
+              setBoard([...newBoard]);
+            } else if (collected >= 4) {
+              console.log("progressTeamHappyOne");
+              const newBoard = progressTeamHappyOne(board);
+              setBoard([...newBoard]);
+            }
+          }
+          return updatedGoals;
+        });
+      }
       
       // Для openGuide в 6-м уровне обрабатываем выполнение целей специальным образом
       if (type === "openGuide" && currentLevelId === 6) {

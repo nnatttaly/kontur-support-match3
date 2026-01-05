@@ -22,7 +22,7 @@ const isUsable = (f: Figure | null) => {
 };
 
 /** запасной: заменяет случайную обычную клетку на случайную обычную фигуру */
-export const applyModernProductsEffect = (board: Board): Board => {
+export const applyModernProductsEffect = (board: Board): { board: Board, matchedPositions: Position[] } => {
   const newBoard = board.map((r) => [...r]);
   const positions: Position[] = [];
   for (let r = 0; r < BOARD_ROWS; r++) {
@@ -30,16 +30,16 @@ export const applyModernProductsEffect = (board: Board): Board => {
       if (isUsable(newBoard[r][c])) positions.push({ row: r, col: c });
     }
   }
-  if (positions.length === 0) return board;
+  if (positions.length === 0) return { board: newBoard, matchedPositions: [] };
+  
   const pos = positions[Math.floor(Math.random() * positions.length)];
-  // choose a different usable figure from somewhere else
   const otherPositions = positions.filter((p) => p.row !== pos.row || p.col !== pos.col);
-  if (otherPositions.length === 0) return board;
+  if (otherPositions.length === 0) return { board: newBoard, matchedPositions: [] };
+  
   const source = otherPositions[Math.floor(Math.random() * otherPositions.length)];
   newBoard[pos.row][pos.col] = newBoard[source.row][source.col];
 
-  // Возвращаем доску без обработки матчей
-  return newBoard;
+  return { board: newBoard, matchedPositions: [{ row: pos.row, col: pos.col }] };
 };
 
 /**
@@ -51,8 +51,13 @@ export const applyModernProductsAt = (
   board: Board,
   sourcePos: Position,
   targetPos?: Position
-): Board => {
-  if (!targetPos) return board;
+): { board: Board, matchedPositions: Position[] } => {
+  console.log("applyModernProductsAt ВЫЗВАН:", sourcePos, targetPos);
+  
+  if (!targetPos) {
+    console.log("Нет targetPos");
+    return { board, matchedPositions: [] };
+  }
 
   const { row: sr, col: sc } = sourcePos;
   const { row: tr, col: tc } = targetPos;
@@ -62,21 +67,41 @@ export const applyModernProductsAt = (
     sr < 0 || sc < 0 || tr < 0 || tc < 0 ||
     sr >= BOARD_ROWS || sc >= BOARD_COLS || tr >= BOARD_ROWS || tc >= BOARD_COLS
   ) {
-    return board;
+    console.log("Невалидные позиции");
+    return { board, matchedPositions: [] };
   }
 
   const sourceFig = board[sr][sc];
   const targetFig = board[tr][tc];
 
-  // обе фигуры должны быть "обычными"
-  if (!isUsable(sourceFig) || !isUsable(targetFig)) return board;
+  console.log("Фигура исходная:", sourceFig, "Фигура целевая:", targetFig);
 
-  // если то же место — ничего не делаем
-  if (sr === tr && sc === tc) return board;
+  // обе фигуры должны быть "обычными"
+  if (!isUsable(sourceFig)) {
+    console.log("Исходная фигура не является обычной:", sourceFig);
+    return { board, matchedPositions: [] };
+  }
+  
+  if (!isUsable(targetFig)) {
+    console.log("Целевая фигура не является обычной:", targetFig);
+    return { board, matchedPositions: [] };
+  }
+
+  // если то же место или та же фигура — ничего не делаем
+  if (sr === tr && sc === tc) {
+    console.log("Та же позиция");
+    return { board, matchedPositions: [] };
+  }
+  
+  if (sourceFig === targetFig) {
+    console.log("Одинаковые фигуры");
+    return { board, matchedPositions: [] };
+  }
 
   const newBoard = board.map((r) => [...r]);
   newBoard[sr][sc] = targetFig; // превращаем исходную в тип целевой
 
-  // Возвращаем доску без обработки матчей
-  return newBoard;
+  console.log("ModernProducts успешно применен:", sourceFig, "->", targetFig);
+  console.log("Возвращаем matchedPositions:", [{ row: sr, col: sc }]);
+  return { board: newBoard, matchedPositions: [{ row: sr, col: sc }] };
 };
