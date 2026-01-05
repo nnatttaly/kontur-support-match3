@@ -44,6 +44,7 @@ export const Cell = ({
   };
 
   const isStar = figure === "star";
+  const isDiamond = figure === "diamond"
   const isTeamBigFigure = figure && (figure === "team" || isTeamImage(figure));
 
   return (
@@ -71,6 +72,7 @@ export const Cell = ({
             className={`
               figure 
               ${isStar ? "figure--star" : ""} 
+              ${isDiamond ? "figure--diamond" : ""}
               ${isTeamBigFigure ? "figure--big" : ""}
               ${isTeamImage(figure) ? "figure--big--image" : ""}
             `}

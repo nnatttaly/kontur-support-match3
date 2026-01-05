@@ -4,7 +4,7 @@
   gap: 16px;
   background: #F6F6F6; /* серый фон */
   border-radius: 20px; /* скругление для серого фона */
-  padding: 20px; /* отступ внутри серого фона */
+  padding: 15px; /* отступ внутри серого фона */
 }
 
 .bsc-white-card {
