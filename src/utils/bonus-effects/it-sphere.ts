@@ -14,7 +14,7 @@ const forbidden = new Set<Figure>([
   "teamImage3",
 ] as Figure[]);
 
-const isUsable = (f: Figure | null): f is Figure => {
+const isUsable = (f: Figure | null) => {
   if (!f) return false;
   if (forbidden.has(f)) return false;
   if (isTeamImage(f)) return false;
@@ -28,13 +28,14 @@ export const applyItSphereEffect = (board: Board, specialCells: SpecialCell[] = 
   removedFigures: Array<{position: Position, figure: Figure}>,
   removedGoldenCells: Position[]
 } => {
+  console.log('applyItSphereEffect specialCells:', specialCells);
   const freq = new Map<Figure, number>();
 
   for (let r = 0; r < BOARD_ROWS; r++) {
     for (let c = 0; c < board[r].length; c++) {
       const f = board[r][c];
       if (isUsable(f)) {
-        freq.set(f, (freq.get(f) || 0) + 1);
+        freq.set(f!, (freq.get(f!) || 0) + 1);
       }
     }
   }
@@ -69,21 +70,23 @@ export const applyItSphereEffect = (board: Board, specialCells: SpecialCell[] = 
         removedFigures.push({ position: pos, figure: target });
         newBoard[r][c] = null;
         
-        // Проверяем, есть ли на этой позиции golden-cell
-        const goldenCell = specialCells.find(cell => 
-          cell.row === r && 
-          cell.col === c && 
-          cell.type === 'golden' && 
-          cell.isActive !== false
-        );
-        if (goldenCell) {
-          removedGoldenCells.push(pos);
-          // Удаляем golden-cell из доски
-          newBoard[r][c] = null;
+        // Ищем golden-cell на этой позиции
+        for (let i = 0; i < specialCells.length; i++) {
+          const sc = specialCells[i];
+          if (sc.row === r && sc.col === c && sc.type === 'golden' && sc.isActive !== false) {
+            removedGoldenCells.push(pos);
+            console.log('Found golden cell at:', pos);
+            break;
+          }
         }
       }
     }
   }
+
+  console.log('itSphere removed:', {
+    figures: removedFigures.length,
+    goldenCells: removedGoldenCells.length
+  });
 
   return { 
     board: newBoard, 
@@ -105,6 +108,7 @@ export const applyItSphereAt = (
   removedFigures: Array<{position: Position, figure: Figure}>,
   removedGoldenCells: Position[]
 } => {
+  console.log('applyItSphereAt specialCells:', specialCells);
   const { row, col } = pos;
 
   if (
@@ -139,24 +143,26 @@ export const applyItSphereAt = (
       if (newBoard[r][c] === targetFig) {
         const pos = { row: r, col: c };
         matchedPositions.push(pos);
-        removedFigures.push({ position: pos, figure: targetFig });
+        removedFigures.push({ position: pos, figure: targetFig! });
         newBoard[r][c] = null;
         
-        // Проверяем, есть ли на этой позиции golden-cell
-        const goldenCell = specialCells.find(cell => 
-          cell.row === r && 
-          cell.col === c && 
-          cell.type === 'golden' && 
-          cell.isActive !== false
-        );
-        if (goldenCell) {
-          removedGoldenCells.push(pos);
-          // Удаляем golden-cell из доски
-          newBoard[r][c] = null;
+        // Ищем golden-cell на этой позиции
+        for (let i = 0; i < specialCells.length; i++) {
+          const sc = specialCells[i];
+          if (sc.row === r && sc.col === c && sc.type === 'golden' && sc.isActive !== false) {
+            removedGoldenCells.push(pos);
+            console.log('Found golden cell at:', pos);
+            break;
+          }
         }
       }
     }
   }
+
+  console.log('itSphereAt removed:', {
+    figures: removedFigures.length,
+    goldenCells: removedGoldenCells.length
+  });
 
   return { 
     board: newBoard, 

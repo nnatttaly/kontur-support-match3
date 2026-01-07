@@ -71,10 +71,66 @@ export const useBonuses = ({
     removedFigures: Array<{position: Position, figure: Figure}>,
     removedGoldenCells: Position[]
   ) => {
+    console.log('=== updateGoalsForRemovedFigures (useBonuses) START ===');
+    console.log('removedFigures:', removedFigures);
+    console.log('removedGoldenCells:', removedGoldenCells);
+    console.log('current specialCells:', specialCells);
+    
+    // Обрабатываем golden-cell
+    if (removedGoldenCells.length > 0) {
+      console.log(`Processing ${removedGoldenCells.length} golden cells (useBonuses)`);
+      
+      // Создаем копию specialCells для обновления
+      let updatedSpecialCells = specialCells ? [...specialCells] : [];
+      let goldenCellsUpdated = false;
+      
+      removedGoldenCells.forEach(pos => {
+        const cellIndex = updatedSpecialCells.findIndex(cell => 
+          cell.row === pos.row && 
+          cell.col === pos.col && 
+          cell.type === 'golden'
+        );
+        
+        if (cellIndex !== -1 && updatedSpecialCells[cellIndex].isActive !== false) {
+          console.log(`Marking golden cell as inactive at ${pos.row},${pos.col} (useBonuses)`);
+          updatedSpecialCells[cellIndex] = {
+            ...updatedSpecialCells[cellIndex],
+            isActive: false,
+          };
+          goldenCellsUpdated = true;
+        }
+      });
+      
+      // Обновляем цели для golden-cell
+      setGoals((prev) => {
+        const next = prev.map(goal => {
+          if (goal.figure === "goldenCell") {
+            const inc = removedGoldenCells.length;
+            console.log(`Adding ${inc} to goldenCell goal (useBonuses)`);
+            const newCollected = Math.min(goal.collected + inc, goal.target);
+            console.log(`goldenCell: ${goal.collected} -> ${newCollected} (useBonuses)`);
+            return {
+              ...goal,
+              collected: newCollected
+            };
+          }
+          return goal;
+        });
+        return next;
+      });
+      
+      // Применяем обновленные specialCells
+      if (goldenCellsUpdated && setSpecialCells) {
+        console.log('Updating specialCells (useBonuses):', updatedSpecialCells);
+        setSpecialCells(updatedSpecialCells);
+      }
+    }
+
     // Обновляем цели для удаленных фигур
     if (removedFigures.length > 0) {
+      console.log(`Processing ${removedFigures.length} removed figures (useBonuses)`);
+      
       setGoals((prev) => {
-        const next = [...prev];
         const figureCountMap = new Map<Figure, number>();
 
         removedFigures.forEach(({ figure }) => {
@@ -82,58 +138,28 @@ export const useBonuses = ({
           figureCountMap.set(figure, count + 1);
         });
 
-        next.forEach(goal => {
+        console.log('Figure count map (useBonuses):', Object.fromEntries(figureCountMap));
+
+        const next = prev.map(goal => {
           if (figureCountMap.has(goal.figure)) {
             const count = figureCountMap.get(goal.figure)!;
-            goal.collected = Math.min(goal.collected + count, goal.target);
-          }
-        });
-
-        return next;
-      });
-    }
-
-    // Обновляем цели для удаленных golden-cell
-    if (removedGoldenCells.length > 0) {
-      setGoals((prev) => {
-        const next = [...prev];
-        const idx = next.findIndex((g) => g.figure === "goldenCell");
-        if (idx !== -1) {
-          const inc = removedGoldenCells.length;
-          next[idx] = {
-            ...next[idx],
-            collected: Math.min(next[idx].collected + inc, next[idx].target),
-          };
-        }
-        return next;
-      });
-
-      // Обновляем specialCells, помечая golden-cell как неактивные
-      if (setSpecialCells && specialCells) {
-        const updatedSpecialCells = [...specialCells];
-        removedGoldenCells.forEach(pos => {
-          const cellIndex = updatedSpecialCells.findIndex(cell => 
-            cell.row === pos.row && 
-            cell.col === pos.col && 
-            cell.type === 'golden' && 
-            cell.isActive !== false
-          );
-          if (cellIndex !== -1) {
-            updatedSpecialCells[cellIndex] = {
-              ...updatedSpecialCells[cellIndex],
-              isActive: false,
+            const newCollected = Math.min(goal.collected + count, goal.target);
+            console.log(`${goal.figure}: ${goal.collected} -> ${newCollected} (+${count}) (useBonuses)`);
+            return {
+              ...goal,
+              collected: newCollected
             };
           }
+          return goal;
         });
-        setSpecialCells(updatedSpecialCells);
-      }
+
+        return next;
+      });
     }
+    
+    console.log('=== updateGoalsForRemovedFigures (useBonuses) END ===');
   }, [setGoals, setSpecialCells, specialCells]);
 
-  /**
-   * ✅ ЗАКОНЧЕННЫЙ ЦИКЛ ОБНОВЛЕНИЯ ПОЛЯ
-   * работает даже без матчей
-   */
   const applyBonusBoardUpdate = async (boardWithHoles: Board, bonusType: BonusType) => {
     const bonusChange = [
       "friendlyTeam",
@@ -143,16 +169,13 @@ export const useBonuses = ({
     ];
 
     if (bonusChange.includes(bonusType)) {
-      // 1. показываем удаление
       setBoard([...boardWithHoles]);
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      // 2. гравитация
       let next = applyGravity(boardWithHoles);
       setBoard([...next]);
       await new Promise(resolve => setTimeout(resolve, 200));
 
-      // 3. заполнение
       next = fillEmptySlots(next);
       setBoard([...next]);
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -163,9 +186,6 @@ export const useBonuses = ({
     return boardWithHoles;
   };
 
-  /**
-   * Клик по иконке бонуса
-   */
   const handleBonus = useCallback(
     (type: Bonus["type"], board: Board) => {
       const effect = BONUS_EFFECTS[type];
@@ -176,14 +196,12 @@ export const useBonuses = ({
         if (idx === -1 || prev[idx].count <= 0) return prev;
 
         if (!effect.isInstant) {
-          // Если бонус уже активен - деактивируем его
           if (activeBonus?.type === type) {
             setActiveBonus(null);
             effect?.reset && setModifiers(effect.reset());
             return prev;
           }
           
-          // Активируем новый бонус
           setActiveBonus({ type, isActive: true });
           if (effect.applyModifiers) {
             setModifiers(effect.applyModifiers());
@@ -191,20 +209,13 @@ export const useBonuses = ({
           return prev;
         }
 
-        // Для instant бонусов уменьшаем количество и удаляем, если достигли 0 (только для 6 уровня)
         const next = [...prev];
         if (idx !== -1 && next[idx].count > 0) {
           const newCount = next[idx].count - 1;
           
-          if (currentLevelId === 6) {
-            // В 6-м уровне удаляем бонус, если использований не осталось
-            if (newCount <= 0) {
-              next.splice(idx, 1);
-            } else {
-              next[idx] = { ...next[idx], count: newCount };
-            }
+          if (currentLevelId === 6 && newCount <= 0) {
+            next.splice(idx, 1);
           } else {
-            // В других уровнях просто уменьшаем количество
             next[idx] = { ...next[idx], count: newCount };
           }
         }
@@ -216,37 +227,28 @@ export const useBonuses = ({
       setIsAnimating(true);
 
       const result = effect.apply(board, specialCells);
-      console.log(type);
+      console.log('Bonus applied:', type, result);
       
-      // Обновляем цели для удаленных фигур и golden-cell для instant бонусов
+      // Обновляем цели для удаленных фигур и golden-cell
       if ((type === "itSphere" || type === "remoteWork") && result.removedFigures && result.removedGoldenCells) {
         updateGoalsForRemovedFigures(result.removedFigures, result.removedGoldenCells);
       }
       
-      // Для openGuide в 5-м уровне обновляем лица команды
       if (type === "openGuide" && currentLevelId === 5) {
-        console.log("openGuide используется на 5 уровне");
-        
-        // Получаем текущее состояние целей для teamCell
         setGoals((prevGoals) => {
           const updatedGoals = [...prevGoals];
           const teamGoal = updatedGoals.find((g) => g.figure === "teamCell");
-          console.log("teamGoal found:", teamGoal);
           
           if (teamGoal) {
             const collected = teamGoal.collected + 3;
-            console.log("teamCell collected:", collected);
             
             if (collected >= 12) {
-              console.log("progressTeamHappyThree");
               const newBoard = progressTeamHappyThree(board);
               setBoard([...newBoard]);
             } else if (collected >= 8) {
-              console.log("progressTeamHappyTwo");
               const newBoard = progressTeamHappyTwo(board);
               setBoard([...newBoard]);
             } else if (collected >= 4) {
-              console.log("progressTeamHappyOne");
               const newBoard = progressTeamHappyOne(board);
               setBoard([...newBoard]);
             }
@@ -255,29 +257,23 @@ export const useBonuses = ({
         });
       }
       
-      // Для openGuide в 6-м уровне обрабатываем выполнение целей специальным образом
       if (type === "openGuide" && currentLevelId === 6) {
-        // Сначала применяем эффект openGuide
         effect.onApplyGoals?.(setGoals);
         
-        // Затем проверяем, есть ли выполненные цели и даем бонусы
         setTimeout(() => {
           setGoals((prevGoals) => {
             const updatedGoals = [...prevGoals];
             const completedIndices: number[] = [];
             const newBonuses: BonusType[] = [];
             
-            // Проверяем, какие цели выполнились
             updatedGoals.forEach((goal, index) => {
               if (goal.collected >= goal.target) {
                 completedIndices.push(index);
-                // Даем бонус за каждую выполненную цель
                 const randomBonus = getRandomBonusForLevel6();
                 newBonuses.push(randomBonus);
               }
             });
 
-            // Если есть выполненные цели, заменяем их
             if (completedIndices.length > 0) {
               completedIndices.forEach((index) => {
                 const currentFigures = updatedGoals.map(g => g.figure);
@@ -290,10 +286,9 @@ export const useBonuses = ({
                 };
               });
 
-              // Добавляем бонусы (если есть место)
               if (newBonuses.length > 0) {
                 setBonuses((prevBonuses) => {
-                  const updatedBonuses = [...prevBonuses];
+                  let updatedBonuses = [...prevBonuses];
                   
                   for (const bonusType of newBonuses) {
                     const existingIndex = updatedBonuses.findIndex(b => b.type === bonusType);
@@ -316,7 +311,6 @@ export const useBonuses = ({
             return updatedGoals;
           });
 
-          // Продолжаем обычную обработку бонуса
           applyBonusBoardUpdate(result.board, type).then(async (finalBoard) => {
             effect.onApply?.(setMoves);
 
@@ -330,7 +324,6 @@ export const useBonuses = ({
           });
         }, 100);
       } else {
-        // Обычная обработка для других бонусов
         applyBonusBoardUpdate(result.board, type).then(async (finalBoard) => {
           effect.onApply?.(setMoves);
           effect.onApplyGoals?.(setGoals);
@@ -364,9 +357,6 @@ export const useBonuses = ({
     ]
   );
 
-  /**
-   * Отмена активного бонуса
-   */
   const deactivateBonus = useCallback(() => {
     if (!activeBonus) return;
     const effect = BONUS_EFFECTS[activeBonus.type];

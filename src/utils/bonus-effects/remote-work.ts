@@ -14,7 +14,7 @@ const forbidden = new Set<Figure>([
   "teamImage3",
 ] as Figure[]);
 
-const isRemovable = (f: Figure | null): f is Figure => {
+const isRemovable = (f: Figure | null) => {
   if (!f) return false;
   if (forbidden.has(f)) return false;
   if (isTeamImage(f)) return false;
@@ -28,6 +28,7 @@ export const applyRemoteWorkEffect = (board: Board, specialCells: SpecialCell[] 
   removedFigures: Array<{position: Position, figure: Figure}>,
   removedGoldenCells: Position[]
 } => {
+  console.log('applyRemoteWorkEffect specialCells:', specialCells);
   const positions: Position[] = [];
 
   for (let r = 0; r < BOARD_ROWS; r++) {
@@ -46,29 +47,31 @@ export const applyRemoteWorkEffect = (board: Board, specialCells: SpecialCell[] 
   };
 
   const { row, col } = positions[Math.floor(Math.random() * positions.length)];
-  const figure = board[row][col] as Figure;
+  const figure = board[row][col];
   
   const removedFigures: Array<{position: Position, figure: Figure}> = [
-    { position: { row, col }, figure }
+    { position: { row, col }, figure: figure! }
   ];
   
   const removedGoldenCells: Position[] = [];
   
-  // Проверяем, есть ли на этой позиции golden-cell
-  const goldenCell = specialCells.find(cell => 
-    cell.row === row && 
-    cell.col === col && 
-    cell.type === 'golden' && 
-    cell.isActive !== false
-  );
-  if (goldenCell) {
-    removedGoldenCells.push({ row, col });
-    // Удаляем golden-cell из доски
-    board[row][col] = null;
+  // Ищем golden-cell на этой позиции
+  for (let i = 0; i < specialCells.length; i++) {
+    const sc = specialCells[i];
+    if (sc.row === row && sc.col === col && sc.type === 'golden' && sc.isActive !== false) {
+      removedGoldenCells.push({ row, col });
+      console.log('Found golden cell at:', { row, col });
+      break;
+    }
   }
 
   const newBoard = board.map((r) => [...r]);
   newBoard[row][col] = null;
+
+  console.log('remoteWork removed:', {
+    figure: figure,
+    hasGoldenCell: removedGoldenCells.length > 0
+  });
 
   return { 
     board: newBoard, 
@@ -90,6 +93,7 @@ export const applyRemoteWorkAt = (
   removedFigures: Array<{position: Position, figure: Figure}>,
   removedGoldenCells: Position[]
 } => {
+  console.log('applyRemoteWorkAt specialCells:', specialCells);
   const { row, col } = pos;
 
   if (
@@ -115,26 +119,28 @@ export const applyRemoteWorkAt = (
   };
 
   const removedFigures: Array<{position: Position, figure: Figure}> = [
-    { position: { row, col }, figure: figure as Figure }
+    { position: { row, col }, figure: figure! }
   ];
   
   const removedGoldenCells: Position[] = [];
   
-  // Проверяем, есть ли на этой позиции golden-cell
-  const goldenCell = specialCells.find(cell => 
-    cell.row === row && 
-    cell.col === col && 
-    cell.type === 'golden' && 
-    cell.isActive !== false
-  );
-  if (goldenCell) {
-    removedGoldenCells.push({ row, col });
-    // Удаляем golden-cell из доски
-    board[row][col] = null;
+  // Ищем golden-cell на этой позиции
+  for (let i = 0; i < specialCells.length; i++) {
+    const sc = specialCells[i];
+    if (sc.row === row && sc.col === col && sc.type === 'golden' && sc.isActive !== false) {
+      removedGoldenCells.push({ row, col });
+      console.log('Found golden cell at:', { row, col });
+      break;
+    }
   }
 
   const newBoard = board.map((r) => [...r]);
   newBoard[row][col] = null;
+
+  console.log('remoteWorkAt removed:', {
+    figure: figure,
+    hasGoldenCell: removedGoldenCells.length > 0
+  });
 
   return { 
     board: newBoard, 
