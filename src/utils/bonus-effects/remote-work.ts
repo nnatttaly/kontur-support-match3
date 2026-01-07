@@ -1,4 +1,4 @@
-import { Board, Figure, Position } from "types";
+import { Board, Figure, Position, SpecialCell } from "types";
 import { BOARD_ROWS } from "consts";
 import { isTeamImage } from "@utils/game-utils";
 
@@ -14,7 +14,7 @@ const forbidden = new Set<Figure>([
   "teamImage3",
 ] as Figure[]);
 
-const isRemovable = (f: Figure | null) => {
+const isRemovable = (f: Figure | null): f is Figure => {
   if (!f) return false;
   if (forbidden.has(f)) return false;
   if (isTeamImage(f)) return false;
@@ -22,7 +22,12 @@ const isRemovable = (f: Figure | null) => {
 };
 
 /** случайное удаление */
-export const applyRemoteWorkEffect = (board: Board): { board: Board, matchedPositions: Position[] } => {
+export const applyRemoteWorkEffect = (board: Board, specialCells: SpecialCell[] = []): { 
+  board: Board, 
+  matchedPositions: Position[],
+  removedFigures: Array<{position: Position, figure: Figure}>,
+  removedGoldenCells: Position[]
+} => {
   const positions: Position[] = [];
 
   for (let r = 0; r < BOARD_ROWS; r++) {
@@ -33,22 +38,58 @@ export const applyRemoteWorkEffect = (board: Board): { board: Board, matchedPosi
     }
   }
 
-  if (positions.length === 0) return { board, matchedPositions: [] };
+  if (positions.length === 0) return { 
+    board, 
+    matchedPositions: [],
+    removedFigures: [],
+    removedGoldenCells: []
+  };
 
-  const { row, col } =
-    positions[Math.floor(Math.random() * positions.length)];
+  const { row, col } = positions[Math.floor(Math.random() * positions.length)];
+  const figure = board[row][col] as Figure;
+  
+  const removedFigures: Array<{position: Position, figure: Figure}> = [
+    { position: { row, col }, figure }
+  ];
+  
+  const removedGoldenCells: Position[] = [];
+  
+  // Проверяем, есть ли на этой позиции golden-cell
+  const goldenCell = specialCells.find(cell => 
+    cell.row === row && 
+    cell.col === col && 
+    cell.type === 'golden' && 
+    cell.isActive !== false
+  );
+  if (goldenCell) {
+    removedGoldenCells.push({ row, col });
+    // Удаляем golden-cell из доски
+    board[row][col] = null;
+  }
 
   const newBoard = board.map((r) => [...r]);
   newBoard[row][col] = null;
 
-  return { board: newBoard, matchedPositions: [{ row, col }] };
+  return { 
+    board: newBoard, 
+    matchedPositions: [{ row, col }], 
+    removedFigures,
+    removedGoldenCells
+  };
 };
 
 /** удаление по выбранной клетке */
 export const applyRemoteWorkAt = (
   board: Board,
-  pos: Position
-): { board: Board, matchedPositions: Position[] } => {
+  pos: Position,
+  secondPos?: Position,
+  specialCells: SpecialCell[] = []
+): { 
+  board: Board, 
+  matchedPositions: Position[],
+  removedFigures: Array<{position: Position, figure: Figure}>,
+  removedGoldenCells: Position[]
+} => {
   const { row, col } = pos;
 
   if (
@@ -57,13 +98,48 @@ export const applyRemoteWorkAt = (
     row >= BOARD_ROWS ||
     col >= (board[0]?.length ?? 0)
   ) {
-    return { board, matchedPositions: [] };
+    return { 
+      board, 
+      matchedPositions: [],
+      removedFigures: [],
+      removedGoldenCells: []
+    };
   }
 
-  if (!isRemovable(board[row][col])) return { board, matchedPositions: [] };
+  const figure = board[row][col];
+  if (!isRemovable(figure)) return { 
+    board, 
+    matchedPositions: [],
+    removedFigures: [],
+    removedGoldenCells: []
+  };
+
+  const removedFigures: Array<{position: Position, figure: Figure}> = [
+    { position: { row, col }, figure: figure as Figure }
+  ];
+  
+  const removedGoldenCells: Position[] = [];
+  
+  // Проверяем, есть ли на этой позиции golden-cell
+  const goldenCell = specialCells.find(cell => 
+    cell.row === row && 
+    cell.col === col && 
+    cell.type === 'golden' && 
+    cell.isActive !== false
+  );
+  if (goldenCell) {
+    removedGoldenCells.push({ row, col });
+    // Удаляем golden-cell из доски
+    board[row][col] = null;
+  }
 
   const newBoard = board.map((r) => [...r]);
   newBoard[row][col] = null;
 
-  return { board: newBoard, matchedPositions: [{ row, col }] };
+  return { 
+    board: newBoard, 
+    matchedPositions: [{ row, col }], 
+    removedFigures,
+    removedGoldenCells
+  };
 };

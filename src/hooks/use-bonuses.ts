@@ -1,11 +1,10 @@
 import { useCallback } from "react";
-import { Bonus, Board, ActiveBonus, GameModifiers, Goal, BonusType, Figure } from "types";
+import { Bonus, Board, ActiveBonus, GameModifiers, Goal, BonusType, Figure, Position, SpecialCell } from "types";
 import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
 import {
   applyGravity,
   fillEmptySlots,
   findAllMatches,
-  applyHorizontalGravity,
 } from "@utils/game-logic";
 import { LEVELS } from "consts";
 import { progressTeamHappyOne, progressTeamHappyTwo, progressTeamHappyThree } from "@utils/game-team-utils";
@@ -21,6 +20,8 @@ type UseBonusesProps = {
   setGoals: (updater: (goals: Goal[]) => Goal[]) => void;
   processMatches?: (board: Board) => Promise<Board>;
   currentLevelId?: number;
+  specialCells?: SpecialCell[];
+  setSpecialCells?: (cells: SpecialCell[]) => void;
 };
 
 export const useBonuses = ({
@@ -34,6 +35,8 @@ export const useBonuses = ({
   setGoals,
   processMatches,
   currentLevelId,
+  specialCells = [],
+  setSpecialCells,
 }: UseBonusesProps) => {
   const getRandomBonusForLevel6 = useCallback((): BonusType => {
     const allBonuses: BonusType[] = [
@@ -63,6 +66,69 @@ export const useBonuses = ({
     
     return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
   }, []);
+
+  const updateGoalsForRemovedFigures = useCallback((
+    removedFigures: Array<{position: Position, figure: Figure}>,
+    removedGoldenCells: Position[]
+  ) => {
+    // Обновляем цели для удаленных фигур
+    if (removedFigures.length > 0) {
+      setGoals((prev) => {
+        const next = [...prev];
+        const figureCountMap = new Map<Figure, number>();
+
+        removedFigures.forEach(({ figure }) => {
+          const count = figureCountMap.get(figure) || 0;
+          figureCountMap.set(figure, count + 1);
+        });
+
+        next.forEach(goal => {
+          if (figureCountMap.has(goal.figure)) {
+            const count = figureCountMap.get(goal.figure)!;
+            goal.collected = Math.min(goal.collected + count, goal.target);
+          }
+        });
+
+        return next;
+      });
+    }
+
+    // Обновляем цели для удаленных golden-cell
+    if (removedGoldenCells.length > 0) {
+      setGoals((prev) => {
+        const next = [...prev];
+        const idx = next.findIndex((g) => g.figure === "goldenCell");
+        if (idx !== -1) {
+          const inc = removedGoldenCells.length;
+          next[idx] = {
+            ...next[idx],
+            collected: Math.min(next[idx].collected + inc, next[idx].target),
+          };
+        }
+        return next;
+      });
+
+      // Обновляем specialCells, помечая golden-cell как неактивные
+      if (setSpecialCells && specialCells) {
+        const updatedSpecialCells = [...specialCells];
+        removedGoldenCells.forEach(pos => {
+          const cellIndex = updatedSpecialCells.findIndex(cell => 
+            cell.row === pos.row && 
+            cell.col === pos.col && 
+            cell.type === 'golden' && 
+            cell.isActive !== false
+          );
+          if (cellIndex !== -1) {
+            updatedSpecialCells[cellIndex] = {
+              ...updatedSpecialCells[cellIndex],
+              isActive: false,
+            };
+          }
+        });
+        setSpecialCells(updatedSpecialCells);
+      }
+    }
+  }, [setGoals, setSpecialCells, specialCells]);
 
   /**
    * ✅ ЗАКОНЧЕННЫЙ ЦИКЛ ОБНОВЛЕНИЯ ПОЛЯ
@@ -149,8 +215,13 @@ export const useBonuses = ({
 
       setIsAnimating(true);
 
-      const result = effect.apply(board);
+      const result = effect.apply(board, specialCells);
       console.log(type);
+      
+      // Обновляем цели для удаленных фигур и golden-cell для instant бонусов
+      if ((type === "itSphere" || type === "remoteWork") && result.removedFigures && result.removedGoldenCells) {
+        updateGoalsForRemovedFigures(result.removedFigures, result.removedGoldenCells);
+      }
       
       // Для openGuide в 5-м уровне обновляем лица команды
       if (type === "openGuide" && currentLevelId === 5) {
@@ -287,6 +358,9 @@ export const useBonuses = ({
       currentLevelId,
       getRandomBonusForLevel6,
       getRandomFigureForLevel6,
+      specialCells,
+      setSpecialCells,
+      updateGoalsForRemovedFigures,
     ]
   );
 

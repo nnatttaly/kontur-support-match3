@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Position, Bonus, Board, LevelState, ActiveBonus, Match, Figure } from "types";
+import { Position, Bonus, Board, LevelState, ActiveBonus, Match, Figure, SpecialCell } from "types";
 import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
-import { applyGravity, fillEmptySlots, findAllMatches, applyHorizontalGravity } from "@utils/game-logic";
+import { applyGravity, fillEmptySlots, applyHorizontalGravity } from "@utils/game-logic";
 import { ANIMATION_DURATION, BOARD_ROWS, LEVELS } from "consts";
 import { progressTeamHappyOne, progressTeamHappyTwo, progressTeamHappyThree } from "@utils/game-team-utils";
 import { applyModernProductsAt } from "@utils/bonus-effects/modern-products";
@@ -39,6 +39,8 @@ type UseInputHandlersProps = {
   setGoals: (updater: (goals: import("types").Goal[]) => import("types").Goal[]) => void;
   setMatches: (matches: Match[]) => void;
   processMatches?: (board: Board) => Promise<Board>;
+  specialCells?: SpecialCell[];
+  setSpecialCells?: (cells: SpecialCell[]) => void;
 };
 
 export const useInputHandlers = ({
@@ -57,9 +59,10 @@ export const useInputHandlers = ({
   setGoals,
   setMatches,
   processMatches,
+  specialCells = [],
+  setSpecialCells,
 }: UseInputHandlersProps) => {
   const [modernProductsSourcePos, setModernProductsSourcePos] = useState<Position | null>(null);
-  const [openGuideCompleted, setOpenGuideCompleted] = useState<number[]>([]);
 
   // Функция для обработки алмазов и звезд в нижнем ряду
   const processSpecialFigures = (currentBoard: Board): { board: Board; hasSpecialFigures: boolean } => {
@@ -113,10 +116,75 @@ export const useInputHandlers = ({
     return { board: boardCopy, hasSpecialFigures };
   };
 
+  const updateGoalsForRemovedFigures = (
+    removedFigures: Array<{position: Position, figure: Figure}>,
+    removedGoldenCells: Position[]
+  ) => {
+    // Обновляем цели для удаленных фигур
+    if (removedFigures.length > 0) {
+      setGoals((prev) => {
+        const next = [...prev];
+        const figureCountMap = new Map<Figure, number>();
+
+        removedFigures.forEach(({ figure }) => {
+          const count = figureCountMap.get(figure) || 0;
+          figureCountMap.set(figure, count + 1);
+        });
+
+        next.forEach(goal => {
+          if (figureCountMap.has(goal.figure)) {
+            const count = figureCountMap.get(goal.figure)!;
+            goal.collected = Math.min(goal.collected + count, goal.target);
+          }
+        });
+
+        return next;
+      });
+    }
+
+    // Обновляем цели для удаленных golden-cell
+    if (removedGoldenCells.length > 0) {
+      setGoals((prev) => {
+        const next = [...prev];
+        const idx = next.findIndex((g) => g.figure === "goldenCell");
+        if (idx !== -1) {
+          const inc = removedGoldenCells.length;
+          next[idx] = {
+            ...next[idx],
+            collected: Math.min(next[idx].collected + inc, next[idx].target),
+          };
+        }
+        return next;
+      });
+
+      // Обновляем specialCells, помечая golden-cell как неактивные
+      if (setSpecialCells && specialCells) {
+        const updatedSpecialCells = [...specialCells];
+        removedGoldenCells.forEach(pos => {
+          const cellIndex = updatedSpecialCells.findIndex(cell => 
+            cell.row === pos.row && 
+            cell.col === pos.col && 
+            cell.type === 'golden' && 
+            cell.isActive !== false
+          );
+          if (cellIndex !== -1) {
+            updatedSpecialCells[cellIndex] = {
+              ...updatedSpecialCells[cellIndex],
+              isActive: false,
+            };
+          }
+        });
+        setSpecialCells(updatedSpecialCells);
+      }
+    }
+  };
+
   const applyAndFinalizeBonus = async (
     type: string,
     boardWithHoles: Board,
     matchedPositions: Position[],
+    removedFigures: Array<{position: Position, figure: Figure}>,
+    removedGoldenCells: Position[],
     effect: any
   ) => {
     console.log(`applyAndFinalizeBonus вызван для ${type}, matchedPositions:`, matchedPositions);
@@ -154,40 +222,13 @@ export const useInputHandlers = ({
       return next;
     });
 
-    effect?.onApply?.(setMoves);
-
-    // Для openGuide в 6-м уровне нужно проверить, выполнилась ли цель
-    if (type === "openGuide" && levelState.currentLevel === 6) {
-      setGoals((prevGoals) => {
-        const updatedGoals = [...prevGoals];
-        const completedIndices: number[] = [];
-        
-        updatedGoals.forEach((goal, index) => {
-          if (goal.collected >= goal.target) {
-            completedIndices.push(index);
-          }
-        });
-
-        if (completedIndices.length > 0) {
-          setOpenGuideCompleted(completedIndices);
-          
-          completedIndices.forEach((index) => {
-            const currentFigures = updatedGoals.map(g => g.figure);
-            const newFigure = getRandomFigureForLevel6(LEVELS[5].availableFigures || [], currentFigures);
-            const newTarget = updatedGoals[index].target + 1;
-            updatedGoals[index] = {
-              figure: newFigure,
-              target: newTarget,
-              collected: 0
-            };
-          });
-        }
-        
-        return updatedGoals;
-      });
-    } else {
-      effect?.onApplyGoals?.(setGoals);
+    // Обновляем цели для удаленных фигур и golden-cell
+    if (type === "itSphere" || type === "remoteWork") {
+      updateGoalsForRemovedFigures(removedFigures, removedGoldenCells);
     }
+
+    effect?.onApply?.(setMoves);
+    effect?.onApplyGoals?.(setGoals);
 
     setIsAnimating(true);
     try {
@@ -351,33 +392,54 @@ export const useInputHandlers = ({
         
         // Используем фиктивный effect для вызова applyAndFinalizeBonus
         const effect = BONUS_EFFECTS.modernProducts;
-        await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
+        await applyAndFinalizeBonus(
+          activeBonus.type, 
+          result.board, 
+          result.matchedPositions, 
+          [], // removedFigures - не нужно для modernProducts
+          [], // removedGoldenCells - не нужно для modernProducts
+          effect
+        );
         return;
       }
       
       const effect = BONUS_EFFECTS[activeBonus.type];
       if (effect?.applyAt) {
         if (activeBonus.type === "remoteWork") {
-          const result = effect.applyAt(board, position);
+          const result = effect.applyAt(board, position, undefined, specialCells);
           // Проверяем, были ли удалены фигуры
           if (!result || !result.board || result.matchedPositions.length === 0) {
             // Не тратим бонус
             setActiveBonus(null);
             return;
           }
-          await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
+          await applyAndFinalizeBonus(
+            activeBonus.type, 
+            result.board, 
+            result.matchedPositions, 
+            result.removedFigures || [],
+            result.removedGoldenCells || [],
+            effect
+          );
           return;
         }
 
         if (activeBonus.type === "itSphere") {
-          const result = effect.applyAt(board, position);
+          const result = effect.applyAt(board, position, undefined, specialCells);
           // Проверяем, были ли удалены фигуры
           if (!result || !result.board || result.matchedPositions.length === 0) {
             // Не тратим бонус
             setActiveBonus(null);
             return;
           }
-          await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
+          await applyAndFinalizeBonus(
+            activeBonus.type, 
+            result.board, 
+            result.matchedPositions, 
+            result.removedFigures || [],
+            result.removedGoldenCells || [],
+            effect
+          );
           return;
         }
       }

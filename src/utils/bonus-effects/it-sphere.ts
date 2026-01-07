@@ -1,4 +1,4 @@
-import { Board, Figure, Position } from "types";
+import { Board, Figure, Position, SpecialCell } from "types";
 import { BOARD_ROWS } from "consts";
 import { isTeamImage } from "@utils/game-utils";
 
@@ -14,7 +14,7 @@ const forbidden = new Set<Figure>([
   "teamImage3",
 ] as Figure[]);
 
-const isUsable = (f: Figure | null) => {
+const isUsable = (f: Figure | null): f is Figure => {
   if (!f) return false;
   if (forbidden.has(f)) return false;
   if (isTeamImage(f)) return false;
@@ -22,14 +22,19 @@ const isUsable = (f: Figure | null) => {
 };
 
 /** legacy: удалить самый частый тип */
-export const applyItSphereEffect = (board: Board): { board: Board, matchedPositions: Position[] } => {
+export const applyItSphereEffect = (board: Board, specialCells: SpecialCell[] = []): { 
+  board: Board, 
+  matchedPositions: Position[],
+  removedFigures: Array<{position: Position, figure: Figure}>,
+  removedGoldenCells: Position[]
+} => {
   const freq = new Map<Figure, number>();
 
   for (let r = 0; r < BOARD_ROWS; r++) {
     for (let c = 0; c < board[r].length; c++) {
       const f = board[r][c];
       if (isUsable(f)) {
-        freq.set(f as Figure, (freq.get(f as Figure) || 0) + 1);
+        freq.set(f, (freq.get(f) || 0) + 1);
       }
     }
   }
@@ -44,28 +49,62 @@ export const applyItSphereEffect = (board: Board): { board: Board, matchedPositi
     }
   });
 
-  if (!target) return { board, matchedPositions: [] };
+  if (!target) return { 
+    board, 
+    matchedPositions: [],
+    removedFigures: [],
+    removedGoldenCells: []
+  };
 
   const matchedPositions: Position[] = [];
+  const removedFigures: Array<{position: Position, figure: Figure}> = [];
+  const removedGoldenCells: Position[] = [];
   const newBoard = board.map((r) => [...r]);
 
   for (let r = 0; r < BOARD_ROWS; r++) {
     for (let c = 0; c < newBoard[r].length; c++) {
       if (newBoard[r][c] === target) {
-        matchedPositions.push({ row: r, col: c });
+        const pos = { row: r, col: c };
+        matchedPositions.push(pos);
+        removedFigures.push({ position: pos, figure: target });
         newBoard[r][c] = null;
+        
+        // Проверяем, есть ли на этой позиции golden-cell
+        const goldenCell = specialCells.find(cell => 
+          cell.row === r && 
+          cell.col === c && 
+          cell.type === 'golden' && 
+          cell.isActive !== false
+        );
+        if (goldenCell) {
+          removedGoldenCells.push(pos);
+          // Удаляем golden-cell из доски
+          newBoard[r][c] = null;
+        }
       }
     }
   }
 
-  return { board: newBoard, matchedPositions };
+  return { 
+    board: newBoard, 
+    matchedPositions, 
+    removedFigures,
+    removedGoldenCells 
+  };
 };
 
 /** удалить ВСЕ фигуры типа выбранной */
 export const applyItSphereAt = (
   board: Board,
-  pos: Position
-): { board: Board, matchedPositions: Position[] } => {
+  pos: Position,
+  secondPos?: Position,
+  specialCells: SpecialCell[] = []
+): { 
+  board: Board, 
+  matchedPositions: Position[],
+  removedFigures: Array<{position: Position, figure: Figure}>,
+  removedGoldenCells: Position[]
+} => {
   const { row, col } = pos;
 
   if (
@@ -74,23 +113,55 @@ export const applyItSphereAt = (
     row >= BOARD_ROWS ||
     col >= (board[0]?.length ?? 0)
   ) {
-    return { board, matchedPositions: [] };
+    return { 
+      board, 
+      matchedPositions: [],
+      removedFigures: [],
+      removedGoldenCells: []
+    };
   }
 
   const targetFig = board[row][col];
-  if (!isUsable(targetFig)) return { board, matchedPositions: [] };
+  if (!isUsable(targetFig)) return { 
+    board, 
+    matchedPositions: [],
+    removedFigures: [],
+    removedGoldenCells: []
+  };
 
   const matchedPositions: Position[] = [];
+  const removedFigures: Array<{position: Position, figure: Figure}> = [];
+  const removedGoldenCells: Position[] = [];
   const newBoard = board.map((r) => [...r]);
 
   for (let r = 0; r < BOARD_ROWS; r++) {
     for (let c = 0; c < newBoard[r].length; c++) {
       if (newBoard[r][c] === targetFig) {
-        matchedPositions.push({ row: r, col: c });
+        const pos = { row: r, col: c };
+        matchedPositions.push(pos);
+        removedFigures.push({ position: pos, figure: targetFig });
         newBoard[r][c] = null;
+        
+        // Проверяем, есть ли на этой позиции golden-cell
+        const goldenCell = specialCells.find(cell => 
+          cell.row === r && 
+          cell.col === c && 
+          cell.type === 'golden' && 
+          cell.isActive !== false
+        );
+        if (goldenCell) {
+          removedGoldenCells.push(pos);
+          // Удаляем golden-cell из доски
+          newBoard[r][c] = null;
+        }
       }
     }
   }
 
-  return { board: newBoard, matchedPositions };
+  return { 
+    board: newBoard, 
+    matchedPositions, 
+    removedFigures,
+    removedGoldenCells 
+  };
 };
