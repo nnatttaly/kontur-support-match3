@@ -69,11 +69,14 @@ export const useBonuses = ({
 
   const updateGoalsForRemovedFigures = useCallback((
     removedFigures: Array<{position: Position, figure: Figure}>,
-    removedGoldenCells: Position[]
+    removedGoldenCells: Position[],
+    currentBoard: Board,
+    bonusType?: BonusType
   ) => {
     console.log('=== updateGoalsForRemovedFigures (useBonuses) START ===');
     console.log('removedFigures:', removedFigures);
     console.log('removedGoldenCells:', removedGoldenCells);
+    console.log('bonusType:', bonusType);
     console.log('current specialCells:', specialCells);
     
     // Обрабатываем golden-cell
@@ -126,14 +129,18 @@ export const useBonuses = ({
       }
     }
 
-    // Обновляем цели для удаленных фигур
-    if (removedFigures.length > 0) {
-      console.log(`Processing ${removedFigures.length} removed figures (useBonuses)`);
+    // Обновляем цели для удаленных фигур (teamCell никогда не удаляется бонусами itSphere и remoteWork)
+    const filteredRemovedFigures = removedFigures.filter(({ figure }) => 
+      figure !== "teamCell" && figure !== "goldenCell"
+    );
+    
+    if (filteredRemovedFigures.length > 0) {
+      console.log(`Processing ${filteredRemovedFigures.length} normal removed figures (useBonuses)`);
       
       setGoals((prev) => {
         const figureCountMap = new Map<Figure, number>();
 
-        removedFigures.forEach(({ figure }) => {
+        filteredRemovedFigures.forEach(({ figure }) => {
           const count = figureCountMap.get(figure) || 0;
           figureCountMap.set(figure, count + 1);
         });
@@ -158,7 +165,7 @@ export const useBonuses = ({
     }
     
     console.log('=== updateGoalsForRemovedFigures (useBonuses) END ===');
-  }, [setGoals, setSpecialCells, specialCells]);
+  }, [setGoals, setSpecialCells, specialCells, setBoard]);
 
   const applyBonusBoardUpdate = async (boardWithHoles: Board, bonusType: BonusType) => {
     const bonusChange = [
@@ -187,7 +194,7 @@ export const useBonuses = ({
   };
 
   const handleBonus = useCallback(
-    (type: Bonus["type"], board: Board) => {
+    (type: Bonus["type"], currentBoard: Board) => {
       const effect = BONUS_EFFECTS[type];
       if (!effect) return;
 
@@ -226,12 +233,24 @@ export const useBonuses = ({
 
       setIsAnimating(true);
 
-      const result = effect.apply(board, specialCells);
+      const result = effect.apply(currentBoard, specialCells);
       console.log('Bonus applied:', type, result);
       
-      // Обновляем цели для удаленных фигур и golden-cell
-      if ((type === "itSphere" || type === "remoteWork") && result.removedFigures && result.removedGoldenCells) {
-        updateGoalsForRemovedFigures(result.removedFigures, result.removedGoldenCells);
+      // Для itSphere и remoteWork передаем bonusType, чтобы не учитывать teamCell
+      if ((type === "itSphere" || type === "remoteWork") && 
+          result.removedFigures && result.removedGoldenCells) {
+        updateGoalsForRemovedFigures(
+          result.removedFigures, 
+          result.removedGoldenCells,
+          currentBoard,
+          type
+        );
+      } else if (result.removedFigures && result.removedGoldenCells) {
+        updateGoalsForRemovedFigures(
+          result.removedFigures, 
+          result.removedGoldenCells,
+          currentBoard
+        );
       }
       
       if (type === "openGuide" && currentLevelId === 5) {
@@ -243,13 +262,13 @@ export const useBonuses = ({
             const collected = teamGoal.collected + 3;
             
             if (collected >= 12) {
-              const newBoard = progressTeamHappyThree(board);
+              const newBoard = progressTeamHappyThree(currentBoard);
               setBoard([...newBoard]);
             } else if (collected >= 8) {
-              const newBoard = progressTeamHappyTwo(board);
+              const newBoard = progressTeamHappyTwo(currentBoard);
               setBoard([...newBoard]);
             } else if (collected >= 4) {
-              const newBoard = progressTeamHappyOne(board);
+              const newBoard = progressTeamHappyOne(currentBoard);
               setBoard([...newBoard]);
             }
           }

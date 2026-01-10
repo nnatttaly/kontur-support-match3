@@ -1,4 +1,4 @@
-import { BonusType, Board, GameModifiers, Position, Goal, SpecialCell, Figure } from "types";
+import { BonusType, Board, GameModifiers, Position, Goal, SpecialCell, Figure, Level } from "types";
 import { applyFriendlyTeamEffect } from "./friendly-team";
 import {
   applyCareerGrowthEffect,
@@ -20,7 +20,7 @@ import { applyItSphereEffect, applyItSphereAt } from "./it-sphere";
 import { applyDMSEffect } from "./dms"
 
 export type BonusEffect = {
-  apply: (board: Board, specialCells?: SpecialCell[]) => { 
+  apply: (board: Board, level?: Level, specialCells?: SpecialCell[]) => { 
     board: Board, 
     matchedPositions: Position[],
     removedFigures?: Array<{position: Position, figure: Figure}>,
@@ -45,8 +45,8 @@ export type BonusEffect = {
 
 export const BONUS_EFFECTS: Record<BonusType, BonusEffect> = {
   friendlyTeam: {
-    apply: (board) => ({ 
-      board: applyFriendlyTeamEffect(board), 
+    apply: (board, level) => ({ 
+      board: applyFriendlyTeamEffect(board, level), 
       matchedPositions: [],
       removedFigures: [],
       removedGoldenCells: []

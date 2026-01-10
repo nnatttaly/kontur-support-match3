@@ -119,15 +119,18 @@ export const useInputHandlers = ({
 
   const updateGoalsAndSpecialCells = (
     removedFigures: Array<{position: Position, figure: Figure}>,
-    removedGoldenCells: Position[]
+    removedGoldenCells: Position[],
+    bonusType?: string
   ): SpecialCell[] => {
     console.log('=== updateGoalsAndSpecialCells START ===');
     console.log('removedFigures:', removedFigures);
     console.log('removedGoldenCells:', removedGoldenCells);
+    console.log('bonusType:', bonusType);
     console.log('current specialCells:', specialCells);
     
     // Создаем копию specialCells для обновления
     let updatedSpecialCells = specialCells ? [...specialCells] : [];
+    let goldenCellsUpdated = false;
     
     // Обрабатываем golden-cell
     if (removedGoldenCells.length > 0) {
@@ -146,6 +149,7 @@ export const useInputHandlers = ({
             ...updatedSpecialCells[cellIndex],
             isActive: false,
           };
+          goldenCellsUpdated = true;
         }
       });
       
@@ -166,22 +170,20 @@ export const useInputHandlers = ({
         });
         return next;
       });
-      
-      // Применяем обновленные specialCells
-      if (setSpecialCells) {
-        console.log('Updating specialCells:', updatedSpecialCells);
-        setSpecialCells(updatedSpecialCells);
-      }
     }
 
-    // Обновляем цели для удаленных фигур
-    if (removedFigures.length > 0) {
-      console.log(`Processing ${removedFigures.length} removed figures`);
+    // Обновляем цели для удаленных фигур (teamCell никогда не удаляется бонусами)
+    const filteredRemovedFigures = removedFigures.filter(({ figure }) => 
+      figure !== "teamCell" && figure !== "goldenCell"
+    );
+    
+    if (filteredRemovedFigures.length > 0) {
+      console.log(`Processing ${filteredRemovedFigures.length} normal removed figures`);
       
       setGoals((prev) => {
         const figureCountMap = new Map<Figure, number>();
 
-        removedFigures.forEach(({ figure }) => {
+        filteredRemovedFigures.forEach(({ figure }) => {
           const count = figureCountMap.get(figure) || 0;
           figureCountMap.set(figure, count + 1);
         });
@@ -203,6 +205,12 @@ export const useInputHandlers = ({
 
         return next;
       });
+    }
+    
+    // Применяем обновленные specialCells
+    if (goldenCellsUpdated && setSpecialCells) {
+      console.log('Updating specialCells:', updatedSpecialCells);
+      setSpecialCells(updatedSpecialCells);
     }
     
     console.log('=== updateGoalsAndSpecialCells END ===');
@@ -255,7 +263,11 @@ export const useInputHandlers = ({
     });
 
     // Обновляем цели и specialCells для удаленных фигур и golden-cell
-    const updatedSpecialCells = updateGoalsAndSpecialCells(removedFigures, removedGoldenCells);
+    const updatedSpecialCells = updateGoalsAndSpecialCells(
+      removedFigures, 
+      removedGoldenCells,
+      type
+    );
 
     effect?.onApply?.(setMoves);
     effect?.onApplyGoals?.(setGoals);
@@ -425,6 +437,7 @@ export const useInputHandlers = ({
           }
           console.log("Внимание говно");
           console.log(specialCells);
+          
           await applyAndFinalizeBonus(
             activeBonus.type, 
             result.board, 
@@ -444,6 +457,7 @@ export const useInputHandlers = ({
             return;
           }
           console.log(specialCells);
+          
           await applyAndFinalizeBonus(
             activeBonus.type, 
             result.board, 
@@ -528,20 +542,6 @@ export const useInputHandlers = ({
   const resetSelection = () => {
     gameState.setSelectedPosition(null);
     setModernProductsSourcePos(null);
-  };
-
-  const getRandomFigureForLevel6 = (availableFigures: Figure[], excludeFigures: Figure[] = []): Figure => {
-    const filteredFigures = availableFigures.filter(
-      fig => !["star", "diamond", "team", "teamImage0", "teamImage1", "teamImage2", "teamImage3", "goldenCell", "teamCell"].includes(fig)
-    );
-    
-    const availableFiltered = filteredFigures.filter(fig => !excludeFigures.includes(fig));
-    
-    if (availableFiltered.length > 0) {
-      return availableFiltered[Math.floor(Math.random() * availableFiltered.length)];
-    }
-    
-    return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
   };
 
   return {

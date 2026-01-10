@@ -115,7 +115,10 @@ export const updateBoardAfterMatches = (board: Board): Board => {
 
   matches.forEach((match) => {
     match.positions.forEach(({ row, col }) => {
-      newBoard[row][col] = null;
+      const figure = newBoard[row][col];
+      if (figure !== "teamCell") {
+        newBoard[row][col] = null;
+      }
     });
   });
 
