@@ -13,14 +13,21 @@
   background: #F6F6F6;
   border-radius: 24px;
   padding: clamp(12px, 3vw, 20px);
-  width: 100%;
-  max-width: 500px;
-  max-height: 95vh; /* Модалка не выйдет за пределы экрана по высоте */
+  width: min(475px, 95vw);
+  max-height: 95vh;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
-  overflow: hidden; /* Чтобы скролл был только у контента внутри */
+  overflow: hidden;
+  margin: 0 auto;
 }
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  .lt-modal {
+    width: min(600px, 90vw);
+  }
+}
+
 
 .lt-start-button {
   background: linear-gradient(135deg, #366AF3, #366AF3);

@@ -1,3 +1,3 @@
 export enum AppRoute {
-  GamePage = "/game",
+  GamePage = "/",
 }
