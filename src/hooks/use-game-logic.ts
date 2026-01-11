@@ -61,6 +61,8 @@ export const useGameLogic = () => {
     setGoals: gameState.setGoals,
     processMatches,
     currentLevelId: currentLevel?.id,
+    specialCells: currentSpecialCells, // Передаем специальные клетки
+    setSpecialCells: setCurrentSpecialCells, // Передаем сеттер
   });
 
   const { 
@@ -96,6 +98,8 @@ export const useGameLogic = () => {
     setGoals: gameState.setGoals,
     setMatches: gameState.setMatches,
     processMatches,
+    specialCells: currentSpecialCells, // Передаем специальные клетки
+    setSpecialCells: setCurrentSpecialCells, // Передаем сеттер
   });
 
   return {

@@ -1,17 +1,15 @@
 import { useCallback } from "react";
-import { Board, Position } from "types";
+import { Board, Position, SpecialCell } from "types";
 import { ANIMATION_DURATION } from "consts";
 import { willCreateMatch } from "@utils/game-logic";
 import { isTeamImage } from "@utils/game-utils";
-
-
 
 export const useSwapLogic = (
   board: Board,
   setIsSwapping: (swapping: boolean) => void,
   setIsAnimating: (animating: boolean) => void,
   setBoard: (board: Board) => void,
-  processMatches: (board: Board) => Promise<Board>
+  processMatches: (board: Board, specialCells: SpecialCell[], options?: { skipGoldenRestore: boolean }) => Promise<Board>
 ) => {
   const areAdjacent = useCallback((pos1: Position, pos2: Position): boolean => {
     const rowDiff = Math.abs(pos1.row - pos2.row);
@@ -35,13 +33,13 @@ export const useSwapLogic = (
     return true;
   }, []);
 
-
   const swapFigures = useCallback(
     async (
       pos1: Position,
       pos2: Position,
       moves: number,
-      setMoves: (updater: (moves: number) => number) => void
+      setMoves: (updater: (moves: number) => number) => void,
+      specialCells: SpecialCell[]
     ): Promise<boolean> => {
       if (moves <= 0) return false;
 
@@ -84,14 +82,14 @@ export const useSwapLogic = (
 
       setMoves((prevMoves) => prevMoves - 1);
 
-      await processMatches(newBoard);
+      // Для обычных свапов передаем specialCells и флаг skipGoldenRestore: false
+      await processMatches(newBoard, specialCells, { skipGoldenRestore: false });
       setIsAnimating(false);
 
       return true;
     },
     [board, setIsSwapping, setIsAnimating, processMatches, setBoard, canSwap]
   );
-
 
   return {
     areAdjacent,

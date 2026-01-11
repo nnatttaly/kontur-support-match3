@@ -10,7 +10,7 @@ export const LEVELS: Level[] = [
       { figure: "bonnet", target: 3, collected: 0 },
       { figure: "briefcase", target: 3, collected: 0 },
     ],
-    bonuses: ["knowledgeBase", "openGuide", "modernProducts"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
+    bonuses: ["knowledgeBase", "openGuide", "remoteWork"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
     moves: 21,
     availableFigures: [
       "pencil",
@@ -31,7 +31,7 @@ export const LEVELS: Level[] = [
         collected: 0,
       },
     ],
-    bonuses: ["sportCompensation", "openGuide", "remoteWork"], // ["sportCompensation", "modernProducts", "remoteWork"]
+    bonuses: ["itSphere", "openGuide", "remoteWork"], // ["sportCompensation", "modernProducts", "remoteWork"]
     moves: 22,
     availableFigures: [
       "roundMessage",
@@ -149,7 +149,7 @@ export const LEVELS: Level[] = [
       { figure: "heart", target: 8, collected: 0 },
       { figure: "handshake", target: 8, collected: 0 },
     ],
-    bonuses: ["friendlyTeam", "sportCompensation", "knowledgeBase"],
+    bonuses: ["friendlyTeam", "itSphere", "knowledgeBase"],
     moves: 25,
     availableFigures: [
       "question",

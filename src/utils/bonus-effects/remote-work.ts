@@ -1,4 +1,4 @@
-import { Board, Figure, Position } from "types";
+import { Board, Figure, Position, SpecialCell } from "types";
 import { BOARD_ROWS } from "consts";
 import { isTeamImage } from "@utils/game-utils";
 
@@ -22,7 +22,13 @@ const isRemovable = (f: Figure | null) => {
 };
 
 /** случайное удаление */
-export const applyRemoteWorkEffect = (board: Board): { board: Board, matchedPositions: Position[] } => {
+export const applyRemoteWorkEffect = (board: Board, specialCells: SpecialCell[] = []): { 
+  board: Board, 
+  matchedPositions: Position[],
+  removedFigures: Array<{position: Position, figure: Figure}>,
+  removedGoldenCells: Position[]
+} => {
+  console.log('applyRemoteWorkEffect specialCells:', specialCells);
   const positions: Position[] = [];
 
   for (let r = 0; r < BOARD_ROWS; r++) {
@@ -33,22 +39,61 @@ export const applyRemoteWorkEffect = (board: Board): { board: Board, matchedPosi
     }
   }
 
-  if (positions.length === 0) return { board, matchedPositions: [] };
+  if (positions.length === 0) return { 
+    board, 
+    matchedPositions: [],
+    removedFigures: [],
+    removedGoldenCells: []
+  };
 
-  const { row, col } =
-    positions[Math.floor(Math.random() * positions.length)];
+  const { row, col } = positions[Math.floor(Math.random() * positions.length)];
+  const figure = board[row][col];
+  
+  const removedFigures: Array<{position: Position, figure: Figure}> = [
+    { position: { row, col }, figure: figure! }
+  ];
+  
+  const removedGoldenCells: Position[] = [];
+  
+  // Ищем golden-cell на этой позиции
+  for (let i = 0; i < specialCells.length; i++) {
+    const sc = specialCells[i];
+    if (sc.row === row && sc.col === col && sc.type === 'golden' && sc.isActive !== false) {
+      removedGoldenCells.push({ row, col });
+      console.log('Found golden cell at:', { row, col });
+      break;
+    }
+  }
 
   const newBoard = board.map((r) => [...r]);
   newBoard[row][col] = null;
 
-  return { board: newBoard, matchedPositions: [{ row, col }] };
+  console.log('remoteWork removed:', {
+    figure: figure,
+    hasGoldenCell: removedGoldenCells.length > 0
+  });
+
+  return { 
+    board: newBoard, 
+    matchedPositions: [{ row, col }], 
+    removedFigures,
+    removedGoldenCells
+  };
 };
 
 /** удаление по выбранной клетке */
 export const applyRemoteWorkAt = (
   board: Board,
-  pos: Position
-): { board: Board, matchedPositions: Position[] } => {
+  pos: Position,
+  secondPos?: Position,
+  specialCells: SpecialCell[] = []
+): { 
+  board: Board, 
+  matchedPositions: Position[],
+  removedFigures: Array<{position: Position, figure: Figure}>,
+  removedGoldenCells: Position[]
+} => {
+  console.log('applyRemoteWorkAt specialCells:', specialCells);
   const { row, col } = pos;
 
   if (
@@ -57,13 +102,50 @@ export const applyRemoteWorkAt = (
     row >= BOARD_ROWS ||
     col >= (board[0]?.length ?? 0)
   ) {
-    return { board, matchedPositions: [] };
+    return { 
+      board, 
+      matchedPositions: [],
+      removedFigures: [],
+      removedGoldenCells: []
+    };
   }
 
-  if (!isRemovable(board[row][col])) return { board, matchedPositions: [] };
+  const figure = board[row][col];
+  if (!isRemovable(figure)) return { 
+    board, 
+    matchedPositions: [],
+    removedFigures: [],
+    removedGoldenCells: []
+  };
+
+  const removedFigures: Array<{position: Position, figure: Figure}> = [
+    { position: { row, col }, figure: figure! }
+  ];
+  
+  const removedGoldenCells: Position[] = [];
+  
+  // Ищем golden-cell на этой позиции
+  for (let i = 0; i < specialCells.length; i++) {
+    const sc = specialCells[i];
+    if (sc.row === row && sc.col === col && sc.type === 'golden' && sc.isActive !== false) {
+      removedGoldenCells.push({ row, col });
+      console.log('Found golden cell at:', { row, col });
+      break;
+    }
+  }
 
   const newBoard = board.map((r) => [...r]);
   newBoard[row][col] = null;
 
-  return { board: newBoard, matchedPositions: [{ row, col }] };
+  console.log('remoteWorkAt removed:', {
+    figure: figure,
+    hasGoldenCell: removedGoldenCells.length > 0
+  });
+
+  return { 
+    board: newBoard, 
+    matchedPositions: [{ row, col }], 
+    removedFigures,
+    removedGoldenCells
+  };
 };
