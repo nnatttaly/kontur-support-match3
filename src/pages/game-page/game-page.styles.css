@@ -1,13 +1,13 @@
 .page {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center; /* центрирует по вертикали */
-  min-height: 100vh; /* занимает всю высоту экрана */
-  margin: 0 auto; /* центрирует по горизонтали если есть max-width */
-  max-width: 1200px; /* опционально: ограничить максимальную ширину */
-  width: 100%;
-  padding: 20px; /* равные отступы со всех сторон */
+  justify-content: center; 
+  align-items: center; 
+  height: 100vh; 
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   box-sizing: border-box;
 }
 
@@ -15,15 +15,16 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 
 .game-info {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* первый у левого края, последний у правого */
-  width: 100%; /* занимает всю ширину */
-  max-width: 446px; /* ограничение ширины */
-  margin: 0 auto; /* центрирование если родитель шире */
+  justify-content: space-between;
+  width: 100%;
+  max-width: 446px;
+  margin: 0 auto;
 }
 
 .game-content {
@@ -62,19 +63,66 @@
 }
 
 
-
-
-@media (max-width: 768px) {
-  .game-field-section {
-    transform: scale(0.88);
+@media (min-aspect-ratio: 1/1) {
+  @media (max-height: 700px) {
+    .game-content {
+      transform: scale(0.8);
+      transform-origin: center center;
+    }
   }
+}
+
+@media (max-aspect-ratio: 1/1) {
   .game-content {
     flex-direction: column;
     align-items: center;
-    gap: 0px;
+    gap: 30px;
   }
 
   .game-logo {
     display: none;
   }
+
+  @media (min-width: 700px) and (max-width: 1024px) and (min-height: 1118px){
+    .game-content {
+      transform: scale(1.25);
+      transform-origin: center center;
+    }
+  }
+
+  @media (min-width: 500px) and (max-width: 700px) {
+    .game-content {
+      transform: scale(0.75);
+      transform-origin: center center;
+    }
+  }
+
+  @media (min-width: 400px) and (max-width: 500px) {
+    .game-content {
+      transform: scale(0.85);
+      transform-origin: center center;
+    }
+  }
+
+  @media (min-width: 370px) and (max-width: 400px) {
+    .game-content {
+      transform: scale(0.77);
+      transform-origin: center center;
+    }
+  }
+
+  @media (min-width: 350px) and (max-width: 370px) {
+    .game-content {
+      transform: scale(0.72);
+      transform-origin: center center;
+    }
+  }
+
+  @media (min-width: 300px) and (max-width: 350px) {
+    .game-content {
+      transform: scale(0.65);
+      transform-origin: center center;
+    }
+  }
+
 }

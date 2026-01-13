@@ -53,15 +53,17 @@
 }
 
 
-@media (max-width: 575px) {
+@media (max-aspect-ratio: 1/1) {
   .goals-list {
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    gap: 40px;
   }
   .goals-container {
-    width: 392px;
-    height: 150px;
+    width: 458px;
+    height: fit-content;
+    padding: 10px;
   }
   .goals-title {
     margin: 0 0 10px 0;

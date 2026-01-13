@@ -17,9 +17,22 @@
 .header-container p {
   margin: 5px 0;
   font-size: 15px;
-  line-height: 1.4;
+  line-height: 1.5;
 }
 
-.header-question {
-  font-weight: 500;
+
+@media (max-height: 844px) and (max-width: 959px) {
+  .header-container p {
+    line-height: 1.2;
+  }
+  .header-container h1 {
+    font-size: 26px;
+    margin: 0 0 10px 0;
+  }
+}
+
+@media (max-height: 700px) {
+  .header-container {
+    gap: 20px;
+  }
 }

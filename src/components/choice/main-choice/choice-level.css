@@ -19,3 +19,10 @@ body {
   flex-wrap: wrap;
   justify-content: center;
 }
+
+
+@media (max-height: 700px) {
+  .cards-container {
+    gap: 20px;
+  }
+}
