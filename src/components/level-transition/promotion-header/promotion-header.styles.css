@@ -28,7 +28,7 @@
   color: #FF8D28;
 }
 
-@media (max-height: 600px) {
+@media (max-height: 700px) {
   .ph-promotion p {
     line-height: 1.2;
   }
