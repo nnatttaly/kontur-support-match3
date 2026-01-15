@@ -3,10 +3,12 @@
   flex-direction: column;
   justify-content: center; 
   align-items: center; 
-  height: 100vh;
+  height: 100dvh; /* Основное решение */
+  height: -webkit-fill-available; /* Для Safari */
   width: 100vw;
   margin: 0;
-  padding: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) 
+           env(safe-area-inset-bottom) env(safe-area-inset-left);
   overflow: hidden;
   box-sizing: border-box;
 }
