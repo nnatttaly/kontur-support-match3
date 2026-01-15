@@ -26,5 +26,4 @@ body {
 body {
   background: linear-gradient(135deg, #E0F7FA 0%, #91cbff 50%, #91cbff 100%);
   min-height: 100dvh;
-  min-height: -webkit-fill-available;
 }
