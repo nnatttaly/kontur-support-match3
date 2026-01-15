@@ -131,7 +131,7 @@
 }
 
 
-@media (max-width: 300px) {
+@media (max-height: 600px) {
   .bgi-name { font-size: 12px; }
   .bgi-description, .bgi-effect { font-size: 10px; }
 }
