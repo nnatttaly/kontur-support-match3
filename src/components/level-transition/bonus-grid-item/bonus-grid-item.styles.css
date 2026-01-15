@@ -129,3 +129,9 @@
   .bgi-name { font-size: 14px; }
   .bgi-description, .bgi-effect { font-size: 12px; }
 }
+
+
+@media (max-width: 300px) {
+  .bgi-name { font-size: 12px; }
+  .bgi-description, .bgi-effect { font-size: 10px; }
+}
