@@ -15,7 +15,6 @@ body {
   overflow-x: hidden;
   width: 100%;
   position: fixed;
-  overscroll-behavior: none;
 }
 
 #root {
@@ -24,5 +23,4 @@ body {
 
 body {
   background: linear-gradient(135deg, #E0F7FA 0%, #91cbff 50%, #91cbff 100%);
-  background-attachment: fixed;
 }
