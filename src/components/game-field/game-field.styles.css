@@ -7,7 +7,7 @@
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: repeat(6, 1fr);
   gap: var(--cell-gap);
-  padding: min(3vw, 24px);
+  padding: 24px;
   background-color: #f6f6f6;
   border-radius: 24px;
   width: fit-content;
@@ -15,18 +15,4 @@
   box-sizing: border-box;
   height: 452px;
   overflow: visible;
-
-
-  /* РЕЗИНОВЫЕ РАЗМЕРЫ: */
-  width: 90vw;            /* Ширина почти на весь экран */
-  max-width: 450px;       /* Но не шире 450px на десктопе */
-  
-  /* Вместо фиксированной высоты используем соотношение сторон: */
-  aspect-ratio: 7 / 6;    
-  
-  /* Важно: ограничиваем высоту, чтобы поле не выталкивало инфо-панель */
-  max-height: 50dvh;      
-  
-  margin: 0 auto;
-  box-sizing: border-box;
 }
