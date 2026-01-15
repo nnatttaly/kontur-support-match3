@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Position, Bonus, Board, LevelState, ActiveBonus, Match, Figure } from "types";
-import { BONUS_EFFECTS, BonusEffect } from "@utils/bonus-effects/effects-registry";
+import { Position, Bonus, Board, LevelState, ActiveBonus, Match, Figure, SpecialCell } from "types";
+import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
 import { applyGravity, fillEmptySlots, applyHorizontalGravity } from "@utils/game-logic";
 import { ANIMATION_DURATION, BOARD_ROWS, LEVELS } from "consts";
 import { applyModernProductsAt } from "@utils/bonus-effects/modern-products";
@@ -25,7 +25,8 @@ type UseInputHandlersProps = {
     pos1: Position,
     pos2: Position,
     moves: number,
-    setMoves: (updater: (moves: number) => number) => void
+    setMoves: (updater: (moves: number) => number) => void,
+    specialCells: SpecialCell[]
   ) => Promise<boolean>;
   handleBonus: (type: Bonus["type"], board: Board) => void;
   board: Board;
@@ -37,7 +38,9 @@ type UseInputHandlersProps = {
   setMoves: (updater: (moves: number) => number) => void;
   setGoals: (updater: (goals: import("types").Goal[]) => import("types").Goal[]) => void;
   setMatches: (matches: Match[]) => void;
-  processMatches?: (board: Board) => Promise<Board>;
+  processMatches?: (board: Board, specialCells: SpecialCell[], options?: { skipGoldenRestore: boolean }) => Promise<Board>;
+  specialCells?: SpecialCell[];
+  setSpecialCells?: (cells: SpecialCell[]) => void;
 };
 
 export const useInputHandlers = ({
@@ -56,13 +59,14 @@ export const useInputHandlers = ({
   setGoals,
   setMatches,
   processMatches,
+  specialCells = [],
+  setSpecialCells,
 }: UseInputHandlersProps) => {
   const [modernProductsSourcePos, setModernProductsSourcePos] = useState<Position | null>(null);
-  const [, setOpenGuideCompleted] = useState<number[]>([]);
 
   // Функция для обработки алмазов и звезд в нижнем ряду
   const processSpecialFigures = (currentBoard: Board): { board: Board; hasSpecialFigures: boolean } => {
-    const boardCopy = currentBoard.map(row => [...row]);
+    let boardCopy = currentBoard.map(row => [...row]);
     let hasSpecialFigures = false;
 
     // Проверяем и удаляем алмазы в нижнем ряду
@@ -112,17 +116,122 @@ export const useInputHandlers = ({
     return { board: boardCopy, hasSpecialFigures };
   };
 
+  const updateGoalsAndSpecialCells = (
+    removedFigures: Array<{position: Position, figure: Figure}>,
+    removedGoldenCells: Position[],
+    bonusType?: string
+  ): SpecialCell[] => {
+    console.log('=== updateGoalsAndSpecialCells START ===');
+    console.log('removedFigures:', removedFigures);
+    console.log('removedGoldenCells:', removedGoldenCells);
+    console.log('bonusType:', bonusType);
+    console.log('current specialCells:', specialCells);
+    
+    // Создаем копию specialCells для обновления
+    let updatedSpecialCells = specialCells ? [...specialCells] : [];
+    let goldenCellsUpdated = false;
+    
+    // Обрабатываем golden-cell
+    if (removedGoldenCells.length > 0) {
+      console.log(`Processing ${removedGoldenCells.length} golden cells`);
+      
+      removedGoldenCells.forEach(pos => {
+        const cellIndex = updatedSpecialCells.findIndex(cell => 
+          cell.row === pos.row && 
+          cell.col === pos.col && 
+          cell.type === 'golden'
+        );
+        
+        if (cellIndex !== -1) {
+          console.log(`Marking golden cell as inactive at ${pos.row},${pos.col}`);
+          updatedSpecialCells[cellIndex] = {
+            ...updatedSpecialCells[cellIndex],
+            isActive: false,
+          };
+          goldenCellsUpdated = true;
+        }
+      });
+      
+      // Обновляем цели для golden-cell
+      setGoals((prev) => {
+        const next = prev.map(goal => {
+          if (goal.figure === "goldenCell") {
+            const inc = removedGoldenCells.length;
+            console.log(`Adding ${inc} to goldenCell goal`);
+            const newCollected = Math.min(goal.collected + inc, goal.target);
+            console.log(`goldenCell: ${goal.collected} -> ${newCollected}`);
+            return {
+              ...goal,
+              collected: newCollected
+            };
+          }
+          return goal;
+        });
+        return next;
+      });
+    }
+
+    // Обновляем цели для удаленных фигур (teamCell никогда не удаляется бонусами)
+    const filteredRemovedFigures = removedFigures.filter(({ figure }) => 
+      figure !== "teamCell" && figure !== "goldenCell"
+    );
+    
+    if (filteredRemovedFigures.length > 0) {
+      console.log(`Processing ${filteredRemovedFigures.length} normal removed figures`);
+      
+      setGoals((prev) => {
+        const figureCountMap = new Map<Figure, number>();
+
+        filteredRemovedFigures.forEach(({ figure }) => {
+          const count = figureCountMap.get(figure) || 0;
+          figureCountMap.set(figure, count + 1);
+        });
+
+        console.log('Figure count map:', Object.fromEntries(figureCountMap));
+
+        const next = prev.map(goal => {
+          if (figureCountMap.has(goal.figure)) {
+            const count = figureCountMap.get(goal.figure)!;
+            const newCollected = Math.min(goal.collected + count, goal.target);
+            console.log(`${goal.figure}: ${goal.collected} -> ${newCollected} (+${count})`);
+            return {
+              ...goal,
+              collected: newCollected
+            };
+          }
+          return goal;
+        });
+
+        return next;
+      });
+    }
+    
+    // Применяем обновленные specialCells
+    if (goldenCellsUpdated && setSpecialCells) {
+      console.log('Updating specialCells:', updatedSpecialCells);
+      setSpecialCells(updatedSpecialCells);
+    }
+    
+    console.log('=== updateGoalsAndSpecialCells END ===');
+    
+    return updatedSpecialCells;
+  };
+
   const applyAndFinalizeBonus = async (
     type: string,
     boardWithHoles: Board,
     matchedPositions: Position[],
-    effect: BonusEffect
+    removedFigures: Array<{position: Position, figure: Figure}>,
+    removedGoldenCells: Position[],
+    effect: any
   ) => {
-    console.log(`applyAndFinalizeBonus вызван для ${type}, matchedPositions:`, matchedPositions);
+    console.log(`\n=== applyAndFinalizeBonus для ${type} START ===`);
+    console.log('matchedPositions:', matchedPositions.length);
+    console.log('removedFigures:', removedFigures);
+    console.log('removedGoldenCells:', removedGoldenCells);
     
     // Для modernProducts: проверяем, что matchedPositions не пустой (фигура была изменена)
     if (type === "modernProducts") {
-      console.log("ModernProducts: проверка matchedPositions");
       if (matchedPositions.length === 0) {
         console.log("ModernProducts: matchedPositions пустой, бонус не тратится");
         setActiveBonus(null);
@@ -136,14 +245,13 @@ export const useInputHandlers = ({
       return;
     }
 
-    // Уменьшаем количество бонусов и удаляем, если count=0 для 6-го уровня
+    // Уменьшаем количество бонусов
     setBonuses((prev) => {
       const next = [...prev];
       const idx = next.findIndex((b) => b.type === type);
       if (idx !== -1 && next[idx].count > 0) {
         const newCount = next[idx].count - 1;
         
-        // Для 6-го уровня удаляем бонус, если использований не осталось
         if (levelState.currentLevel === 6 && newCount <= 0) {
           next.splice(idx, 1);
         } else {
@@ -153,40 +261,15 @@ export const useInputHandlers = ({
       return next;
     });
 
+    // Обновляем цели и specialCells для удаленных фигур и golden-cell
+    const updatedSpecialCells = updateGoalsAndSpecialCells(
+      removedFigures, 
+      removedGoldenCells,
+      type
+    );
+
     effect?.onApply?.(setMoves);
-
-    // Для openGuide в 6-м уровне нужно проверить, выполнилась ли цель
-    if (type === "openGuide" && levelState.currentLevel === 6) {
-      setGoals((prevGoals) => {
-        const updatedGoals = [...prevGoals];
-        const completedIndices: number[] = [];
-        
-        updatedGoals.forEach((goal, index) => {
-          if (goal.collected >= goal.target) {
-            completedIndices.push(index);
-          }
-        });
-
-        if (completedIndices.length > 0) {
-          setOpenGuideCompleted(completedIndices);
-          
-          completedIndices.forEach((index) => {
-            const currentFigures = updatedGoals.map(g => g.figure);
-            const newFigure = getRandomFigureForLevel6(LEVELS[5].availableFigures || [], currentFigures);
-            const newTarget = updatedGoals[index].target + 1;
-            updatedGoals[index] = {
-              figure: newFigure,
-              target: newTarget,
-              collected: 0
-            };
-          });
-        }
-        
-        return updatedGoals;
-      });
-    } else {
-      effect?.onApplyGoals?.(setGoals);
-    }
+    effect?.onApplyGoals?.(setGoals);
 
     setIsAnimating(true);
     try {
@@ -237,7 +320,7 @@ export const useInputHandlers = ({
         }
       }
 
-      const updatedBoardIsChanged = applyHorizontalGravity(updatedBoard);
+      let updatedBoardIsChanged = applyHorizontalGravity(updatedBoard);
       
       if (updatedBoardIsChanged.isChanged) {
         setBoard([...updatedBoardIsChanged.board]);
@@ -246,7 +329,6 @@ export const useInputHandlers = ({
         setBoard(updatedBoard);
         await new Promise((r) => setTimeout(r, ANIMATION_DURATION/2));
         
-        // Снова проверяем алмазы/звезды после горизонтальной гравитации
         hasMoreSpecialFigures = true;
         while (hasMoreSpecialFigures) {
           const specialResult = processSpecialFigures(updatedBoard);
@@ -269,12 +351,15 @@ export const useInputHandlers = ({
       await new Promise(resolve => setTimeout(resolve, 200));
 
       if (processMatches) {
-        await processMatches(updatedBoard);
+        // Для бонусов itSphere и remoteWork передаем обновленные specialCells и флаг skipGoldenRestore
+        const skipGoldenRestore = (type === "itSphere" || type === "remoteWork");
+        await processMatches(updatedBoard, updatedSpecialCells, { skipGoldenRestore });
       }
     } finally {
       setIsAnimating(false);
       setActiveBonus(null);
     }
+    console.log(`=== applyAndFinalizeBonus для ${type} END ===\n`);
   };
 
   const handleCellClick = async (position: Position) => {
@@ -287,96 +372,99 @@ export const useInputHandlers = ({
       return;
     }
 
-    // Проверяем, что board существует
     if (!board || !Array.isArray(board) || board.length === 0) {
-      console.warn('Board is not ready');
       return;
     }
 
     if (activeBonus && activeBonus.isActive && activeBonus.type !== "careerGrowth") {
       if (activeBonus.type === "modernProducts") {
         if (!modernProductsSourcePos) {
-          // Проверяем, что позиция валидна
           if (!board[position.row] || board[position.row][position.col] === undefined) {
             return;
           }
           const fig = board[position.row][position.col];
           if (!fig) return;
           setModernProductsSourcePos(position);
-          console.log("ModernProducts: выбрана первая фигура", fig, "в позиции", position);
           return;
         }
 
-        // Второй клик: применяем бонус
         const sourcePos = modernProductsSourcePos;
         
-        // Если кликнули на ту же клетку - снимаем выделение
         if (sourcePos.row === position.row && sourcePos.col === position.col) {
-          console.log("ModernProducts: клик на ту же клетку, снимаем выделение");
           setModernProductsSourcePos(null);
           return;
         }
         
-        // Получаем фигуры
         const sourceFig = board[sourcePos.row][sourcePos.col];
         const targetFig = board[position.row][position.col];
         
-        // Если тип фигур одинаковый - ничего не делаем
         if (sourceFig === targetFig) {
-          console.log("ModernProducts: одинаковые фигуры, ничего не делаем");
           setModernProductsSourcePos(null);
           setActiveBonus(null);
           return;
         }
         
-        // СРАЗУ сбрасываем выделение
         setModernProductsSourcePos(null);
         
-        console.log("ModernProducts: вызываем applyModernProductsAt напрямую с параметрами:", sourcePos, position);
-        
-        // Используем прямую импортированную функцию
         const result = applyModernProductsAt(board, sourcePos as Position, position);
-        console.log("ModernProducts: результат от applyModernProductsAt:", result);
         
-        // Проверяем, что результат валиден
         if (!result || !result.board) {
-          console.log("ModernProducts: невалидный результат");
           setActiveBonus(null);
           return;
         }
 
-        console.log("ModernProducts: применяем превращение", sourceFig, "->", targetFig);
-        console.log("matchedPositions из результата:", result.matchedPositions);
-        
-        // Используем фиктивный effect для вызова applyAndFinalizeBonus
         const effect = BONUS_EFFECTS.modernProducts;
-        await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
+        await applyAndFinalizeBonus(
+          activeBonus.type, 
+          result.board, 
+          result.matchedPositions, 
+          [], // removedFigures - не нужно для modernProducts
+          [], // removedGoldenCells - не нужно для modernProducts
+          effect
+        );
         return;
       }
       
       const effect = BONUS_EFFECTS[activeBonus.type];
       if (effect?.applyAt) {
         if (activeBonus.type === "remoteWork") {
-          const result = effect.applyAt(board, position);
-          // Проверяем, были ли удалены фигуры
+          console.log("это remote work бибиби бабаба");
+          const result = effect.applyAt(board, position, undefined, specialCells);
           if (!result || !result.board || result.matchedPositions.length === 0) {
-            // Не тратим бонус
             setActiveBonus(null);
             return;
           }
-          await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
+          console.log("Внимание говно");
+          console.log(specialCells);
+          
+          await applyAndFinalizeBonus(
+            activeBonus.type, 
+            result.board, 
+            result.matchedPositions, 
+            result.removedFigures || [],
+            result.removedGoldenCells || [],
+            effect
+          );
           return;
         }
 
         if (activeBonus.type === "itSphere") {
-          const result = effect.applyAt(board, position);
-          // Проверяем, были ли удалены фигуры
+          console.log("это it sphere бабаба бобобо");
+          const result = effect.applyAt(board, position, undefined, specialCells);
           if (!result || !result.board || result.matchedPositions.length === 0) {
-            // Не тратим бонус
             setActiveBonus(null);
             return;
           }
-          await applyAndFinalizeBonus(activeBonus.type, result.board, result.matchedPositions, effect);
+          console.log(specialCells);
+          
+          await applyAndFinalizeBonus(
+            activeBonus.type, 
+            result.board, 
+            result.matchedPositions, 
+            result.removedFigures || [],
+            result.removedGoldenCells || [],
+            effect
+          );
           return;
         }
       }
@@ -390,7 +478,8 @@ export const useInputHandlers = ({
           gameState.selectedPosition,
           position,
           gameState.moves,
-          gameState.setMoves
+          gameState.setMoves,
+          specialCells
         );
       }
       gameState.setSelectedPosition(null);
@@ -434,7 +523,8 @@ export const useInputHandlers = ({
         gameState.selectedPosition,
         position,
         gameState.moves,
-        gameState.setMoves
+        gameState.setMoves,
+        specialCells
       );
       gameState.setSelectedPosition(null);
     }
@@ -451,21 +541,6 @@ export const useInputHandlers = ({
   const resetSelection = () => {
     gameState.setSelectedPosition(null);
     setModernProductsSourcePos(null);
-  };
-
-  // Вспомогательная функция для получения случайной фигуры для 6-го уровня
-  const getRandomFigureForLevel6 = (availableFigures: Figure[], excludeFigures: Figure[] = []): Figure => {
-    const filteredFigures = availableFigures.filter(
-      fig => !["star", "diamond", "team", "teamImage0", "teamImage1", "teamImage2", "teamImage3", "goldenCell", "teamCell"].includes(fig)
-    );
-    
-    const availableFiltered = filteredFigures.filter(fig => !excludeFigures.includes(fig));
-    
-    if (availableFiltered.length > 0) {
-      return availableFiltered[Math.floor(Math.random() * availableFiltered.length)];
-    }
-    
-    return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
   };
 
   return {
