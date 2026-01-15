@@ -34,6 +34,9 @@
   align-items: flex-start;
   justify-content: center;
   gap: 20px;
+
+
+  
 }
 
 .game-field-section {
@@ -68,8 +71,7 @@
 @media (min-aspect-ratio: 1/1) {
   @media (max-height: 700px) {
     .game-content {
-      transform: scale(0.8);
-      transform-origin: center center;
+      zoom: 0.8;
     }
   }
 }
@@ -87,43 +89,37 @@
 
   @media (min-width: 700px) and (max-width: 1024px) and (min-height: 1118px){
     .game-content {
-      transform: scale(1.25);
-      transform-origin: center center;
+      zoom: 1.25;
     }
   }
 
   @media (min-width: 500px) and (max-width: 700px) {
     .game-content {
-      transform: scale(0.75);
-      transform-origin: center center;
+      zoom: 0.75;
     }
   }
 
   @media (min-width: 400px) and (max-width: 500px) {
     .game-content {
-      transform: scale(0.85);
-      transform-origin: center center;
+      zoom: 0.85;
     }
   }
 
   @media (min-width: 370px) and (max-width: 400px) {
     .game-content {
-      transform: scale(0.77);
-      transform-origin: center center;
+      zoom: 0.77;
     }
   }
 
   @media (min-width: 350px) and (max-width: 370px) {
     .game-content {
-      transform: scale(0.72);
-      transform-origin: center center;
+      zoom: 0.72;
     }
   }
 
   @media (min-width: 300px) and (max-width: 350px) {
     .game-content {
-      transform: scale(0.65);
-      transform-origin: center center;
+      zoom: 0.65;
     }
   }
 
