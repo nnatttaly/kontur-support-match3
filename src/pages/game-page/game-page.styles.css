@@ -9,6 +9,7 @@
   padding: 0;
   overflow: hidden;
   box-sizing: border-box;
+  position: fixed
 }
 
 .game-main {
@@ -82,10 +83,6 @@
     flex-direction: column;
     align-items: center;
     gap: 30px;
-  }
-  .game-main {
-    width: 80vw; /* Используем vw вместо фиксированных значений */
-    height: 80vh;
   }
 
   .game-logo {
