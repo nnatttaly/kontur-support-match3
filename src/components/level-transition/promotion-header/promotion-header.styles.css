@@ -27,3 +27,9 @@
 .highlight {
   color: #FF8D28;
 }
+
+@media (max-height: 600px) {
+  .ph-promotion p {
+    line-height: 1.2;
+  }
+}

@@ -7,3 +7,7 @@
   overflow-y: auto; 
   gap: 8px;
 }
+
+@media (max-height: 600px) {
+  .bg-grid { gap: 0; }
+}
