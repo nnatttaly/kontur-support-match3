@@ -23,11 +23,29 @@ export const useLevelManagement = ({
     isLevelComplete: false,
     isLevelTransition: true,
     selectedBonuses: [],
-    isLevelFailed: false, // Новое поле
+    isLevelFailed: false,
   });
 
   const currentLevel =
     LEVELS.find((level) => level.id === levelState.currentLevel) || LEVELS[0];
+
+  /**
+   * Обработчик провала уровня
+   */
+  const handleLevelFailed = () => {
+    console.log(`Уровень ${levelState.currentLevel} провален: закончились ходы`);
+    setCompletionTriggered(true);
+
+    setTimeout(() => {
+      setLevelState((prev) => ({
+        ...prev,
+        isLevelFailed: true,
+        isLevelTransition: true,
+      }));
+      isLevelInitialized.current = false;
+      setCompletionTriggered(false);
+    }, 300);
+  };
 
   /**
    * restartCurrentLevel
@@ -41,16 +59,13 @@ export const useLevelManagement = ({
    * on every invocation (so you can find every restart in logs).
    */
   const restartCurrentLevel = () => {
-    // SPECIFIC RUNTIME COMMENT (logged on every call)
     console.log(
       `RESTART_CURRENT_LEVEL: invoked for level ${levelState.currentLevel} at ${new Date().toISOString()}`
     );
 
-    // Prepare level defaults
     const levelGoals = getLevelGoals(levelState.currentLevel);
     const levelMoves = getLevelMoves(levelState.currentLevel);
 
-    // Reset game state (same logic as initialisation)
     gameState.setGoals(() =>
       levelGoals.map((goal) => ({ ...goal, collected: 0 }))
     );
@@ -79,17 +94,14 @@ export const useLevelManagement = ({
       gameState.setBonuses(() => []);
     }
 
-    // Recreate and set a fresh board
     const newBoard = createInitialBoard(currentLevel);
     setBoard(newBoard);
 
-    // Mark as initialized so normal flows continue
     isLevelInitialized.current = true;
     setCompletionTriggered(false);
   };
 
-  // Effect: monitor moves & goals. If moves run out (and not animating / not in transition),
-  // show level transition screen for retry.
+  // Effect: monitor moves & goals
   useEffect(() => {
     if (
       levelState.isLevelTransition ||
@@ -99,22 +111,9 @@ export const useLevelManagement = ({
       return;
     }
 
-    // If no moves left and there's no animation in progress, show level transition for retry
-    // Тут проверяем, остались ли еще ходы
+    // Если закончились ходы
     if (gameState.moves <= 0 && !isAnimating && !completionTriggered) {
-      console.log(`Уровень ${levelState.currentLevel} провален: закончились ходы`);
-      setCompletionTriggered(true);
-
-      setTimeout(() => {
-        setLevelState((prev) => ({
-          ...prev,
-          isLevelFailed: true, // Устанавливаем флаг провала
-          isLevelTransition: true, // Показываем экран перехода
-        }));
-        isLevelInitialized.current = false;
-        setCompletionTriggered(false);
-      }, 300);
-
+      handleLevelFailed(); // Вызов вынесенной функции
       return;
     }
 
@@ -132,7 +131,7 @@ export const useLevelManagement = ({
           ...prev,
           isLevelComplete: true,
           isLevelTransition: true,
-          isLevelFailed: false, // Сбрасываем флаг провала при успешном завершении
+          isLevelFailed: false,
         }));
         isLevelInitialized.current = false;
         setCompletionTriggered(false);
@@ -149,7 +148,7 @@ export const useLevelManagement = ({
     currentLevel.id,
   ]);
 
-  // Initialization effect: runs when levelState changes from transition -> active
+  // Initialization effect
   useEffect(() => {
     if (levelState.isLevelTransition) {
       isLevelInitialized.current = false;
@@ -216,7 +215,7 @@ export const useLevelManagement = ({
       isLevelComplete: false,
       isLevelTransition: false,
       selectedBonuses,
-      isLevelFailed: false, // Сбрасываем флаг провала при начале уровня
+      isLevelFailed: false,
     });
 
     isLevelInitialized.current = false;
@@ -227,7 +226,6 @@ export const useLevelManagement = ({
     levelState,
     currentLevel,
     handleLevelStart,
-    // export restart so callers (tests, UI, debug) can trigger it manually if needed
     restartCurrentLevel,
   };
 };
