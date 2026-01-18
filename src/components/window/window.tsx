@@ -1,5 +1,6 @@
 import { EndTransition } from './end-transition/end-transition';
-import { FailTransition } from './fail-transition/fail-transition'
+import { FailTransition } from './fail-transition/fail-transition';
+import './window.css'
 
 type WindowProps = {
   isLastLevel: boolean;
