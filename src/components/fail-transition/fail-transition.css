@@ -1,0 +1,12 @@
+.fail-message {
+    text-align: center;
+    font-size: 17px;
+    line-height: 1.4;
+}
+
+
+@media (max-width: 500px) {
+  .fail-message {
+    font-size: 16px;
+  }
+}

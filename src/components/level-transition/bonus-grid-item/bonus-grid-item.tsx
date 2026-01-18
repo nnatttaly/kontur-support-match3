@@ -4,29 +4,15 @@ import "./bonus-grid-item.styles.css";
 
 type BonusGridItemProps = {
   type: BonusType;
-  isSelected: boolean;
-  isDisabled: boolean;
-  onClick: () => void;
 };
 
 export const BonusGridItem = ({
   type,
-  isSelected,
-  isDisabled,
-  onClick,
 }: BonusGridItemProps) => {
   return (
-    <div
-      className={`
-        bgi-item
-        ${isSelected ? "bgi-item--selected" : ""}
-        ${isDisabled ? "bgi-item--disabled" : ""}
-      `}
-      onClick={onClick}
-    >
+    <div className={`bgi-item`} >
       <div className="bgi-circle">
         <img src={BONUS_PATHS[type]} alt={type} className="bgi-icon" />
-        {isSelected && <div className="bgi-check">✓</div>}
       </div>
       <div className="bgi-text-block">
         <span className="bgi-name">{BONUS_NAMES[type]}</span>

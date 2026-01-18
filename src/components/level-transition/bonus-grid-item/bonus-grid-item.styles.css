@@ -1,23 +1,12 @@
 .bgi-item {
   display: flex;
   align-items: flex-start;
-  cursor: pointer;
   transition: all 0.3s ease;
   padding: 10px 12px;
   border-radius: 16px;
   width: 100%;
-  gap: 15px;
+  gap: 20px;
   box-sizing: border-box;
-}
-
-.bgi-item--disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.bgi-item:not(.bgi-item--disabled):hover {
-  transform: translateY(-4px);
-  background: rgba(54, 106, 243, 0.05);
 }
 
 .bgi-circle {
@@ -37,43 +26,11 @@
   flex-shrink: 0;
 }
 
-.bgi-item--selected .bgi-circle {
-  box-shadow: 
-    0 0 0 2px rgba(252, 118, 48, 0.3),
-    0 4px 16px rgba(252, 118, 48, 0.2);
-  animation: pulseGlow 2s ease-in-out infinite;
-}
-
-.bgi-item:not(.bgi-item--disabled):hover .bgi-circle {
-  transform: scale(1.05);
-  box-shadow: 
-    0 6px 16px rgba(0, 0, 0, 0.12),
-    inset 0 1px 1px rgba(255, 255, 255, 0.3);
-}
-
 .bgi-icon {
   width: 30px;
   height: 30px;
   object-fit: contain;
   filter: brightness(0) invert(1);
-}
-
-.bgi-check {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  width: 20px;
-  height: 20px;
-  background: #FE4C4C;
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-  border: 2px solid white;
-  box-shadow: 0 2px 4px rgba(252, 118, 48, 0.3);
 }
 
 .bgi-text-block {
@@ -93,7 +50,7 @@
 }
 
 .bgi-description {
-  font-size: 13px;
+  font-size: 15px;
   margin: 0;
 }
 
@@ -101,8 +58,8 @@
   position: relative;
   padding-left: 17px;
   margin: 3px 0 0;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .bgi-effect::before {
@@ -110,17 +67,9 @@
   position: absolute;
   left: 0;
   color: #366AF3;
-  font-weight: 900;
+  font-weight: 1000;
 }
 
-@keyframes pulseGlow {
-  0%, 100% { 
-    box-shadow: 0 0 0 2px rgba(252, 118, 48, 0.3), 0 4px 16px rgba(252, 118, 48, 0.2); 
-  }
-  50% { 
-    box-shadow: 0 0 0 3px rgba(252, 118, 48, 0.4), 0 6px 20px rgba(252, 118, 48, 0.25); 
-  }
-}
 
 @media (max-width: 400px) {
   .bgi-item { gap: 10px; padding: 6px; }

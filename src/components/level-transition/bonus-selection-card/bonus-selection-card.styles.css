@@ -9,7 +9,7 @@
 .bsc-white-card {
   background: white;
   border-radius: 18px;
-  padding: 12px 20px;
+  padding: 12px 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
@@ -22,10 +22,3 @@
   text-align: center;
 }
 
-.bsc-hint {
-  text-align: center;
-  color: #2291FF;
-  font-weight: 600;
-  font-size: 14px;
-  margin-top: 7px;
-}
