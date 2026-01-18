@@ -12,6 +12,30 @@ export const LEVELS: Level[] = [
     ],
     bonuses: ["knowledgeBase", "openGuide"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
     moves: 1,
+    /*
+    teamPositions: [
+      { row: 1, col: 1 },
+      { row: 1, col: 2 },
+      { row: 1, col: 3 },
+      { row: 1, col: 4 },
+      { row: 1, col: 5 },
+      { row: 2, col: 1 },
+      { row: 2, col: 2 },
+      { row: 2, col: 3 },
+      { row: 2, col: 4 },
+      { row: 2, col: 5 },
+      { row: 3, col: 1 },
+      { row: 3, col: 2 },
+      { row: 3, col: 3 },
+      { row: 3, col: 4 },
+      { row: 3, col: 5 },
+      { row: 4, col: 1 },
+      { row: 4, col: 2 },
+      { row: 4, col: 3 },
+      { row: 4, col: 4 },
+      { row: 4, col: 5 },
+    ],
+    */
     availableFigures: [
       "pencil",
       "questionBook",

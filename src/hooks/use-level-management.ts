@@ -17,6 +17,8 @@ export const useLevelManagement = ({
 }: UseLevelManagementProps) => {
   const isLevelInitialized = useRef(false);
   const [completionTriggered, setCompletionTriggered] = useState(false);
+  // Флаг для блокировки повторного выполнения логики завершения уровня
+  const isProcessingCompletion = useRef(false);
 
   const [levelState, setLevelState] = useState<LevelState>({
     currentLevel: 0,
@@ -33,6 +35,10 @@ export const useLevelManagement = ({
    * Обработчик провала уровня
    */
   const handleLevelFailed = () => {
+    // Защита от повторного вызова
+    if (isProcessingCompletion.current) return;
+    isProcessingCompletion.current = true;
+
     console.log(`Уровень ${levelState.currentLevel} провален: закончились ходы`);
     setCompletionTriggered(true);
 
@@ -44,6 +50,7 @@ export const useLevelManagement = ({
       }));
       isLevelInitialized.current = false;
       setCompletionTriggered(false);
+      isProcessingCompletion.current = false; // Сбрасываем флаг
     }, 300);
   };
 
@@ -99,21 +106,18 @@ export const useLevelManagement = ({
 
     isLevelInitialized.current = true;
     setCompletionTriggered(false);
+    isProcessingCompletion.current = false; // Сброс флага при рестарте
   };
 
   // Effect: monitor moves & goals
   useEffect(() => {
+    // Блокировка при различных условиях или если уже обрабатывается завершение
     if (
       levelState.isLevelTransition ||
       levelState.isLevelComplete ||
-      !isLevelInitialized.current
+      !isLevelInitialized.current ||
+      isProcessingCompletion.current
     ) {
-      return;
-    }
-
-    // Если закончились ходы
-    if (gameState.moves <= 0 && !isAnimating && !completionTriggered) {
-      handleLevelFailed(); // Вызов вынесенной функции
       return;
     }
 
@@ -125,6 +129,7 @@ export const useLevelManagement = ({
     if (allGoalsCompleted && !isAnimating && !completionTriggered) {
       console.log("Уровень", currentLevel.id, "завершен: все цели выполнены");
       setCompletionTriggered(true);
+      isProcessingCompletion.current = true; // Устанавливаем флаг
 
       setTimeout(() => {
         setLevelState((prev) => ({
@@ -135,7 +140,15 @@ export const useLevelManagement = ({
         }));
         isLevelInitialized.current = false;
         setCompletionTriggered(false);
+        isProcessingCompletion.current = false; // Сбрасываем флаг
       }, 300);
+      return;
+    }
+
+    // Если закончились ходы
+    if (gameState.moves <= 0 && !isAnimating && !completionTriggered) {
+      handleLevelFailed(); // Вызов вынесенной функции
+      return;
     }
   }, [
     gameState.goals,
@@ -153,6 +166,7 @@ export const useLevelManagement = ({
     if (levelState.isLevelTransition) {
       isLevelInitialized.current = false;
       setCompletionTriggered(false);
+      isProcessingCompletion.current = false; // Сброс флага при переходе
       return;
     }
 
@@ -220,6 +234,7 @@ export const useLevelManagement = ({
 
     isLevelInitialized.current = false;
     setCompletionTriggered(false);
+    isProcessingCompletion.current = false; // Сброс флага при старте нового уровня
   };
 
   return {

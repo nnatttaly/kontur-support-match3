@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import {
   Board,
   Match,
@@ -58,6 +58,9 @@ export const useMatchProcessing = ({
   currentLevel,
   onSpecialCellsUpdate,
 }: UseMatchProcessingProps) => {
+  // Флаг для предотвращения повторной обработки матчей
+  const isProcessingMatchesRef = useRef(false);
+
   const getRandomBonus = useCallback((): BonusType => {
     const allBonuses: BonusType[] = [
       "friendlyTeam",
@@ -77,25 +80,25 @@ export const useMatchProcessing = ({
     const filteredFigures = availableFigures.filter(
       fig => !["star", "diamond", "team", "teamImage0", "teamImage1", "teamImage2", "teamImage3", "goldenCell", "teamCell"].includes(fig)
     );
-    
+
     // Исключаем уже используемые фигуры
     const availableFiltered = filteredFigures.filter(fig => !excludeFigures.includes(fig));
-    
+
     if (availableFiltered.length > 0) {
       return availableFiltered[Math.floor(Math.random() * availableFiltered.length)];
     }
-    
+
     // Если все доступные фигуры уже используются, возвращаем случайную из отфильтрованных
     return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
   }, []);
 
   const replaceCompletedGoalsForLevel6 = useCallback((goals: Goal[]): [Goal[], BonusType[]] => {
     if (currentLevel?.id !== 6) return [goals, []];
-    
+
     const updatedGoals = [...goals];
     const completedIndices: number[] = [];
     const newBonuses: BonusType[] = [];
-    
+
     // Находим выполненные цели
     updatedGoals.forEach((goal, index) => {
       if (goal.collected >= goal.target) {
@@ -108,12 +111,12 @@ export const useMatchProcessing = ({
     // Если есть выполненные цели - заменяем их
     if (completedIndices.length > 0) {
       console.log(`Заменяем ${completedIndices.length} выполненных целей на 6-м уровне (useMatchProcessing)`);
-      
+
       completedIndices.forEach((index) => {
         const currentFigures = updatedGoals.map(g => g.figure);
         const figuresInMatches: Figure[] = []; // В этом контексте у нас нет информации о матчах
         const excludeFigures = [...currentFigures, ...figuresInMatches];
-        
+
         const newFigure = getRandomFigure(
           currentLevel.availableFigures || [],
           excludeFigures
@@ -131,10 +134,10 @@ export const useMatchProcessing = ({
         console.log(`Добавляем бонусы за выполненные цели (useMatchProcessing):`, newBonuses);
         setBonuses((prevBonuses) => {
           let updatedBonuses = [...prevBonuses];
-          
+
           for (const bonusType of newBonuses) {
             const existingIndex = updatedBonuses.findIndex(b => b.type === bonusType);
-            
+
             if (existingIndex !== -1) {
               updatedBonuses[existingIndex] = {
                 ...updatedBonuses[existingIndex],
@@ -153,19 +156,27 @@ export const useMatchProcessing = ({
               }
             }
           }
-          
+
           return updatedBonuses;
         });
       }
     }
-    
+
     return [updatedGoals, newBonuses];
   }, [currentLevel, getRandomBonus, getRandomFigure, setBonuses]);
 
   const processMatches = useCallback(
     async (currentBoard: Board, currentSpecialCells: SpecialCell[] = [], options?: { skipGoldenRestore: boolean }): Promise<Board> => {
+      // Защита от повторного входа
+      if (isProcessingMatchesRef.current) {
+        console.warn('processMatches: уже выполняется, пропускаем повторный вызов');
+        return currentBoard;
+      }
+
+      isProcessingMatchesRef.current = true;
+
       const skipGoldenRestore = options?.skipGoldenRestore || false;
-      
+
       let boardToProcess = currentBoard;
       let hasMatches = true;
       let totalRoundScore = 0;
@@ -179,8 +190,8 @@ export const useMatchProcessing = ({
         const foundMatches = findAllMatches(boardToProcess);
 
         if (foundMatches.length > 0) {
-          // Собираем информацию о golden cells и team cells в матчах
-          const goldenCellsInMatches: Position[] = [];
+          // Используем Set для хранения УНИКАЛЬНЫХ позиций golden cells
+          const goldenCellsInMatchesSet = new Set<string>();
           let collectedTeamMatches = 0;
 
           foundMatches.forEach((match) => {
@@ -197,7 +208,10 @@ export const useMatchProcessing = ({
               );
 
               if (goldenCellIndex !== -1) {
-                goldenCellsInMatches.push(pos);
+                // Используем строковый ключ для Set
+                const posKey = `${pos.row},${pos.col}`;
+                goldenCellsInMatchesSet.add(posKey);
+
                 // Помечаем golden cell как неактивную
                 updatedSpecialCells[goldenCellIndex] = {
                   ...updatedSpecialCells[goldenCellIndex],
@@ -226,7 +240,13 @@ export const useMatchProcessing = ({
             }
           });
 
-          console.log(`Total golden cells in matches: ${goldenCellsInMatches.length}`);
+          // Преобразуем Set в массив позиций
+          const goldenCellsInMatches: Position[] = Array.from(goldenCellsInMatchesSet).map(key => {
+            const [row, col] = key.split(',').map(Number);
+            return { row, col };
+          });
+
+          console.log(`Total unique golden cells in matches: ${goldenCellsInMatches.length}`);
           console.log(`Total team cell matches found: ${collectedTeamMatches}`);
 
           if (onSpecialCellsUpdate) {
@@ -251,13 +271,13 @@ export const useMatchProcessing = ({
                   ),
                 };
               }
-              
+
               // Для 6-го уровня: немедленно проверяем и заменяем выполненные цели
               if (currentLevel?.id === 6) {
                 const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(next);
                 return newGoals;
               }
-              
+
               return next;
             });
           }
@@ -265,11 +285,11 @@ export const useMatchProcessing = ({
           // UPDATE GOALS FOR TEAMCELL - Ключевое исправление: только 1 за КАЖДУЮ комбинацию
           if (collectedTeamMatches > 0) {
             console.log(`Processing teamCell goal: ${collectedTeamMatches} match(es) with team cell`);
-            
+
             setGoals((prev) => {
               const next = [...prev];
               const teamGoalIndex = next.findIndex((g) => g.figure === "teamCell");
-              
+
               if (teamGoalIndex !== -1) {
                 const teamGoal = next[teamGoalIndex];
                 const inc = modifiers.doubleGoalProgress
@@ -280,9 +300,9 @@ export const useMatchProcessing = ({
                   oldCollected + inc,
                   teamGoal.target
                 );
-                
+
                 console.log(`Updating teamCell goal: ${oldCollected} + ${inc} = ${newCollected}/${teamGoal.target}`);
-                
+
                 next[teamGoalIndex] = {
                   ...teamGoal,
                   collected: newCollected,
@@ -291,7 +311,7 @@ export const useMatchProcessing = ({
                 // Для 5 уровня: обновляем прогресс команды при достижении порогов
                 if (currentLevel?.id === 5) {
                   console.log(`Level 5: Team progress ${oldCollected} -> ${newCollected}`);
-                  
+
                   // Проверяем пороги и обновляем изображение команды
                   if (newCollected >= 12 && oldCollected < 12) {
                     console.log("Progressing to team happy three");
@@ -311,13 +331,13 @@ export const useMatchProcessing = ({
                 console.warn("teamCell goal not found in goals list!");
                 console.log("Current goals:", next);
               }
-              
+
               // Для 6-го уровня: немедленно проверяем и заменяем выполненные цели
               if (currentLevel?.id === 6) {
                 const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(next);
                 return newGoals;
               }
-              
+
               return next;
             });
           }
@@ -347,13 +367,13 @@ export const useMatchProcessing = ({
                     const increment = modifiers.doubleGoalProgress
                       ? baseCount * 2
                       : baseCount;
-                    
+
                     const oldCollected = goal.collected;
                     const newCollected = Math.min(
                       oldCollected + increment,
                       goal.target
                     );
-                    
+
                     updatedGoals[index] = {
                       ...goal,
                       collected: newCollected,
@@ -376,14 +396,14 @@ export const useMatchProcessing = ({
                       goal.collected + increment,
                       goal.target
                     );
-                    
+
                     updatedGoals[index] = {
                       ...goal,
                       collected: newCollected,
                     };
                   }
                 });
-                
+
                 return updatedGoals;
               }
             });
@@ -401,7 +421,7 @@ export const useMatchProcessing = ({
           // УДАЛЯЕМ ВСЕ МАТЧИ, включая фигуры на golden cell
           // Это ключевое исправление: все фигуры в матчах должны быть удалены
           boardToProcess = updateBoardAfterMatches(boardToProcess);
-          
+
           setBoard(boardToProcess);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
           setMatches([]);
@@ -421,14 +441,14 @@ export const useMatchProcessing = ({
           setBoard(boardToProcess);
 
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
-          
+
           // Для 5 уровня применяем горизонтальную гравитацию
           if (lvl?.id === 5) {
             const result = applyHorizontalGravity(boardToProcess);
             boardToProcess = result.board;
             setBoard(boardToProcess);
             await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
-            
+
             if (result.isChanged) {
               boardToProcess = applyGravity(boardToProcess);
               setBoard(boardToProcess);
@@ -487,13 +507,13 @@ export const useMatchProcessing = ({
                 ),
               };
             }
-            
+
             // Для 6-го уровня: немедленно проверяем и заменяем выполненные цели
             if (currentLevel?.id === 6) {
               const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(next);
               return newGoals;
             }
-            
+
             return next;
           });
 
@@ -518,7 +538,7 @@ export const useMatchProcessing = ({
               }
             }
           });
-          
+
           setBoard([...boardToProcess]);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
         }
@@ -553,13 +573,13 @@ export const useMatchProcessing = ({
                 ),
               };
             }
-            
+
             // Для 6-го уровня: немедленно проверяем и заменяем выполненные цели
             if (currentLevel?.id === 6) {
               const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(next);
               return newGoals;
             }
-            
+
             return next;
           });
 
@@ -584,7 +604,7 @@ export const useMatchProcessing = ({
               }
             }
           });
-          
+
           setBoard([...boardToProcess]);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
         }
@@ -621,7 +641,7 @@ export const useMatchProcessing = ({
                 boardToProcess = shuffledBoard;
                 setBoard([...boardToProcess]);
                 await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
-                
+
                 const matchesAfterShuffle = findAllMatches(boardToProcess);
                 if (matchesAfterShuffle.length > 0) {
                   hasMatches = true;
@@ -629,7 +649,7 @@ export const useMatchProcessing = ({
               }
             }
           }
-          
+
           break;
         }
       }
@@ -652,7 +672,7 @@ export const useMatchProcessing = ({
             const i = next.findIndex((b) => b.type === activeBonus.type);
             if (i !== -1 && next[i].count > 0) {
               const newCount = next[i].count - 1;
-              
+
               if (currentLevel?.id === 6) {
                 // В 6-м уровне удаляем бонус, если использований не осталось
                 if (newCount <= 0) {
@@ -669,6 +689,8 @@ export const useMatchProcessing = ({
         }
       }
 
+      // Сбрасываем флаг после завершения обработки
+      isProcessingMatchesRef.current = false;
       return boardToProcess;
     },
     [
@@ -726,7 +748,7 @@ const checkPossibleMoves = (board: Board): boolean => {
           const tempBoard = board.map(r => [...r]);
           tempBoard[row][col] = rightFigure;
           tempBoard[row][col + 1] = currentFigure;
-          
+
           const matchesAfterSwap = findAllMatches(tempBoard);
           if (matchesAfterSwap.length > 0) {
             return true;
@@ -744,7 +766,7 @@ const checkPossibleMoves = (board: Board): boolean => {
           const tempBoard = board.map(r => [...r]);
           tempBoard[row][col] = bottomFigure;
           tempBoard[row + 1][col] = currentFigure;
-          
+
           const matchesAfterSwap = findAllMatches(tempBoard);
           if (matchesAfterSwap.length > 0) {
             return true;
