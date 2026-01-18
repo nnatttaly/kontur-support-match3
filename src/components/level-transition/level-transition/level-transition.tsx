@@ -87,7 +87,7 @@ export const LevelTransition = ({
           levelDescription={nextLevelInfo.description}
           isFirstLevel={currentLevel === 0}
         />
-        <BonusSelectionCard availableBonuses={nextLevelInfo.bonuses} />
+        <BonusSelectionCard availableBonuses={bonusesForNextLevel} />
         <Button text={currentLevel === 0 ? 'Начать игру' : 'Продолжить игру'} onClick={handleStart} />
       </div>
     </div>
