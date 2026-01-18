@@ -111,11 +111,7 @@ export const useLevelManagement = ({
       return;
     }
 
-    // Если закончились ходы
-    if (gameState.moves <= 0 && !isAnimating && !completionTriggered) {
-      handleLevelFailed(); // Вызов вынесенной функции
-      return;
-    }
+    
 
     // For non-move completion (objective-based) finishes:
     const allGoalsCompleted = gameState.goals.every(
@@ -136,6 +132,13 @@ export const useLevelManagement = ({
         isLevelInitialized.current = false;
         setCompletionTriggered(false);
       }, 300);
+      return;
+    }
+
+    // Если закончились ходы
+    if (gameState.moves <= 0 && !isAnimating && !completionTriggered) {
+      handleLevelFailed(); // Вызов вынесенной функции
+      return;
     }
   }, [
     gameState.goals,
