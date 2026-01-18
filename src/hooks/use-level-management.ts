@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { LevelState, BonusType, Board, GameState } from "types";
+import { LevelState, BonusType, Board, GameState, BONUS_TYPES } from "types";
 import { LEVELS } from "consts";
 import { getLevelGoals, getLevelMoves } from "@utils/level-utils";
 import { createInitialBoard } from "@utils/game-logic";
@@ -9,6 +9,18 @@ type UseLevelManagementProps = {
   gameState: GameState;
   isAnimating: boolean;
 };
+
+// Полный список всех доступных бонусов
+const ALL_BONUSES: BonusType[] = [
+  "knowledgeBase",
+  "openGuide",
+  "sportCompensation",
+  "modernProducts",
+  "remoteWork",
+  "dms",
+  "friendlyTeam",
+  "careerGrowth"
+];
 
 export const useLevelManagement = ({
   setBoard,
@@ -30,6 +42,16 @@ export const useLevelManagement = ({
 
   const currentLevel =
     LEVELS.find((level) => level.id === levelState.currentLevel) || LEVELS[0];
+
+  /**
+   * Получение случайных бонусов для уровня 6
+   */
+  const getRandomBonusesForLevel6 = (): BonusType[] => {
+    // Создаем копию массива всех бонусов и перемешиваем
+    const shuffledBonuses = [...ALL_BONUSES].sort(() => Math.random() - 0.5);
+    // Берем первые 2 бонуса
+    return shuffledBonuses.slice(0, 2);
+  };
 
   /**
    * Обработчик провала уровня
@@ -89,17 +111,24 @@ export const useLevelManagement = ({
       extraMoves: 0,
     });
 
-    if (levelState.selectedBonuses.length > 0) {
-      const selectedBonusesWithCount = levelState.selectedBonuses.map(
-        (type) => ({
-          type,
-          count: 3,
-        })
-      );
-      gameState.setBonuses(() => selectedBonusesWithCount);
-    } else {
-      gameState.setBonuses(() => []);
+    let bonusesToSet: { type: BonusType; count: number }[] = [];
+
+    if (levelState.currentLevel === 6) {
+      // Для уровня 6 выбираем случайные бонусы
+      const randomBonuses = getRandomBonusesForLevel6();
+      bonusesToSet = randomBonuses.map(type => ({
+        type,
+        count: 3,
+      }));
+    } else if (levelState.selectedBonuses.length > 0) {
+      // Для остальных уровней используем выбранные бонусы
+      bonusesToSet = levelState.selectedBonuses.map(type => ({
+        type,
+        count: 3,
+      }));
     }
+
+    gameState.setBonuses(() => bonusesToSet);
 
     const newBoard = createInitialBoard(currentLevel);
     setBoard(newBoard);
@@ -191,17 +220,24 @@ export const useLevelManagement = ({
       extraMoves: 0,
     });
 
-    if (levelState.selectedBonuses.length > 0) {
-      const selectedBonusesWithCount = levelState.selectedBonuses.map(
-        (type) => ({
-          type,
-          count: 3,
-        })
-      );
-      gameState.setBonuses(() => selectedBonusesWithCount);
-    } else {
-      gameState.setBonuses(() => []);
+    let bonusesToSet: { type: BonusType; count: number }[] = [];
+
+    if (levelState.currentLevel === 6) {
+      // Для уровня 6 выбираем случайные бонусы
+      const randomBonuses = getRandomBonusesForLevel6();
+      bonusesToSet = randomBonuses.map(type => ({
+        type,
+        count: 3,
+      }));
+    } else if (levelState.selectedBonuses.length > 0) {
+      // Для остальных уровней используем выбранные бонусы
+      bonusesToSet = levelState.selectedBonuses.map(type => ({
+        type,
+        count: 3,
+      }));
     }
+
+    gameState.setBonuses(() => bonusesToSet);
 
     const newBoard = createInitialBoard(currentLevel);
     setBoard(newBoard);
@@ -224,11 +260,14 @@ export const useLevelManagement = ({
       return;
     }
 
+    // Если это уровень 6, игнорируем переданные бонусы
+    const finalBonuses = nextLevel === 6 ? [] : selectedBonuses;
+
     setLevelState({
       currentLevel: nextLevel,
       isLevelComplete: false,
       isLevelTransition: false,
-      selectedBonuses,
+      selectedBonuses: finalBonuses,
       isLevelFailed: false,
     });
 
