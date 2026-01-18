@@ -23,7 +23,7 @@ export const BonusItem = ({
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   const touchTimerRef = useRef<number | null>(null);
-  const longPressTriggeredRef = useRef(false);
+  const longPressRef = useRef(false);
 
   const tooltipPosition = index === 0 ? "left" : "right";
 
@@ -31,21 +31,9 @@ export const BonusItem = ({
   const canUse = count > 0 || isActive;
 
   useEffect(() => {
-    const detectTouch = () => {
-      setIsTouchDevice(
-        "ontouchstart" in window || navigator.maxTouchPoints > 0
-      );
-    };
-
-    detectTouch();
-    window.addEventListener("resize", detectTouch);
-
-    return () => {
-      window.removeEventListener("resize", detectTouch);
-      if (touchTimerRef.current) {
-        clearTimeout(touchTimerRef.current);
-      }
-    };
+    setIsTouchDevice(
+      "ontouchstart" in window || navigator.maxTouchPoints > 0
+    );
   }, []);
 
   /* =========================
@@ -55,22 +43,29 @@ export const BonusItem = ({
   const handleTouchStart = () => {
     if (!canUse) return;
 
-    longPressTriggeredRef.current = false;
+    longPressRef.current = false;
 
     touchTimerRef.current = window.setTimeout(() => {
-      longPressTriggeredRef.current = true;
+      longPressRef.current = true;
       setShowTooltip(true);
     }, 500);
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchTimerRef.current) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
     }
 
-    if (longPressTriggeredRef.current) {
-      setTimeout(() => setShowTooltip(false), 150);
+    // If it was a long press → block click
+    if (longPressRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      setTimeout(() => {
+        setShowTooltip(false);
+        longPressRef.current = false;
+      }, 150);
     }
   };
 
@@ -99,16 +94,17 @@ export const BonusItem = ({
      CLICK
      ========================= */
 
-  const handleClick = () => {
-    // Prevent click after long-press on mobile
-    if (isTouchDevice && longPressTriggeredRef.current) {
-      longPressTriggeredRef.current = false;
+  const handleClick = (e: React.MouseEvent) => {
+    // Block ghost click after long-press
+    if (isTouchDevice && longPressRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
       return;
     }
 
-    if (canUse) {
-      onUse(type);
-    }
+    if (!canUse) return;
+
+    onUse(type);
   };
 
   return (
@@ -127,7 +123,12 @@ export const BonusItem = ({
       onTouchCancel={handleTouchEnd}
     >
       <div className="bonus-circle">
-        <img src={BONUS_PATHS[type]} alt={type} className="bonus-icon" />
+        <img
+          src={BONUS_PATHS[type]}
+          alt={type}
+          className="bonus-icon"
+          draggable={false}
+        />
         <div className="bonus-count">{count}</div>
       </div>
 
