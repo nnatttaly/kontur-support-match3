@@ -86,11 +86,12 @@
 
 
 @media (max-height: 700px) {
-  .learn-more-button { padding: 8px 30px; font-size: 15px; }
+  .learn-more-button { padding: 8px 30px; font-size: 16px; }
   .final-message-wrapper { padding: 20px; }
   .final-score { font-size: 16px; margin-bottom: 20px;}
   .final-title { font-size: 28px; margin-bottom: 10px; }
   .final-icon { width: 50px; margin-bottom: 10px;}
   .final-message { font-size: 15px; }
   .play-again-text { font-size: 14px; }
+  .button-wrapper { transform: scale(0.95); }
 }
