@@ -9,24 +9,29 @@
   box-sizing: border-box;
 }
 
+/* Prevent iOS long-press context menu */
+.bonus-item,
+.bonus-item * {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+
 .bonus-item--disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.bonus-item--toggleable {
-  cursor: pointer;
-}
-
 .bonus-circle {
   width: 69px;
   height: 69px;
-  background: #366AF3;
+  background: #366af3;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 
+  box-shadow:
     0 4px 16px rgba(0, 0, 0, 0.12),
     inset 0 1px 1px rgba(255, 255, 255, 0.2);
   border: 3px solid white;
@@ -36,27 +41,14 @@
 
 .bonus-item:not(.bonus-item--disabled):hover .bonus-circle {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 6px 20px rgba(0, 0, 0, 0.15),
     inset 0 1px 1px rgba(255, 255, 255, 0.2);
 }
 
 .bonus-item--active .bonus-circle {
   border: 3px solid #fc7630;
-  box-shadow: 
-    0 0 0 2px rgba(252, 118, 48, 0.4),
-    0 0 0 4px rgba(252, 118, 48, 0.2),
-    0 6px 24px rgba(252, 118, 48, 0.3),
-    inset 0 1px 1px rgba(255, 255, 255, 0.3);
-}
-
-.bonus-item--active:not(.bonus-item--disabled):hover .bonus-circle {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 0 0 2px rgba(252, 118, 48, 0.5),
-    0 0 0 4px rgba(252, 118, 48, 0.3),
-    0 8px 28px rgba(252, 118, 48, 0.4),
-    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  animation: elegantGlow 2.5s ease-in-out infinite;
 }
 
 .bonus-icon {
@@ -64,7 +56,8 @@
   height: 34px;
   object-fit: contain;
   filter: brightness(0) invert(1);
-  transition: all 0.3s ease;
+  -webkit-touch-callout: none;
+  pointer-events: none;
 }
 
 .bonus-count {
@@ -91,62 +84,23 @@
   transform: scale(0.8);
 }
 
-.bonus-name {
-  margin-top: 8px;
-  font-size: 12px;
-  font-weight: 500;
-  text-align: center;
-  color: #333;
-  transition: color 0.3s ease;
-}
-
-.bonus-item--active .bonus-name {
-  color: #366af3;
-  font-weight: 600;
-}
-
-.bonus-selection-check {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  width: 20px;
-  height: 20px;
-  background: #00bea2;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 12px;
-  font-weight: bold;
-  border: 2px solid white;
-  box-shadow: 0 2px 6px rgba(0, 190, 162, 0.4);
-}
-
 @keyframes elegantGlow {
   0% {
-    box-shadow: 
+    box-shadow:
       0 0 0 2px rgba(252, 118, 48, 0.4),
       0 0 0 4px rgba(252, 118, 48, 0.2),
-      0 6px 24px rgba(252, 118, 48, 0.3),
-      inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      0 6px 24px rgba(252, 118, 48, 0.3);
   }
   50% {
-    box-shadow: 
+    box-shadow:
       0 0 0 2px rgba(252, 118, 48, 0.6),
       0 0 0 4px rgba(252, 118, 48, 0.3),
-      0 8px 28px rgba(252, 118, 48, 0.4),
-      inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      0 8px 28px rgba(252, 118, 48, 0.4);
   }
   100% {
-    box-shadow: 
+    box-shadow:
       0 0 0 2px rgba(252, 118, 48, 0.4),
       0 0 0 4px rgba(252, 118, 48, 0.2),
-      0 6px 24px rgba(252, 118, 48, 0.3),
-      inset 0 1px 1px rgba(255, 255, 255, 0.3);
+      0 6px 24px rgba(252, 118, 48, 0.3);
   }
-}
-
-.bonus-item--active .bonus-circle {
-  animation: elegantGlow 2.5s ease-in-out infinite;
 }
