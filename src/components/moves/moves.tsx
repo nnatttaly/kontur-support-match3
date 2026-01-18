@@ -10,7 +10,7 @@ export const Moves = ({ moves }: MovesProps) => {
     <div className="moves-container">
       <div className="moves">
         <img src={MOVES_ICON_PATH} alt="Moves" className="moves-icon" />
-        <span className="moves-value">{moves}</span>
+        <span className="moves-value">{moves < 0 ? 0 : moves}</span>
       </div>
     </div>
   );
