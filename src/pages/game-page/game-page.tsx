@@ -13,10 +13,10 @@ export default function GamePage() {
   const gameLogic = useGameLogic();
 
   if (gameLogic.levelState.isLevelTransition) {
-    if (true || gameLogic.levelState.isLevelFailed) {
+    if (gameLogic.levelState.isLevelFailed) {
       return (
         <Window
-          isLastLevel={true || gameLogic.levelState.currentLevel === LAST_LEVEL}
+          isLastLevel={gameLogic.levelState.currentLevel === LAST_LEVEL}
           score={gameLogic.score}
           onRestart={() => {
             const fixedBonuses = LEVELS[gameLogic.levelState.currentLevel - 1].bonuses;
