@@ -23,11 +23,85 @@ export const useLevelManagement = ({
     isLevelComplete: false,
     isLevelTransition: true,
     selectedBonuses: [],
+    isLevelFailed: false,
   });
 
   const currentLevel =
     LEVELS.find((level) => level.id === levelState.currentLevel) || LEVELS[0];
 
+  /**
+   * Обработчик провала уровня
+   */
+  const handleLevelFailed = () => {
+    console.log(`Уровень ${levelState.currentLevel} провален: закончились ходы`);
+    setCompletionTriggered(true);
+
+    setTimeout(() => {
+      setLevelState((prev) => ({
+        ...prev,
+        isLevelFailed: true,
+        isLevelTransition: true,
+      }));
+      isLevelInitialized.current = false;
+      setCompletionTriggered(false);
+    }, 300);
+  };
+
+  /**
+   * restartCurrentLevel
+   *
+   * Resets the current level to its initial state:
+   * - resets goals, moves, score, matches, selections, animations, modifiers, bonuses
+   * - creates a fresh board via createInitialBoard and sets it via setBoard
+   *
+   * SPECIFIC RUNTIME COMMENT: this function logs the string
+   * "RESTART_CURRENT_LEVEL: invoked for level <levelId> at <ISO timestamp>"
+   * on every invocation (so you can find every restart in logs).
+   */
+  const restartCurrentLevel = () => {
+    console.log(
+      `RESTART_CURRENT_LEVEL: invoked for level ${levelState.currentLevel} at ${new Date().toISOString()}`
+    );
+
+    const levelGoals = getLevelGoals(levelState.currentLevel);
+    const levelMoves = getLevelMoves(levelState.currentLevel);
+
+    gameState.setGoals(() =>
+      levelGoals.map((goal) => ({ ...goal, collected: 0 }))
+    );
+    gameState.setMoves(() => levelMoves);
+    gameState.setScore(() => 0);
+    gameState.setMatches([]);
+    gameState.setSelectedPosition(null);
+    gameState.setIsSwapping(false);
+    gameState.setIsAnimating(false);
+    gameState.setActiveBonus(null);
+    gameState.setModifiers({
+      doublePoints: false,
+      doubleGoalProgress: false,
+      extraMoves: 0,
+    });
+
+    if (levelState.selectedBonuses.length > 0) {
+      const selectedBonusesWithCount = levelState.selectedBonuses.map(
+        (type) => ({
+          type,
+          count: 3,
+        })
+      );
+      gameState.setBonuses(() => selectedBonusesWithCount);
+    } else {
+      gameState.setBonuses(() => []);
+    }
+
+    const newBoard = createInitialBoard(currentLevel);
+    setBoard(newBoard);
+
+    isLevelInitialized.current = true;
+    setCompletionTriggered(false);
+  };
+
+  // Effect: monitor moves & goals
   useEffect(() => {
     if (
       levelState.isLevelTransition ||
@@ -37,27 +111,13 @@ export const useLevelManagement = ({
       return;
     }
 
-    // Для 6-го уровня проверяем только количество ходов
-    if (currentLevel.id === 6) {
-      // Завершаем уровень, когда ходы закончились и нет активной анимации
-      if (gameState.moves <= 0 && !isAnimating && !completionTriggered) { // тут заканчиваем бесконечный уровень
-        console.log("6 уровень завершен: закончились ходы");
-        setCompletionTriggered(true);
-
-        setTimeout(() => {
-          setLevelState((prev) => ({
-            ...prev,
-            isLevelComplete: true,
-            isLevelTransition: true,
-          }));
-          isLevelInitialized.current = false;
-          setCompletionTriggered(false);
-        }, 300);
-      }
-      return; // Не проверяем цели для 6-го уровня
+    // Если закончились ходы
+    if (gameState.moves <= 0 && !isAnimating && !completionTriggered) {
+      handleLevelFailed(); // Вызов вынесенной функции
+      return;
     }
 
-    // Для обычных уровней проверяем выполнение целей
+    // For non-move completion (objective-based) finishes:
     const allGoalsCompleted = gameState.goals.every(
       (goal) => goal.collected >= goal.target
     );
@@ -71,6 +131,7 @@ export const useLevelManagement = ({
           ...prev,
           isLevelComplete: true,
           isLevelTransition: true,
+          isLevelFailed: false,
         }));
         isLevelInitialized.current = false;
         setCompletionTriggered(false);
@@ -87,6 +148,7 @@ export const useLevelManagement = ({
     currentLevel.id,
   ]);
 
+  // Initialization effect
   useEffect(() => {
     if (levelState.isLevelTransition) {
       isLevelInitialized.current = false;
@@ -132,7 +194,6 @@ export const useLevelManagement = ({
 
     isLevelInitialized.current = true;
     setCompletionTriggered(false);
-
   }, [
     levelState.currentLevel,
     levelState.isLevelTransition,
@@ -143,7 +204,6 @@ export const useLevelManagement = ({
   ]);
 
   const handleLevelStart = (nextLevel: number, selectedBonuses: BonusType[]) => {
-
     const nextLevelData = LEVELS.find((level) => level.id === nextLevel);
 
     if (!nextLevelData) {
@@ -155,6 +215,7 @@ export const useLevelManagement = ({
       isLevelComplete: false,
       isLevelTransition: false,
       selectedBonuses,
+      isLevelFailed: false,
     });
 
     isLevelInitialized.current = false;
@@ -165,5 +226,6 @@ export const useLevelManagement = ({
     levelState,
     currentLevel,
     handleLevelStart,
+    restartCurrentLevel,
   };
 };

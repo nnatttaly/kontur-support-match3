@@ -15,6 +15,7 @@ export default function GamePage() {
       <LevelTransition
         currentLevel={gameLogic.levelState.currentLevel}
         onLevelStart={gameLogic.handleLevelStart}
+        isLevelFailed={gameLogic.levelState.isLevelFailed}
       />
     );
   }

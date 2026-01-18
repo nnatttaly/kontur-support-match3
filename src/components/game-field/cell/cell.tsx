@@ -1,3 +1,4 @@
+import React from "react";
 import { Figure, Position, SpecialCell } from "types";
 import { FIGURE_PATHS } from "consts";
 import "./cell.styles.css";
@@ -16,7 +17,7 @@ type CellProps = {
   onDragOver: (position: Position) => void;
 };
 
-export const Cell = ({
+export const Cell: React.FC<CellProps> = ({
   figure,
   position,
   isSelected,
@@ -27,12 +28,15 @@ export const Cell = ({
   onClick,
   onDragStart,
   onDragOver,
-}: CellProps) => {
+}) => {
   const handleClick = () => {
     if (isBlocked) return;
     onClick(position);
   };
 
+  /* =====================
+     DESKTOP (MOUSE)
+     ===================== */
   const handleMouseDown = () => {
     if (isBlocked) return;
     onDragStart(position);
@@ -43,12 +47,76 @@ export const Cell = ({
     onDragOver(position);
   };
 
+  /* =====================
+     MOBILE / POINTER
+     ===================== */
+  const handlePointerDown = () => {
+    if (isBlocked) return;
+    onDragStart(position);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isBlocked) return;
+    if (e.pointerType === "mouse") return; // mouse handled separately
+
+    const el = document.elementFromPoint(
+      e.clientX,
+      e.clientY
+    ) as HTMLElement | null;
+
+    if (!el) return;
+
+    const cellEl = el.closest(".cell") as HTMLElement | null;
+    if (!cellEl) return;
+
+    const row = Number(cellEl.dataset.row);
+    const col = Number(cellEl.dataset.col);
+
+    if (!Number.isNaN(row) && !Number.isNaN(col)) {
+      onDragOver({ row, col });
+    }
+  };
+
+  /* =====================
+     TOUCH (fallback)
+     ===================== */
+  const handleTouchStart = () => {
+    if (isBlocked) return;
+    onDragStart(position);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (isBlocked) return;
+
+    const t = e.touches[0];
+    if (!t) return;
+
+    const el = document.elementFromPoint(
+      t.clientX,
+      t.clientY
+    ) as HTMLElement | null;
+
+    if (!el) return;
+
+    const cellEl = el.closest(".cell") as HTMLElement | null;
+    if (!cellEl) return;
+
+    const row = Number(cellEl.dataset.row);
+    const col = Number(cellEl.dataset.col);
+
+    if (!Number.isNaN(row) && !Number.isNaN(col)) {
+      onDragOver({ row, col });
+    }
+  };
+
   const isStar = figure === "star";
-  const isDiamond = figure === "diamond"
+  const isDiamond = figure === "diamond";
   const isTeamBigFigure = figure && (figure === "team" || isTeamImage(figure));
 
   return (
     <div
+      data-row={position.row}
+      data-col={position.col}
       className={`
         cell 
         ${isSelected ? "cell--selected" : ""}
@@ -62,7 +130,11 @@ export const Cell = ({
       onClick={handleClick}
       onMouseDown={handleMouseDown}
       onMouseEnter={handleMouseEnter}
-      style={{ pointerEvents: isBlocked ? 'none' : 'auto' }}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      style={{ pointerEvents: isBlocked ? "none" : "auto" }}
     >
       <div className="cell-content">
         {figure && (
@@ -76,7 +148,7 @@ export const Cell = ({
               ${isTeamBigFigure ? "figure--big" : ""}
               ${isTeamImage(figure) ? "figure--big--image" : ""}
             `}
-            draggable="false"
+            draggable={false}
           />
         )}
       </div>
