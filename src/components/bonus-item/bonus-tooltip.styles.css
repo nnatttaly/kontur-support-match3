@@ -80,7 +80,7 @@
     right: auto !important;
     transform: translateX(-50%) !important;
   }
-  
+
   .bonus-tooltip--left::before,
   .bonus-tooltip--right::before {
     left: 50%;

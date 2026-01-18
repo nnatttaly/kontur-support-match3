@@ -10,32 +10,11 @@ export const LEVELS: Level[] = [
       { figure: "bonnet", target: 3, collected: 0 },
       { figure: "briefcase", target: 3, collected: 0 },
     ],
-    bonuses: ["knowledgeBase", "openGuide"], // ["knowledgeBase", "friendlyTeam", "careerGrowth"]
-    moves: 1,
-    /*
-    teamPositions: [
-      { row: 1, col: 1 },
-      { row: 1, col: 2 },
-      { row: 1, col: 3 },
-      { row: 1, col: 4 },
-      { row: 1, col: 5 },
-      { row: 2, col: 1 },
-      { row: 2, col: 2 },
-      { row: 2, col: 3 },
-      { row: 2, col: 4 },
-      { row: 2, col: 5 },
-      { row: 3, col: 1 },
-      { row: 3, col: 2 },
-      { row: 3, col: 3 },
-      { row: 3, col: 4 },
-      { row: 3, col: 5 },
-      { row: 4, col: 1 },
-      { row: 4, col: 2 },
-      { row: 4, col: 3 },
-      { row: 4, col: 4 },
-      { row: 4, col: 5 },
+    bonuses: [
+      { type: "knowledgeBase", count: 2 },
+      { type: "openGuide", count: 3 }
     ],
-    */
+    moves: 1,
     availableFigures: [
       "pencil",
       "questionBook",
@@ -55,7 +34,10 @@ export const LEVELS: Level[] = [
         collected: 0,
       },
     ],
-    bonuses: ["itSphere", "openGuide"], // ["sportCompensation", "modernProducts", "remoteWork"]
+    bonuses: [
+      { type: "itSphere", count: 3 },
+      { type: "openGuide", count: 3 }
+    ],
     moves: 22,
     availableFigures: [
       "roundMessage",
@@ -83,7 +65,10 @@ export const LEVELS: Level[] = [
     goals: [
       { figure: "star", target: 5, collected: 0 },
     ],
-    bonuses: ["remoteWork", "openGuide"], // ["remoteWork", "sportCompensation", "itSphere"]
+    bonuses: [
+      { type: "remoteWork", count: 3 },
+      { type: "openGuide", count: 3 }
+    ],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "smartphone", "rectangleMessage", "phone"],
     starPositions: [
@@ -106,7 +91,10 @@ export const LEVELS: Level[] = [
         collected: 0,
       }
     ],
-    bonuses: ["remoteWork", "openGuide"], // ["remoteWork", "dms", "itSphere"]
+    bonuses: [
+      { type: "remoteWork", count: 2 },
+      { type: "openGuide", count: 3 }
+    ],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "bulb", "rectangleMessage", "phone"],
     diamondPositions: [
@@ -140,7 +128,10 @@ export const LEVELS: Level[] = [
         collected: 0,
       }
     ],
-    bonuses: ["itSphere", "openGuide"], // ["itSphere", "openGuide", "remoteWork"]
+    bonuses: [
+      { type: "itSphere", count: 2 },
+      { type: "openGuide", count: 5 }
+    ],
     moves: 23,
     availableFigures: ["question", "heart", "handshake", "kpi", "bulb"],
     teamPositions: [
@@ -173,8 +164,8 @@ export const LEVELS: Level[] = [
       { figure: "letter", target: 8, collected: 0 },
       { figure: "smartphone", target: 8, collected: 0 },
     ],
-    bonuses: ["friendlyTeam", "itSphere"],
-    moves: 1,
+    bonuses: [], // Бонусы будут выбираться случайно с разным количеством
+    moves: 5,
     availableFigures: [
       "roundMessage",
       "rectangleMessage",

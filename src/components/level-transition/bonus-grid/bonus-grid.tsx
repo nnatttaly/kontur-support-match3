@@ -1,9 +1,9 @@
-import { BonusType } from "types";
+import { Bonus } from "types";
 import { BonusGridItem } from "../bonus-grid-item/bonus-grid-item";
 import "./bonus-grid.styles.css";
 
 type BonusGridProps = {
-  bonuses: BonusType[];
+  bonuses: Bonus[];
 };
 
 export const BonusGrid = ({ bonuses }: BonusGridProps) => {
@@ -11,8 +11,8 @@ export const BonusGrid = ({ bonuses }: BonusGridProps) => {
     <div className="bg-grid">
       {bonuses.map((bonus) => (
         <BonusGridItem
-          key={bonus}
-          type={bonus}
+          key={bonus.type}
+          bonus={bonus}
         />
       ))}
     </div>

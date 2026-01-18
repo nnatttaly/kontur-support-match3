@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { LevelState, BonusType, Board, GameState } from "types";
+import { LevelState, Bonus, Board, GameState } from "types";
 import { LEVELS } from "consts";
 import { getLevelGoals, getLevelMoves } from "@utils/level-utils";
 import { createInitialBoard } from "@utils/game-logic";
+import { getRandomBonusesForLevel6 } from "@utils/bonus-utils";
 
 type UseLevelManagementProps = {
   setBoard: (board: Board) => void;
@@ -30,6 +31,13 @@ export const useLevelManagement = ({
 
   const currentLevel =
     LEVELS.find((level) => level.id === levelState.currentLevel) || LEVELS[0];
+
+  /**
+   * Получение случайных бонусов для уровня 6
+   */
+  const getRandomBonuses = (): Bonus[] => {
+    return getRandomBonusesForLevel6();
+  };
 
   /**
    * Обработчик провала уровня
@@ -89,24 +97,27 @@ export const useLevelManagement = ({
       extraMoves: 0,
     });
 
-    if (levelState.selectedBonuses.length > 0) {
-      const selectedBonusesWithCount = levelState.selectedBonuses.map(
-        (type) => ({
-          type,
-          count: 3,
-        })
-      );
-      gameState.setBonuses(() => selectedBonusesWithCount);
-    } else {
-      gameState.setBonuses(() => []);
+    let bonusesToSet: Bonus[] = [];
+
+    if (levelState.currentLevel === 6) {
+      // Для уровня 6 используем уже сохраненные случайные бонусы
+      bonusesToSet = levelState.selectedBonuses;
+    } else if (levelState.selectedBonuses.length > 0) {
+      // Для остальных уровней используем выбранные бонусы
+      bonusesToSet = levelState.selectedBonuses;
+    } else if (currentLevel.bonuses.length > 0) {
+      // Используем бонусы, заданные в уровне
+      bonusesToSet = currentLevel.bonuses;
     }
+
+    gameState.setBonuses(() => bonusesToSet);
 
     const newBoard = createInitialBoard(currentLevel);
     setBoard(newBoard);
 
     isLevelInitialized.current = true;
     setCompletionTriggered(false);
-    isProcessingCompletion.current = false; // Сброс флага при рестарте
+    isProcessingCompletion.current = false;
   };
 
   // Effect: monitor moves & goals
@@ -191,17 +202,31 @@ export const useLevelManagement = ({
       extraMoves: 0,
     });
 
-    if (levelState.selectedBonuses.length > 0) {
-      const selectedBonusesWithCount = levelState.selectedBonuses.map(
-        (type) => ({
-          type,
-          count: 3,
-        })
-      );
-      gameState.setBonuses(() => selectedBonusesWithCount);
-    } else {
-      gameState.setBonuses(() => []);
+    let bonusesToSet: Bonus[] = [];
+
+    if (levelState.currentLevel === 6) {
+      // Для уровня 6 выбираем случайные бонусы с разным количеством
+      // Если бонусы уже есть в selectedBonuses (например, при переходе с LevelStartModal), используем их
+      if (levelState.selectedBonuses.length > 0) {
+        bonusesToSet = levelState.selectedBonuses;
+      } else {
+        // Иначе генерируем новые (например, при рестарте или переходе из предыдущего уровня)
+        bonusesToSet = getRandomBonuses();
+        // Обновляем state с новыми бонусами
+        setLevelState(prev => ({
+          ...prev,
+          selectedBonuses: bonusesToSet
+        }));
+      }
+    } else if (levelState.selectedBonuses.length > 0) {
+      // Для остальных уровней используем выбранные бонусы (но это только если игрок выбирал бонусы)
+      bonusesToSet = levelState.selectedBonuses;
+    } else if (currentLevel.bonuses.length > 0) {
+      // Используем бонусы, заданные в уровне
+      bonusesToSet = currentLevel.bonuses;
     }
+
+    gameState.setBonuses(() => bonusesToSet);
 
     const newBoard = createInitialBoard(currentLevel);
     setBoard(newBoard);
@@ -217,24 +242,36 @@ export const useLevelManagement = ({
     currentLevel,
   ]);
 
-  const handleLevelStart = (nextLevel: number, selectedBonuses: BonusType[]) => {
+  const handleLevelStart = (nextLevel: number, selectedBonuses: Bonus[]) => {
     const nextLevelData = LEVELS.find((level) => level.id === nextLevel);
 
     if (!nextLevelData) {
       return;
     }
 
+    // Используем переданные бонусы (для уровня 6 это случайные бонусы из LevelTransition)
     setLevelState({
       currentLevel: nextLevel,
       isLevelComplete: false,
       isLevelTransition: false,
-      selectedBonuses,
+      selectedBonuses: selectedBonuses, // ← Используем переданные бонусы
       isLevelFailed: false,
     });
 
     isLevelInitialized.current = false;
     setCompletionTriggered(false);
-    isProcessingCompletion.current = false; // Сброс флага при старте нового уровня
+    isProcessingCompletion.current = false;
+  };
+
+  // Функция для получения бонусов для отображения в LevelStartModal
+  const getBonusesForLevelStartModal = (levelId: number): Bonus[] => {
+    if (levelId === 6) {
+      // Для уровня 6 генерируем случайные бонусы для предпоказа
+      return getRandomBonuses();
+    }
+    
+    const level = LEVELS.find(l => l.id === levelId);
+    return level?.bonuses || [];
   };
 
   return {
@@ -242,5 +279,6 @@ export const useLevelManagement = ({
     currentLevel,
     handleLevelStart,
     restartCurrentLevel,
+    getBonusesForLevelStartModal,
   };
 };

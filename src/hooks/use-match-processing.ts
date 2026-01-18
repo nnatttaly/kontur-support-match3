@@ -92,8 +92,10 @@ export const useMatchProcessing = ({
     return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
   }, []);
 
-  const replaceCompletedGoalsForLevel6 = useCallback((goals: Goal[]): [Goal[], BonusType[]] => {
-    if (currentLevel?.id !== 6) return [goals, []];
+  // Changed: now returns both updated goals and the bonuses to add, but DOES NOT apply bonuses itself.
+  // This prevents duplicate application when called multiple times.
+  const replaceCompletedGoalsForLevel6 = useCallback((goals: Goal[]): { goals: Goal[]; bonuses: BonusType[] } => {
+    if (currentLevel?.id !== 6) return { goals, bonuses: [] };
 
     const updatedGoals = [...goals];
     const completedIndices: number[] = [];
@@ -103,18 +105,20 @@ export const useMatchProcessing = ({
     updatedGoals.forEach((goal, index) => {
       if (goal.collected >= goal.target) {
         completedIndices.push(index);
+        // Даем 1 случайный бонус за каждую выполненную цель
         const randomBonus = getRandomBonus();
         newBonuses.push(randomBonus);
       }
     });
 
-    // Если есть выполненные цели - заменяем их
+    // Если есть выполненные цели - заменяем их (но не применяем бонусы здесь)
     if (completedIndices.length > 0) {
       console.log(`Заменяем ${completedIndices.length} выполненных целей на 6-м уровне (useMatchProcessing)`);
+      console.log(`Подготовлено ${newBonuses.length} бонусов за выполненные цели (будут применены централизованно)`);
 
       completedIndices.forEach((index) => {
         const currentFigures = updatedGoals.map(g => g.figure);
-        const figuresInMatches: Figure[] = []; // В этом контексте у нас нет информации о матчах
+        const figuresInMatches: Figure[] = [];
         const excludeFigures = [...currentFigures, ...figuresInMatches];
 
         const newFigure = getRandomFigure(
@@ -128,42 +132,10 @@ export const useMatchProcessing = ({
           collected: 0
         };
       });
-
-      // Добавляем бонусы
-      if (newBonuses.length > 0) {
-        console.log(`Добавляем бонусы за выполненные цели (useMatchProcessing):`, newBonuses);
-        setBonuses((prevBonuses) => {
-          let updatedBonuses = [...prevBonuses];
-
-          for (const bonusType of newBonuses) {
-            const existingIndex = updatedBonuses.findIndex(b => b.type === bonusType);
-
-            if (existingIndex !== -1) {
-              updatedBonuses[existingIndex] = {
-                ...updatedBonuses[existingIndex],
-                count: Math.min(updatedBonuses[existingIndex].count + 1, 3)
-              };
-            } else if (updatedBonuses.length < 2) {
-              updatedBonuses.push({ type: bonusType, count: 1 });
-            } else {
-              // Если уже есть 2 бонуса, добавляем к случайному существующему
-              const randomIndex = Math.floor(Math.random() * 2);
-              if (updatedBonuses[randomIndex].count < 3) {
-                updatedBonuses[randomIndex] = {
-                  ...updatedBonuses[randomIndex],
-                  count: Math.min(updatedBonuses[randomIndex].count + 1, 3)
-                };
-              }
-            }
-          }
-
-          return updatedBonuses;
-        });
-      }
     }
 
-    return [updatedGoals, newBonuses];
-  }, [currentLevel, getRandomBonus, getRandomFigure, setBonuses]);
+    return { goals: updatedGoals, bonuses: newBonuses };
+  }, [currentLevel, getRandomBonus, getRandomFigure]);
 
   const processMatches = useCallback(
     async (currentBoard: Board, currentSpecialCells: SpecialCell[] = [], options?: { skipGoldenRestore: boolean }): Promise<Board> => {
@@ -185,6 +157,9 @@ export const useMatchProcessing = ({
       // ВАЖНО: используем переданные currentSpecialCells, которые уже обновлены бонусами
       const initialSpecialCells = currentSpecialCells.length > 0 ? currentSpecialCells : currentLevel?.specialCells || [];
       const updatedSpecialCells: SpecialCell[] = [...initialSpecialCells];
+
+      // Track how many level-6 bonuses we've applied during this processMatches invocation to avoid double-applying
+      let appliedLevel6Bonuses = 0;
 
       while (hasMatches) {
         const foundMatches = findAllMatches(boardToProcess);
@@ -272,12 +247,7 @@ export const useMatchProcessing = ({
                 };
               }
 
-              // Для 6-го уровня: немедленно проверяем и заменяем выполненные цели
-              if (currentLevel?.id === 6) {
-                const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(next);
-                return newGoals;
-              }
-
+              // DO NOT replace completed goals here for level 6. Replacement will be handled once per iteration below.
               return next;
             });
           }
@@ -332,12 +302,7 @@ export const useMatchProcessing = ({
                 console.log("Current goals:", next);
               }
 
-              // Для 6-го уровня: немедленно проверяем и заменяем выполненные цели
-              if (currentLevel?.id === 6) {
-                const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(next);
-                return newGoals;
-              }
-
+              // DO NOT replace completed goals here for level 6. Replacement will be handled once per iteration below.
               return next;
             });
           }
@@ -359,53 +324,27 @@ export const useMatchProcessing = ({
                 });
               });
 
-              // Для 6 уровня: проверяем каждую цель отдельно и заменяем выполненные
-              if (currentLevel?.id === 6) {
-                updatedGoals.forEach((goal, index) => {
-                  if (figureCountMap.has(goal.figure)) {
-                    const baseCount = figureCountMap.get(goal.figure)!;
-                    const increment = modifiers.doubleGoalProgress
-                      ? baseCount * 2
-                      : baseCount;
+              // Для обычных уровней
+              updatedGoals.forEach((goal, index) => {
+                if (figureCountMap.has(goal.figure)) {
+                  const count = figureCountMap.get(goal.figure)!;
+                  const increment = modifiers.doubleGoalProgress
+                    ? count * 2
+                    : count;
+                  const newCollected = Math.min(
+                    goal.collected + increment,
+                    goal.target
+                  );
 
-                    const oldCollected = goal.collected;
-                    const newCollected = Math.min(
-                      oldCollected + increment,
-                      goal.target
-                    );
+                  updatedGoals[index] = {
+                    ...goal,
+                    collected: newCollected,
+                  };
+                }
+              });
 
-                    updatedGoals[index] = {
-                      ...goal,
-                      collected: newCollected,
-                    };
-                  }
-                });
-
-                // После обновления целей немедленно проверяем и заменяем выполненные
-                const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(updatedGoals);
-                return newGoals;
-              } else {
-                // Для обычных уровней
-                updatedGoals.forEach((goal, index) => {
-                  if (figureCountMap.has(goal.figure)) {
-                    const count = figureCountMap.get(goal.figure)!;
-                    const increment = modifiers.doubleGoalProgress
-                      ? count * 2
-                      : count;
-                    const newCollected = Math.min(
-                      goal.collected + increment,
-                      goal.target
-                    );
-
-                    updatedGoals[index] = {
-                      ...goal,
-                      collected: newCollected,
-                    };
-                  }
-                });
-
-                return updatedGoals;
-              }
+              // DO NOT replace completed goals here for level 6. Replacement will be handled once per iteration below.
+              return updatedGoals;
             });
           }
 
@@ -508,12 +447,7 @@ export const useMatchProcessing = ({
               };
             }
 
-            // Для 6-го уровня: немедленно проверяем и заменяем выполненные цели
-            if (currentLevel?.id === 6) {
-              const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(next);
-              return newGoals;
-            }
-
+            // DO NOT replace completed goals here for level 6. Replacement will be handled once per iteration below.
             return next;
           });
 
@@ -574,12 +508,7 @@ export const useMatchProcessing = ({
               };
             }
 
-            // Для 6-го уровня: немедленно проверяем и заменяем выполненные цели
-            if (currentLevel?.id === 6) {
-              const [newGoals, bonusesToAdd] = replaceCompletedGoalsForLevel6(next);
-              return newGoals;
-            }
-
+            // DO NOT replace completed goals here for level 6. Replacement will be handled once per iteration below.
             return next;
           });
 
@@ -607,6 +536,58 @@ export const useMatchProcessing = ({
 
           setBoard([...boardToProcess]);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+        }
+
+        // --- CENTRALIZED: For level 6, run replacement once per iteration and apply bonuses once ---
+        if (currentLevel?.id === 6) {
+          setGoals((prev) => {
+            const { goals: newGoals, bonuses: bonusesToAdd } = replaceCompletedGoalsForLevel6(prev);
+
+            if (bonusesToAdd.length > 0) {
+              // Only apply bonuses that haven't been applied yet during this processMatches call.
+              const toApply = bonusesToAdd.slice(0, Math.max(0, bonusesToAdd.length - appliedLevel6Bonuses));
+
+              if (toApply.length > 0) {
+                console.log(`Applying ${toApply.length} bonus(es) for completed goals on level 6`);
+
+                setBonuses((prevBonuses) => {
+                  let updatedBonuses = [...prevBonuses];
+
+                  for (const bonusType of toApply) {
+                    const existingIndex = updatedBonuses.findIndex(b => b.type === bonusType);
+
+                    if (existingIndex !== -1) {
+                      updatedBonuses[existingIndex] = {
+                        ...updatedBonuses[existingIndex],
+                        count: Math.min(updatedBonuses[existingIndex].count + 1, 3)
+                      };
+                    } else if (updatedBonuses.length < 2) {
+                      updatedBonuses.push({ type: bonusType, count: 1 });
+                    } else {
+                      // Если уже есть 2 бонуса, добавляем к случайному существующему
+                      const randomIndex = Math.floor(Math.random() * updatedBonuses.length);
+                      if (updatedBonuses[randomIndex].count < 3) {
+                        updatedBonuses[randomIndex] = {
+                          ...updatedBonuses[randomIndex],
+                          count: Math.min(updatedBonuses[randomIndex].count + 1, 3)
+                        };
+                      }
+                    }
+                  }
+
+                  return updatedBonuses;
+                });
+
+                // Mark that we've applied these bonuses so we don't re-apply them in the same invocation
+                appliedLevel6Bonuses += toApply.length;
+              }
+            }
+
+            return newGoals;
+          });
+
+          // wait a tick so state updates propagate visually if needed
+          await new Promise((r) => setTimeout(r, ANIMATION_DURATION / 2));
         }
 
         // CHECK IF MORE MATCHES, DIAMONDS OR STARS
