@@ -21,38 +21,3 @@
   overflow: hidden;
   margin: 0 auto;
 }
-
-.lt-start-button {
-  background: linear-gradient(135deg, #366AF3, #366AF3);
-  color: white;
-  border: none;
-  border-radius: 30px;
-  margin: 15px auto 0;
-  padding: 12px 40px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-block;
-  width: fit-content;
-  min-width: 140px;
-  text-align: center;
-  align-self: center;
-  white-space: nowrap;
-  
-}
-
-.lt-start-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.lt-start-button:not(:disabled):hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(252, 118, 48, 0.3);
-}
-
-@media (max-height: 700px) {
-  .lt-start-button { padding: 8px 30px; font-size: 16px; }
-}

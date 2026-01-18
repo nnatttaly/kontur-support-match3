@@ -1,3 +1,4 @@
+import { Button } from '@components/button/button';
 import './choice-card.css';
 
 interface ChoiceCardProps {
@@ -11,9 +12,7 @@ function ChoiceCard ({ title, description, onSelect } : ChoiceCardProps)  {
     <div className="choice-card">
       <h2 className="card-title">{title}</h2>
       <p className="card-description">{description}</p>
-      <button className="select-button" onClick={onSelect}>
-        Выбрать
-      </button>
+      <Button text='Выбрать' onClick={onSelect} />
     </div>
   );
 };
