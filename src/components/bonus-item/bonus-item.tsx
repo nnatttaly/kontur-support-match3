@@ -11,94 +11,110 @@ type BonusItemProps = {
   index: number;
 };
 
-export const BonusItem = ({ 
-  bonus, 
-  activeBonus, 
-  onUse, 
-  index 
+export const BonusItem = ({
+  bonus,
+  activeBonus,
+  onUse,
+  index,
 }: BonusItemProps) => {
   const { type, count } = bonus;
+
   const [showTooltip, setShowTooltip] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
+
   const touchTimerRef = useRef<number | null>(null);
-  const tooltipPosition = index === 0 ? 'left' : 'right';
-  
+  const longPressTriggeredRef = useRef(false);
+
+  const tooltipPosition = index === 0 ? "left" : "right";
+
   const isActive = activeBonus?.type === type && activeBonus.isActive;
   const canUse = count > 0 || isActive;
-  
+
   useEffect(() => {
-    // Определяем, является ли устройство сенсорным
-    const checkTouchDevice = () => {
-      setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
+    const detectTouch = () => {
+      setIsTouchDevice(
+        "ontouchstart" in window || navigator.maxTouchPoints > 0
+      );
     };
-    
-    checkTouchDevice();
-    window.addEventListener('resize', checkTouchDevice);
-    
+
+    detectTouch();
+    window.addEventListener("resize", detectTouch);
+
     return () => {
-      window.removeEventListener('resize', checkTouchDevice);
+      window.removeEventListener("resize", detectTouch);
       if (touchTimerRef.current) {
         clearTimeout(touchTimerRef.current);
       }
     };
   }, []);
-  
+
+  /* =========================
+     TOUCH (MOBILE)
+     ========================= */
+
   const handleTouchStart = () => {
     if (!canUse) return;
-    
-    // Устанавливаем таймер для показа подсказки через 500мс (долгое нажатие)
+
+    longPressTriggeredRef.current = false;
+
     touchTimerRef.current = window.setTimeout(() => {
+      longPressTriggeredRef.current = true;
       setShowTooltip(true);
     }, 500);
   };
-  
+
   const handleTouchEnd = () => {
-    // Очищаем таймер при отпускании
     if (touchTimerRef.current) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
     }
-    
-    // Скрываем подсказку с небольшой задержкой для плавности
-    if (showTooltip) {
-      window.setTimeout(() => setShowTooltip(false), 100);
+
+    if (longPressTriggeredRef.current) {
+      setTimeout(() => setShowTooltip(false), 150);
     }
   };
-  
+
   const handleTouchMove = () => {
-    // При движении пальца отменяем показ подсказки
     if (touchTimerRef.current) {
       clearTimeout(touchTimerRef.current);
       touchTimerRef.current = null;
     }
   };
-  
+
+  /* =========================
+     MOUSE (PC)
+     ========================= */
+
   const handleMouseEnter = () => {
     if (!canUse || isTouchDevice) return;
     setShowTooltip(true);
   };
-  
+
   const handleMouseLeave = () => {
     if (isTouchDevice) return;
     setShowTooltip(false);
   };
-  
+
+  /* =========================
+     CLICK
+     ========================= */
+
   const handleClick = () => {
-    // Предотвращаем срабатывание клика при долгом нажатии (когда показана подсказка)
-    if (showTooltip) {
-      setShowTooltip(false);
+    // Prevent click after long-press on mobile
+    if (isTouchDevice && longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
       return;
     }
-    
+
     if (canUse) {
       onUse(type);
     }
   };
-  
+
   return (
     <div
       className={`
-        bonus-item 
+        bonus-item
         ${isActive ? "bonus-item--active" : ""}
         ${!canUse ? "bonus-item--disabled" : ""}
       `}
@@ -108,17 +124,21 @@ export const BonusItem = ({
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onTouchMove={handleTouchMove}
-      onTouchCancel={handleTouchEnd} // На случай отмены жеста
+      onTouchCancel={handleTouchEnd}
     >
       <div className="bonus-circle">
         <img src={BONUS_PATHS[type]} alt={type} className="bonus-icon" />
         <div className="bonus-count">{count}</div>
       </div>
-      
+
       {showTooltip && canUse && (
         <div className={`bonus-tooltip bonus-tooltip--${tooltipPosition}`}>
-          <div className="bonus-tooltip-title">{BONUS_NAMES[type]}</div>
-          <div className="bonus-tooltip-effect">{BONUS_EFFECTS[type]}</div>
+          <div className="bonus-tooltip-title">
+            {BONUS_NAMES[type]}
+          </div>
+          <div className="bonus-tooltip-effect">
+            {BONUS_EFFECTS[type]}
+          </div>
         </div>
       )}
     </div>
