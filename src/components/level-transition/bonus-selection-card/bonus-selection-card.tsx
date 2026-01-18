@@ -1,9 +1,9 @@
-import { BonusType } from "types";
+import { Bonus } from "types";
 import { BonusGrid } from "../bonus-grid/bonus-grid";
 import "./bonus-selection-card.styles.css";
 
 type BonusSelectionCardProps = {
-  availableBonuses: BonusType[];
+  availableBonuses: Bonus[];
 };
 
 export const BonusSelectionCard = ({
