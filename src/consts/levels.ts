@@ -130,7 +130,7 @@ export const LEVELS: Level[] = [
     ],
     bonuses: [
       { type: "itSphere", count: 2 },
-      { type: "openGuide", count: 3 }
+      { type: "openGuide", count: 5 }
     ],
     moves: 23,
     availableFigures: ["question", "heart", "handshake", "kpi", "bulb"],
