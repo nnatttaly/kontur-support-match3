@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { Board, Position, SpecialCell } from "types";
 import { ANIMATION_DURATION } from "consts";
 import { willCreateMatch } from "@utils/game-logic";
@@ -11,6 +11,9 @@ export const useSwapLogic = (
   setBoard: (board: Board) => void,
   processMatches: (board: Board, specialCells: SpecialCell[], options?: { skipGoldenRestore: boolean }) => Promise<Board>
 ) => {
+  // Флаг для предотвращения двойных свапов на мобильных устройствах
+  const isSwappingInProgress = useRef(false);
+
   const areAdjacent = useCallback((pos1: Position, pos2: Position): boolean => {
     const rowDiff = Math.abs(pos1.row - pos2.row);
     const colDiff = Math.abs(pos1.col - pos2.col);
@@ -41,8 +44,15 @@ export const useSwapLogic = (
       setMoves: (updater: (moves: number) => number) => void,
       specialCells: SpecialCell[]
     ): Promise<boolean> => {
+      // Защита от двойного вызова на мобильных устройствах
+      if (isSwappingInProgress.current) {
+        console.warn('swapFigures: обмен уже выполняется, пропускаем');
+        return false;
+      }
+
       if (moves <= 0) return false;
 
+      isSwappingInProgress.current = true;
       setIsSwapping(true);
       setIsAnimating(true);
 
@@ -50,6 +60,7 @@ export const useSwapLogic = (
       if (!canSwap(board, pos1, pos2)) {
         setIsSwapping(false);
         setIsAnimating(false);
+        isSwappingInProgress.current = false;
         return false;
       }
 
@@ -60,6 +71,7 @@ export const useSwapLogic = (
       if (figure1 === "star" && figure2 === "star") {
         setIsSwapping(false);
         setIsAnimating(false);
+        isSwappingInProgress.current = false;
         return false;
       }
 
@@ -67,6 +79,7 @@ export const useSwapLogic = (
       if (!willCreateMatch(board, pos1, pos2)) {
         setIsSwapping(false);
         setIsAnimating(false);
+        isSwappingInProgress.current = false;
         return false;
       }
 
@@ -80,12 +93,19 @@ export const useSwapLogic = (
       await new Promise((resolve) => setTimeout(resolve, ANIMATION_DURATION));
       setIsSwapping(false);
 
-      setMoves((prevMoves) => prevMoves - 1);
+      // Вычитаем ТОЛЬКО ОДИН ход
+      setMoves((prevMoves) => {
+        // Дополнительная проверка на случай, если функция вызвалась дважды
+        if (prevMoves <= 0) return 0;
+        return prevMoves - 1;
+      });
 
       // Для обычных свапов передаем specialCells и флаг skipGoldenRestore: false
       await processMatches(newBoard, specialCells, { skipGoldenRestore: false });
       setIsAnimating(false);
 
+      // Сбрасываем флаг после завершения всего процесса
+      isSwappingInProgress.current = false;
       return true;
     },
     [board, setIsSwapping, setIsAnimating, processMatches, setBoard, canSwap]
