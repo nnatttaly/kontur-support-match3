@@ -136,7 +136,7 @@ export const LEVELS: Level[] = [
     goals: [
       {
         figure: "teamCell",
-        target: 14,
+        target: 5,
         collected: 0,
       }
     ],
@@ -174,7 +174,7 @@ export const LEVELS: Level[] = [
       { figure: "smartphone", target: 8, collected: 0 },
     ],
     bonuses: ["friendlyTeam", "itSphere"],
-    moves: 5,
+    moves: 1,
     availableFigures: [
       "roundMessage",
       "rectangleMessage",

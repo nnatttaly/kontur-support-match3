@@ -5,6 +5,7 @@ import { PromotionHeader } from "../promotion-header/promotion-header";
 import { BonusSelectionCard } from "../bonus-selection-card/bonus-selection-card";
 import "./level-transition.styles.css";
 import ChoiceLevel from "@components/choice/main-choice/choice-level";
+import { Button } from "@components/button/button";
 
 type LevelTransitionProps = {
   currentLevel: number;
@@ -54,12 +55,7 @@ export const LevelTransition = ({
           isFirstLevel={currentLevel === 0}
         />
         <BonusSelectionCard availableBonuses={nextLevelInfo.bonuses} />
-        <button
-          className="lt-start-button"
-          onClick={handleStart}
-        >
-          {currentLevel === 0 ? 'Начать игру' : 'Продолжить игру'}
-        </button>
+        <Button text={currentLevel === 0 ? 'Начать игру' : 'Продолжить игру'} onClick={handleStart} />
       </div>
     </div>
   );

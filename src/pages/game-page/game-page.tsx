@@ -6,21 +6,23 @@ import { Bonuses } from "@components/bonuses/bonuses";
 import { LevelTransition } from "@components/level-transition/level-transition/level-transition";
 import { useGameLogic } from "@hooks/use-game-logic";
 import "./game-page.styles.css";
-import { FailTransition } from "@components/fail-transition/fail-transition";
-import { LEVELS } from "consts/levels";
+import { Window } from "@components/window/window";
+import { LEVELS, LAST_LEVEL } from "consts";
 
 export default function GamePage() {
   const gameLogic = useGameLogic();
 
-
   if (gameLogic.levelState.isLevelTransition) {
-    if (gameLogic.levelState.isLevelFailed) {
+    if (true || gameLogic.levelState.isLevelFailed) {
       return (
-        <FailTransition 
+        <Window
+          isLastLevel={true || gameLogic.levelState.currentLevel === LAST_LEVEL}
+          score={gameLogic.score}
           onRestart={() => {
             const fixedBonuses = LEVELS[gameLogic.levelState.currentLevel - 1].bonuses;
             gameLogic.handleLevelStart(gameLogic.levelState.currentLevel, fixedBonuses);
           }}
+          
         />
       )
     }

@@ -19,37 +19,8 @@
 .card-description {
   font-size: 15px;
   line-height: 1.5;
-  margin-bottom: 20px;
   flex-grow: 1;
 }
-
-
-.select-button {
-  background-color: #4a6cf7;
-  color: white;
-  border: none;
-  border-radius: 25px;
-  padding: 12px 60px;
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: inline-block;
-  outline: none;
-}
-
-.select-button:hover {
-  transform: translateY(-3px);
-
-  box-shadow: 0 10px 25px rgba(252, 118, 48, 0.4);
-  
-}
-
-.select-button:active {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 10px rgba(252, 118, 48, 0.3);
-}
-
 
 @media (max-width: 470px) {
   .choice-card {
@@ -64,10 +35,6 @@
 @media (max-height: 844px) and (max-width: 959px) {
   .card-description {
     line-height: 1.2;
-  }
-
-  .select-button {
-    padding: 8px 50px;
   }
 
   .card-title {
