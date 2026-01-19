@@ -66,7 +66,7 @@ export const LEVELS: Level[] = [
       { figure: "star", target: 5, collected: 0 },
     ],
     bonuses: [
-      { type: "dms", count: 1 },
+      { type: "dms", count: 2 },
       { type: "sportCompensation", count: 3 }
     ],
     moves: 23,
