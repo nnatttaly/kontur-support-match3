@@ -11,6 +11,7 @@ export const FailTransition = ({
   
   return (
     <div className="fail-content">
+      <h2>Неудача</h2>
       <p className="fail-message">
         {"Не вышло… но это нормально! У всех бывают неудачи — даже у самых опытных специалистов. Сделай вдох, соберись и попробуй ещё раз. Ты точно справишься!"}
       </p>

@@ -4,8 +4,16 @@
     line-height: 1.4;
 }
 
+h2 {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
 @media (max-width: 500px) {
   .fail-message {
     font-size: 16px;
+  }
+  h2 {
+    font-size: 20px;
   }
 }

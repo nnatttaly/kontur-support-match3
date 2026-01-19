@@ -3,7 +3,7 @@
   flex-direction: column;
   justify-content: center; 
   align-items: center; 
-  height: 100dvh; /* Основное решение */
+  height: 100dvh;
 
   width: 100vw;
   margin: 0;

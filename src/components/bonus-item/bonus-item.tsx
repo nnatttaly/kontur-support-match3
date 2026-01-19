@@ -8,14 +8,12 @@ type BonusItemProps = {
   bonus: Bonus;
   activeBonus: ActiveBonus | null;
   onUse: (type: Bonus["type"]) => void;
-  index: number;
 };
 
 export const BonusItem = ({
   bonus,
   activeBonus,
   onUse,
-  index,
 }: BonusItemProps) => {
   const { type, count } = bonus;
 
@@ -24,8 +22,6 @@ export const BonusItem = ({
 
   const touchTimerRef = useRef<number | null>(null);
   const longPressRef = useRef(false);
-
-  const tooltipPosition = index === 0 ? "left" : "right";
 
   const isActive = activeBonus?.type === type && activeBonus.isActive;
   const canUse = count > 0 || isActive;
@@ -133,7 +129,7 @@ export const BonusItem = ({
       </div>
 
       {showTooltip && canUse && (
-        <div className={`bonus-tooltip bonus-tooltip--${tooltipPosition}`}>
+        <div className="bonus-tooltip bonus-tooltip--top">
           <div className="bonus-tooltip-title">
             {BONUS_NAMES[type]}
           </div>
