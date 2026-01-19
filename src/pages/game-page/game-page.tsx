@@ -5,12 +5,32 @@ import { Goals } from "@components/goals/goals";
 import { Bonuses } from "@components/bonuses/bonuses";
 import { LevelTransition } from "@components/level-transition/level-transition/level-transition";
 import { useGameLogic } from "@hooks/use-game-logic";
-import "./game-page.styles.css";
 import { Window } from "@components/window/window";
 import { LEVELS, LAST_LEVEL } from "consts";
+import { useEffect, useState } from "react";
+import { TUTORIALS } from "@components/tutorial/tutorial-data";
+import { Tutorial } from "@components/tutorial/tutorial";
+import "./game-page.styles.css";
 
 export default function GamePage() {
   const gameLogic = useGameLogic();
+
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [viewedTutorials, setViewedTutorials] = useState<number[]>([]);
+  const currentLevelId = gameLogic.levelState.currentLevel;
+
+  useEffect(() => {
+    if (!gameLogic.levelState.isLevelTransition && 
+        TUTORIALS[currentLevelId] && 
+        !viewedTutorials.includes(currentLevelId)) {
+      setShowTutorial(true);
+    }
+  }, [gameLogic.levelState.isLevelTransition, currentLevelId, viewedTutorials]);
+
+  const handleCloseTutorial = () => {
+    setShowTutorial(false);
+    setViewedTutorials(prev => [...prev, currentLevelId]);
+  };
 
   if (gameLogic.levelState.isLevelTransition) {
     if (gameLogic.levelState.isLevelFailed) {
@@ -36,6 +56,13 @@ export default function GamePage() {
 
   return (
     <div className="page">
+
+      {showTutorial && (
+        <Tutorial 
+          steps={TUTORIALS[currentLevelId]} 
+          onComplete={handleCloseTutorial} 
+        />
+      )}
       <div className="game-main">
 
         <div className="game-content">
