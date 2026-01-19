@@ -1,22 +1,28 @@
 .tutorial-overlay {
   position: fixed;
+  inset: 0;
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   z-index: 9999;
   cursor: pointer;
+  overflow: hidden;
+  touch-action: none;
 }
 
 .tutorial-svg-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  display: block;
 }
 
 
 .tutorial-content {
-  position: absolute;
-  /* Убираем bottom, left, transform отсюда! */
+  position: fixed; /* Чтобы не зависеть от прокрутки страницы */
   display: flex;
   align-items: center;
   gap: 10px;
@@ -24,7 +30,7 @@
   max-width: 600px;
   pointer-events: none;
   z-index: 10000;
-  transition: all 0.4s ease-out; /* Чтобы плавно двигалось между шагами */
+  transition: all 0.4s ease-out;
 }
 
 /* Позиция Справа: переворачиваем flex-контейнер */
@@ -116,6 +122,32 @@
   60% { opacity: 0.5; }
 }
 
+@media (min-aspect-ratio: 1/1) {
 
 
+  @media (max-width: 1050px) {
+    .tutorial-content {
+      zoom: 0.80;
+    }
+  }
+}
 
+
+  @media (max-width: 600px) {
+    .dialog-bubble p {
+      font-size: 15px;
+      line-height: 1;
+    }
+  }
+
+
+@media (max-width: 768px) {
+  .tutorial-content {
+    width: 90%;
+  }
+  
+  .character-icon {
+    width: 70px;
+    height: 70px;
+  }
+}
