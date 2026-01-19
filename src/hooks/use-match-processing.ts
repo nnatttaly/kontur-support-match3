@@ -697,13 +697,11 @@ export const useMatchProcessing = ({
                 const hasMovesAfterShuffle = checkPossibleMoves(boardToProcess);
                 if (hasMovesAfterShuffle) {
                   
-                  console.log(`Шаффл ${counter}: нет матчей, но есть возможные ходы`);
-                  console.log(boardToProcess);
+                  console.log(`Шаффл ${counter}: есть возможные ходы`);
                   // Выходим из цикла, так как есть ходы
                   break;
                 } else {
-                  console.log(`Шаффл ${counter}: нет матчей и нет возможных ходов, продолжаем цикл`);
-                  console.log(boardToProcess);
+                  console.log(`Шаффл ${counter}: нет возможных ходов, продолжаем цикл`);
                   // Устанавливаем флаг обратно, чтобы продолжить цикл
                   hasMatches = true;
                 }
