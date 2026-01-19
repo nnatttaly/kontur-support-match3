@@ -10,18 +10,20 @@ export interface TutorialStep {
     right?: string;
     transform?: string; // Например, 'translate(-50%, -50%)' для центрирования
   };
+  highlightBonus?: boolean;
+
 }
 
 export const TUTORIALS: Record<number, TutorialStep[]> = {
   1: [
     { text: "Привет! Я твой наставник", characterPos: 'left', highlightSelector: undefined, position: { top: '40%', left: '37%' } },
     { text: "Перетаскивай фигурки на поле и накапливай знания, которые пригодятся в дальнейшем", characterPos: 'right', highlightSelector: '.field', position: { top: '27%', left: '55%' } },
-    { text: "Это твои цели уровня. Собери нужное количество рядов, чтобы перейти дальше", characterPos: 'right', highlightSelector: '.goals-container', position: { top: '35%', left: '30.5%' } },
+    { text: "Это твои цели уровня. Собери нужное количество рядов, чтобы перейти дальше", characterPos: 'right', highlightSelector: '.goals-container', position: { top: '35%', left: '30.5%' }, highlightBonus: true },
 
-    { text: "Это количество оставшихся ходов", characterPos: 'right', highlightSelector: '.moves-container', position: { top: '17%', left: '43%' } },
-    { text: "А тут будет отображаться твой прогресс. Попробуй набрать как можно больше очков!", characterPos: 'left', highlightSelector: '.score-container', position: { top: '17%', left: '23%' } },
-    { text: "Здесь твои бонусы — воспользуйся ими, чтобы быстрее достичь целей", characterPos: 'left', highlightSelector: '.bonuses-container', position: { top: '54%', left: '23%' } },
-    { text: "Здесь твои бонусы — воспользуйся ими, чтобы быстрее достичь целей", characterPos: 'left', highlightSelector: '.bonuses-container', position: { top: '54%', left: '23%' } },
+    { text: "Это количество оставшихся ходов", characterPos: 'right', highlightSelector: '.moves-container', position: { top: '17%', left: '43%' }, highlightBonus: true },
+    { text: "А тут будет отображаться твой прогресс. Попробуй набрать как можно больше очков!", characterPos: 'left', highlightSelector: '.score-container', position: { top: '17%', left: '23%' }, highlightBonus: true },
+    { text: "Здесь твои бонусы — пользуйся ими, чтобы быстрее достичь целей", characterPos: 'left', highlightSelector: '.bonuses-container', position: { top: '54%', left: '23%' }, highlightBonus: true },
+    { text: "вперед", characterPos: 'left', highlightSelector: '.bonuses-container', position: { top: '54%', left: '23%' }, highlightBonus: true },
 
   ],
   2: [

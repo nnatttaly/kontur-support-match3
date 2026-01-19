@@ -1,5 +1,5 @@
 // components/tutorial/tutorial.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './tutorial.css';
 import { TutorialStep } from './tutorial-data';
 import { DIALOG_BUBBLE_ICON_PATH, HERO_ICON_PATH } from 'consts/paths';
@@ -21,6 +21,14 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
   const [coordsArray, setCoordsArray] = useState<ElementRect[]>([]);
 
   const step = steps[currentStep];
+      // Туть
+  const handleNext = useCallback(() => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      onComplete();
+    }
+  }, [currentStep, onComplete, steps.length]);
 
   useEffect(() => {
       if (step.highlightSelector) {
@@ -46,13 +54,23 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
       }
     }, [currentStep, step.highlightSelector]);
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(prev => prev + 1);
+  useEffect(() => {
+    const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
+    if (!bonusesContainer) return;
+
+    if (step.highlightBonus) {
+      bonusesContainer.style.zIndex = '9999999';
+      // Добавляем обработчик клика на бонусы для переход к следующему шагу
+      bonusesContainer.addEventListener('click', handleNext);
+      
+      return () => {
+        bonusesContainer.removeEventListener('click', handleNext);
+        bonusesContainer.style.zIndex = '';
+      };
     } else {
-      onComplete();
+      bonusesContainer.style.zIndex = '';
     }
-  };
+  }, [currentStep, step.highlightBonus, handleNext]);
 
   // Дефолтные стили, если позиция не передана (по центру внизу)
   const defaultPosition = {
