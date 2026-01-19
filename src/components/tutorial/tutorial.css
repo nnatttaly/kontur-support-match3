@@ -1,29 +1,22 @@
+/* tutorial.css */
 .tutorial-overlay {
-  position: fixed; /* Обязательно fixed */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
-  /* dvh подстроится под скрытие/появление адресной строки Safari */
-  height: 100dvh; 
+  height: 100vh;
+  height: -webkit-fill-available; /* Фикс для iOS: игнорирует бары браузера */
   z-index: 9999;
   cursor: pointer;
-  /* Убираем возможные смещения */
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
 }
-
 .tutorial-svg-mask {
-  position: fixed;
+  position: absolute; /* Убедимся, что SVG плотно сидит */
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  /* Важно, чтобы SVG не реагировал на клики сам по себе */
-  pointer-events: none; 
+  height: -webkit-fill-available; /* То же для SVG */
 }
-
-
 .tutorial-content {
   position: absolute;
   /* Убираем bottom, left, transform отсюда! */
@@ -36,20 +29,13 @@
   z-index: 10000;
   transition: all 0.4s ease-out; /* Чтобы плавно двигалось между шагами */
 }
-
 /* Позиция Справа: переворачиваем flex-контейнер */
 .tutorial-content.right {
   flex-direction: row-reverse;
 }
-
-
-
-
-
-
 /* Круг с иконкой - всегда круглый */
 .character-icon {
-  width: 90px; 
+  width: 90px;
   height: 90px;
   border-radius: 50%;
   background-color: #F6F6F6;
@@ -62,14 +48,12 @@
   flex-shrink: 0; /* запрещаем сжатие */
   margin-top: 60px;
 }
-
 .character-icon img {
   width: 70%;
   height: 70%;
   object-fit: contain; /* чтобы картинка сохраняла пропорции */
   display: block;
 }
-
 /* Диалоговое окно */
 .dialog-bubble {
   position: relative;
@@ -79,7 +63,6 @@
   margin-bottom: 5px;
   max-width: 100%; /* ограничиваем максимальную ширину */
 }
-
 .dialog-bubble img {
   width: auto; /* изменено на auto */
   height: auto; /* изменено на auto */
@@ -88,7 +71,6 @@
   top: 0;
   left: 0;
 }
-
 .dialog-bubble p {
   position: absolute;
   top: 50%;
@@ -107,12 +89,9 @@
   align-items: center;
   justify-content: center;
 }
-
 .dialog-bubble.right img {
   transform: scaleX(-1);
 }
-
-
 /* Подсказка под диалоговым окном */
 .click-hint {
   display: block;
@@ -121,7 +100,6 @@
   text-align: center;
   animation: blink 1.5s infinite;
 }
-
 @keyframes blink {
   60% { opacity: 0.5; }
 }
