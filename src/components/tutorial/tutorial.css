@@ -1,16 +1,26 @@
 .tutorial-overlay {
-  position: fixed;
+  position: fixed; /* Обязательно fixed */
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  /* dvh подстроится под скрытие/появление адресной строки Safari */
+  height: 100dvh; 
   z-index: 9999;
   cursor: pointer;
+  /* Убираем возможные смещения */
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .tutorial-svg-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  /* Важно, чтобы SVG не реагировал на клики сам по себе */
+  pointer-events: none; 
 }
 
 

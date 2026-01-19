@@ -31,6 +31,44 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
   }, [currentStep, onComplete, steps.length]);
 
   useEffect(() => {
+    const updateCoords = () => {
+      if (step.highlightSelector) {
+        const elements = document.querySelectorAll(step.highlightSelector);
+        
+        if (elements.length > 0) {
+          const newCoords: ElementRect[] = Array.from(elements).map(el => {
+            const rect = el.getBoundingClientRect();
+            return {
+              x: rect.left,
+              y: rect.top,
+              width: rect.width,
+              height: rect.height
+            };
+          });
+          setCoordsArray(newCoords);
+        } else {
+          setCoordsArray([]);
+        }
+      } else {
+        setCoordsArray([]);
+      }
+    };
+
+    // Вызываем сразу
+    updateCoords();
+
+    // Добавляем слушатель на ресайз (важно для iOS Safari)
+    window.addEventListener('resize', updateCoords);
+    // На случай, если в игре есть внутренний скролл
+    window.addEventListener('scroll', updateCoords, true);
+
+    return () => {
+      window.removeEventListener('resize', updateCoords);
+      window.removeEventListener('scroll', updateCoords, true);
+    };
+  }, [currentStep, step.highlightSelector]);
+
+  useEffect(() => {
       if (step.highlightSelector) {
         // Находим ВСЕ элементы по селектору
         const elements = document.querySelectorAll(step.highlightSelector);
@@ -83,7 +121,7 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
 
   return (
     <div className="tutorial-overlay" onClick={handleNext}>
-    <svg className="tutorial-svg-mask">
+    <svg className="tutorial-svg-mask" viewBox={`0 0 ${window.innerWidth} ${window.innerHeight}`}>
       <defs>
         <mask id="hole">
           {/* Белый фон — всё, что под ним, будет темным */}
