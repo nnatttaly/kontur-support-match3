@@ -1,31 +1,21 @@
-/* tutorial.css */
-html, body {
-  height: 100%; /* Фиксирует layout viewport */
-  overflow: hidden; /* Предотвращает скролл под оверлеем */
-  overscroll-behavior: none; /* Предотвращает overscroll эффекты на iOS */
-}
-
 .tutorial-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  height: -webkit-fill-available; /* Фикс для iOS: игнорирует бары браузера */
+  /* Использование inset: 0 лучше исправляет баги Safari с 100vh */
+  inset: 0;
   z-index: 9999;
   cursor: pointer;
+  /* Запрещаем прокрутку тачем на мобилках */
+  touch-action: none;
 }
+
 .tutorial-svg-mask {
-  position: absolute; /* Убедимся, что SVG плотно сидит */
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  height: -webkit-fill-available; /* То же для SVG */
+  display: block;
 }
+
 .tutorial-content {
   position: absolute;
-  /* Убираем bottom, left, transform отсюда! */
   display: flex;
   align-items: center;
   gap: 10px;
@@ -33,13 +23,14 @@ html, body {
   max-width: 600px;
   pointer-events: none;
   z-index: 10000;
-  transition: all 0.4s ease-out; /* Чтобы плавно двигалось между шагами */
+  /* Плавный переход позиции */
+  transition: top 0.4s ease-out, left 0.4s ease-out, bottom 0.4s ease-out, right 0.4s ease-out, transform 0.4s ease-out;
 }
-/* Позиция Справа: переворачиваем flex-контейнер */
+
 .tutorial-content.right {
   flex-direction: row-reverse;
 }
-/* Круг с иконкой - всегда круглый */
+
 .character-icon {
   width: 90px;
   height: 90px;
@@ -51,61 +42,61 @@ html, body {
   justify-content: center;
   position: relative;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  flex-shrink: 0; /* запрещаем сжатие */
+  flex-shrink: 0;
   margin-top: 60px;
 }
+
 .character-icon img {
   width: 70%;
   height: 70%;
-  object-fit: contain; /* чтобы картинка сохраняла пропорции */
-  display: block;
+  object-fit: contain;
 }
-/* Диалоговое окно */
+
 .dialog-bubble {
   position: relative;
-  display: inline-flex; /* изменено на inline-flex */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   margin-bottom: 5px;
-  max-width: 100%; /* ограничиваем максимальную ширину */
+  max-width: 100%;
 }
+
 .dialog-bubble img {
-  width: auto; /* изменено на auto */
-  height: auto; /* изменено на auto */
-  max-width: 100%; /* ограничиваем максимальную ширину */
+  width: 100%;
+  height: auto;
   display: block;
-  top: 0;
-  left: 0;
 }
+
 .dialog-bubble p {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   margin: 0;
-  padding: 0px 25px; /* РЕГУЛИРУЙТЕ ОТСТУПЫ ТЕКСТА ЗДЕСЬ */
+  padding: 0 25px;
   text-align: center;
   font-size: 18px;
-  line-height: 1.4;
-  width: 100%; /* ширина текстовой области */
-  max-height: 90%; /* высота текстовой области */
+  line-height: 1.2;
+  width: 100%;
   box-sizing: border-box;
   overflow-wrap: break-word;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  color: #000;
 }
+
 .dialog-bubble.right img {
   transform: scaleX(-1);
 }
-/* Подсказка под диалоговым окном */
+
 .click-hint {
   display: block;
-  font-size: 15px;
-  color: #b0b0b0;
+  font-size: 14px;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
   text-align: center;
   animation: blink 1.5s infinite;
+  margin-top: 8px;
 }
+
 @keyframes blink {
-  60% { opacity: 0.5; }
+  50% { opacity: 0.4; }
 }
