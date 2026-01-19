@@ -70,8 +70,8 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
             
             // Если это айфон, применяем корректировку
             // Если зона съезжает вниз и вправо, нам нужно ВЫЧЕСТЬ смещение
-            const correctionX = isIOS ? -2 : 0; // Можно подправить на 1-5 пикселей
-            const correctionY = isIOS ? -2 : 0; 
+            const correctionX = isIOS ? -10 : 0; // Можно подправить на 1-5 пикселей
+            const correctionY = isIOS ? -10 : 0; 
 
             return {
               x: rect.left - offsetX + correctionX,
