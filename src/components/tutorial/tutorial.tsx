@@ -39,11 +39,12 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
       if (elements.length > 0) {
         const newCoords: ElementRect[] = Array.from(elements).map(el => {
           const rect = el.getBoundingClientRect();
-          // Ключевой фикс: корректируем Y на offset visual viewport
+          // Ключевой фикс: корректируем X и Y на offset visual viewport
+          const viewportOffsetX = window.visualViewport?.offsetLeft || 0;
           const viewportOffsetY = window.visualViewport?.offsetTop || 0;
           return {
-            x: rect.left,
-            y: rect.top + viewportOffsetY, // Добавляем offset, чтобы синхронизировать с layout viewport
+            x: rect.left + viewportOffsetX,
+            y: rect.top + viewportOffsetY,
             width: rect.width,
             height: rect.height
           };
@@ -67,19 +68,19 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     const viewport = window.visualViewport;
     if (!viewport) return;
 
-    const handleViewportChange = (e: VisualViewportEvent) => {
+    const handleViewportChange = () => {
       updateCoords();
     };
 
-    viewport.addEventListener('resize', handleViewportChange as EventListener);
-    viewport.addEventListener('scroll', handleViewportChange as EventListener);
+    viewport.addEventListener('resize', handleViewportChange);
+    viewport.addEventListener('scroll', handleViewportChange);
 
     // Инициальный вызов
     updateCoords();
 
     return () => {
-      viewport.removeEventListener('resize', handleViewportChange as EventListener);
-      viewport.removeEventListener('scroll', handleViewportChange as EventListener);
+      viewport.removeEventListener('resize', handleViewportChange);
+      viewport.removeEventListener('scroll', handleViewportChange);
     };
   }, [updateCoords]);
 

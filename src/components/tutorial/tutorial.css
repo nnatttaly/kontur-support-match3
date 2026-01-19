@@ -1,4 +1,10 @@
 /* tutorial.css */
+html, body {
+  height: 100%; /* Фиксирует layout viewport */
+  overflow: hidden; /* Предотвращает скролл под оверлеем */
+  overscroll-behavior: none; /* Предотвращает overscroll эффекты на iOS */
+}
+
 .tutorial-overlay {
   position: fixed;
   top: 0;
