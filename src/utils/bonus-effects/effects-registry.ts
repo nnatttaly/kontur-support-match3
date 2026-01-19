@@ -55,15 +55,15 @@ export const BONUS_EFFECTS: Record<BonusType, BonusEffect> = {
   },
 
   careerGrowth: {
+
     apply: (board, specialCells, currentLevel) => ({ 
-      board, 
+      board: applyDMSEffect(board), 
       matchedPositions: [],
       removedFigures: [],
       removedGoldenCells: []
     }),
-    isInstant: false,
-    applyModifiers: applyCareerGrowthEffect,
-    reset: resetCareerGrowthModifiers,
+    isInstant: true,
+    onApply: (setMoves) => setMoves((m) => m + 3),
   },
 
   sportCompensation: {
@@ -112,19 +112,20 @@ export const BONUS_EFFECTS: Record<BonusType, BonusEffect> = {
   },
 
   itSphere: {
-    apply: applyItSphereEffect,
-    applyAt: applyItSphereAt,
-    isInstant: false,
-  },
-
-  dms: {
     apply: (board, specialCells, currentLevel) => ({ 
-      board: applyDMSEffect(board), 
+      board, 
       matchedPositions: [],
       removedFigures: [],
       removedGoldenCells: []
     }),
-    isInstant: true,
-    onApply: (setMoves) => setMoves((m) => m + 3),
+    isInstant: false,
+    applyModifiers: applyCareerGrowthEffect,
+    reset: resetCareerGrowthModifiers,
+  },
+
+  dms: {
+    apply: applyItSphereEffect,
+    applyAt: applyItSphereAt,
+    isInstant: false,
   },
 };

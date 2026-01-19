@@ -6,15 +6,15 @@ export const LEVELS: Level[] = [
     name: "Новичок",
     description: "Сегодня твой первый день в команде поддержки. Твоя цель — накапливать знания по продуктам Контура, задавать вопросы наставнику и погружаться в жизнь Контура. Удачи!",
     goals: [
-      { figure: "pencil", target: 3, collected: 0 },
-      { figure: "bonnet", target: 3, collected: 0 },
-      { figure: "briefcase", target: 3, collected: 0 },
+      { figure: "pencil", target: 13, collected: 0 },
+      { figure: "bonnet", target: 13, collected: 0 },
+      { figure: "briefcase", target: 13, collected: 0 },
     ],
     bonuses: [
-      { type: "knowledgeBase", count: 2 },
-      { type: "openGuide", count: 3 }
+      { type: "remoteWork", count: 3 },
+      { type: "itSphere", count: 2 }
     ],
-    moves: 1,
+    moves: 21,
     availableFigures: [
       "pencil",
       "questionBook",
@@ -35,8 +35,8 @@ export const LEVELS: Level[] = [
       },
     ],
     bonuses: [
-      { type: "itSphere", count: 3 },
-      { type: "openGuide", count: 3 }
+      { type: "knowledgeBase", count: 2 },
+      { type: "friendlyTeam", count: 3 }
     ],
     moves: 22,
     availableFigures: [
@@ -66,8 +66,8 @@ export const LEVELS: Level[] = [
       { figure: "star", target: 5, collected: 0 },
     ],
     bonuses: [
-      { type: "remoteWork", count: 3 },
-      { type: "openGuide", count: 3 }
+      { type: "dms", count: 1 },
+      { type: "sportCompensation", count: 3 }
     ],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "smartphone", "rectangleMessage", "phone"],
@@ -92,8 +92,8 @@ export const LEVELS: Level[] = [
       }
     ],
     bonuses: [
-      { type: "remoteWork", count: 2 },
-      { type: "openGuide", count: 3 }
+      { type: "modernProducts", count: 2 },
+      { type: "careerGrowth", count: 1 }
     ],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "bulb", "rectangleMessage", "phone"],
@@ -124,13 +124,13 @@ export const LEVELS: Level[] = [
     goals: [
       {
         figure: "teamCell",
-        target: 5,
+        target: 15,
         collected: 0,
       }
     ],
     bonuses: [
-      { type: "itSphere", count: 2 },
-      { type: "openGuide", count: 5 }
+      { type: "openGuide", count: 2 },
+      { type: "careerGrowth", count: 1 }
     ],
     moves: 23,
     availableFigures: ["question", "heart", "handshake", "kpi", "bulb"],
@@ -165,7 +165,7 @@ export const LEVELS: Level[] = [
       { figure: "smartphone", target: 8, collected: 0 },
     ],
     bonuses: [], // Бонусы будут выбираться случайно с разным количеством
-    moves: 5,
+    moves: 20,
     availableFigures: [
       "roundMessage",
       "rectangleMessage",
