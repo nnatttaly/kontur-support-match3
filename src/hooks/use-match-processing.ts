@@ -60,6 +60,9 @@ export const useMatchProcessing = ({
 }: UseMatchProcessingProps) => {
   // Флаг для предотвращения повторной обработки матчей
   const isProcessingMatchesRef = useRef(false);
+  // Счетчик попыток шаффла для предотвращения бесконечного цикла
+  const shuffleAttemptsRef = useRef(0);
+  const MAX_SHUFFLE_ATTEMPTS = 5;
 
   const getRandomBonus = useCallback((): BonusType => {
     const allBonuses: BonusType[] = [
@@ -136,6 +139,72 @@ export const useMatchProcessing = ({
 
     return { goals: updatedGoals, bonuses: newBonuses };
   }, [currentLevel, getRandomBonus, getRandomFigure]);
+
+  const checkPossibleMoves = useCallback((board: Board): boolean => {
+    const rows = board.length;
+    const cols = board[0].length;
+
+    const UNMOVABLE_FIGURES = [
+      "team",
+      "teamImage0",
+      "teamImage1",
+      "teamImage2",
+      "teamImage3",
+      "goldenCell",
+      "teamCell",
+    ];
+
+    const canSwapFigure = (figure: string | null): boolean => {
+      if (!figure) return false;
+      if (UNMOVABLE_FIGURES.includes(figure)) return false;
+      return true;
+    };
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const currentFigure = board[row][col];
+        if (!canSwapFigure(currentFigure)) continue;
+
+        if (col < cols - 1) {
+          const rightFigure = board[row][col + 1];
+          if (canSwapFigure(rightFigure)) {
+            if (currentFigure === "star" && rightFigure === "star") {
+              continue;
+            }
+
+            const tempBoard = board.map(r => [...r]);
+            tempBoard[row][col] = rightFigure;
+            tempBoard[row][col + 1] = currentFigure;
+
+            const matchesAfterSwap = findAllMatches(tempBoard);
+            if (matchesAfterSwap.length > 0) {
+              return true;
+            }
+          }
+        }
+
+        if (row < rows - 1) {
+          const bottomFigure = board[row + 1][col];
+          if (canSwapFigure(bottomFigure)) {
+            if (currentFigure === "star" && bottomFigure === "star") {
+              continue;
+            }
+
+            const tempBoard = board.map(r => [...r]);
+            tempBoard[row][col] = bottomFigure;
+            tempBoard[row + 1][col] = currentFigure;
+
+            const matchesAfterSwap = findAllMatches(tempBoard);
+            if (matchesAfterSwap.length > 0) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    return false;
+  }, []);
 
   const processMatches = useCallback(
     async (currentBoard: Board, currentSpecialCells: SpecialCell[] = [], options?: { skipGoldenRestore: boolean }): Promise<Board> => {
@@ -610,25 +679,38 @@ export const useMatchProcessing = ({
         ) {
           hasMatches = false;
 
-          const finalMatches = findAllMatches(boardToProcess);
-          if (finalMatches.length === 0) {
-            const hasMoves = checkPossibleMoves(boardToProcess);
-            if (!hasMoves) {
+          const hasMoves = checkPossibleMoves(boardToProcess);
+          if (!hasMoves) {
+            // Проверяем, не превысили ли максимальное количество попыток шаффла
+            let counter = 0;
+            while (counter < 5)  {
               const shuffledBoard = shuffleBoardWithoutMatches(
                 boardToProcess,
                 currentLevel
               );
-              if (shuffledBoard !== boardToProcess) {
-                boardToProcess = shuffledBoard;
-                setBoard([...boardToProcess]);
-                await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+              boardToProcess = shuffledBoard;
+              setBoard([...boardToProcess]);
+              await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+              counter++; // Увеличиваем счетчик попыток
 
-                const matchesAfterShuffle = findAllMatches(boardToProcess);
-                if (matchesAfterShuffle.length > 0) {
+                // Если после шаффла все еще нет матчей, проверяем наличие ходов
+                const hasMovesAfterShuffle = checkPossibleMoves(boardToProcess);
+                if (hasMovesAfterShuffle) {
+                  
+                  console.log(`Шаффл ${counter}: нет матчей, но есть возможные ходы`);
+                  console.log(boardToProcess);
+                  // Выходим из цикла, так как есть ходы
+                  break;
+                } else {
+                  console.log(`Шаффл ${counter}: нет матчей и нет возможных ходов, продолжаем цикл`);
+                  console.log(boardToProcess);
+                  // Устанавливаем флаг обратно, чтобы продолжить цикл
                   hasMatches = true;
                 }
-              }
             }
+          } else {
+            // Если есть ходы, сбрасываем счетчик попыток шаффла
+            shuffleAttemptsRef.current = 0;
           }
 
           break;
@@ -689,73 +771,9 @@ export const useMatchProcessing = ({
       getRandomBonus,
       getRandomFigure,
       replaceCompletedGoalsForLevel6,
+      checkPossibleMoves,
     ]
   );
 
   return { processMatches };
-};
-
-// Функция для проверки возможных ходов
-const checkPossibleMoves = (board: Board): boolean => {
-  const rows = board.length;
-  const cols = board[0].length;
-
-  const UNMOVABLE_FIGURES = [
-    "team",
-    "teamImage0",
-    "teamImage1",
-    "teamImage2",
-    "teamImage3",
-  ];
-
-  const canSwapFigure = (figure: string | null): boolean => {
-    if (!figure) return false;
-    if (UNMOVABLE_FIGURES.includes(figure)) return false;
-    return true;
-  };
-
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const currentFigure = board[row][col];
-      if (!canSwapFigure(currentFigure)) continue;
-
-      if (col < cols - 1) {
-        const rightFigure = board[row][col + 1];
-        if (canSwapFigure(rightFigure)) {
-          if (currentFigure === "star" && rightFigure === "star") {
-            continue;
-          }
-
-          const tempBoard = board.map(r => [...r]);
-          tempBoard[row][col] = rightFigure;
-          tempBoard[row][col + 1] = currentFigure;
-
-          const matchesAfterSwap = findAllMatches(tempBoard);
-          if (matchesAfterSwap.length > 0) {
-            return true;
-          }
-        }
-      }
-
-      if (row < rows - 1) {
-        const bottomFigure = board[row + 1][col];
-        if (canSwapFigure(bottomFigure)) {
-          if (currentFigure === "star" && bottomFigure === "star") {
-            continue;
-          }
-
-          const tempBoard = board.map(r => [...r]);
-          tempBoard[row][col] = bottomFigure;
-          tempBoard[row + 1][col] = currentFigure;
-
-          const matchesAfterSwap = findAllMatches(tempBoard);
-          if (matchesAfterSwap.length > 0) {
-            return true;
-          }
-        }
-      }
-    }
-  }
-
-  return false;
 };
