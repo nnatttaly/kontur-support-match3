@@ -1,0 +1,121 @@
+.tutorial-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9999;
+  cursor: pointer;
+}
+
+.tutorial-svg-mask {
+  width: 100%;
+  height: 100%;
+}
+
+
+.tutorial-content {
+  position: absolute;
+  /* Убираем bottom, left, transform отсюда! */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 80%;
+  max-width: 600px;
+  pointer-events: none;
+  z-index: 10000;
+  transition: all 0.4s ease-out; /* Чтобы плавно двигалось между шагами */
+}
+
+/* Позиция Справа: переворачиваем flex-контейнер */
+.tutorial-content.right {
+  flex-direction: row-reverse;
+}
+
+
+
+
+
+
+/* Круг с иконкой - всегда круглый */
+.character-icon {
+  width: 90px; 
+  height: 90px;
+  border-radius: 50%;
+  background-color: #F6F6F6;
+  border: 3px solid #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0; /* запрещаем сжатие */
+  margin-top: 60px;
+}
+
+.character-icon img {
+  width: 70%;
+  height: 70%;
+  object-fit: contain; /* чтобы картинка сохраняла пропорции */
+  display: block;
+}
+
+/* Диалоговое окно */
+.dialog-bubble {
+  position: relative;
+  display: inline-flex; /* изменено на inline-flex */
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 5px;
+  max-width: 100%; /* ограничиваем максимальную ширину */
+}
+
+.dialog-bubble img {
+  width: auto; /* изменено на auto */
+  height: auto; /* изменено на auto */
+  max-width: 100%; /* ограничиваем максимальную ширину */
+  display: block;
+  top: 0;
+  left: 0;
+}
+
+.dialog-bubble p {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  padding: 0px 25px; /* РЕГУЛИРУЙТЕ ОТСТУПЫ ТЕКСТА ЗДЕСЬ */
+  text-align: center;
+  font-size: 18px;
+  line-height: 1.4;
+  width: 100%; /* ширина текстовой области */
+  max-height: 90%; /* высота текстовой области */
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dialog-bubble.right img {
+  transform: scaleX(-1);
+}
+
+
+/* Подсказка под диалоговым окном */
+.click-hint {
+  display: block;
+  font-size: 15px;
+  color: #b0b0b0;
+  text-align: center;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  60% { opacity: 0.5; }
+}
+
+
+
+
