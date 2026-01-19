@@ -1,3 +1,4 @@
+// hooks/use-match-processing.tsx
 import { useCallback, useRef } from "react";
 import {
   Board,
@@ -43,6 +44,7 @@ type UseMatchProcessingProps = {
   setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
   currentLevel?: Level;
   onSpecialCellsUpdate?: (specialCells: SpecialCell[]) => void;
+  onShuffleWarning?: () => void; // Добавляем новый пропс
 };
 
 export const useMatchProcessing = ({
@@ -57,12 +59,12 @@ export const useMatchProcessing = ({
   setBonuses,
   currentLevel,
   onSpecialCellsUpdate,
+  onShuffleWarning, // Получаем обработчик
 }: UseMatchProcessingProps) => {
   // Флаг для предотвращения повторной обработки матчей
   const isProcessingMatchesRef = useRef(false);
   // Счетчик попыток шаффла для предотвращения бесконечного цикла
-  const shuffleAttemptsRef = useRef(0);
-  const MAX_SHUFFLE_ATTEMPTS = 5;
+  const MAX_SHUFFLE_ATTEMPTS = 7;
 
   const getRandomBonus = useCallback((): BonusType => {
     const allBonuses: BonusType[] = [
@@ -95,8 +97,6 @@ export const useMatchProcessing = ({
     return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
   }, []);
 
-  // Changed: now returns both updated goals and the bonuses to add, but DOES NOT apply bonuses itself.
-  // This prevents duplicate application when called multiple times.
   const replaceCompletedGoalsForLevel6 = useCallback((goals: Goal[]): { goals: Goal[]; bonuses: BonusType[] } => {
     if (currentLevel?.id !== 6) return { goals, bonuses: [] };
 
@@ -682,33 +682,38 @@ export const useMatchProcessing = ({
           const hasMoves = checkPossibleMoves(boardToProcess);
           if (!hasMoves) {
             // Проверяем, не превысили ли максимальное количество попыток шаффла
-            let counter = 0;
-            while (counter < 5)  {
+            let current = 0;
+            while (current< MAX_SHUFFLE_ATTEMPTS) {
+              // Показываем предупреждение о перемешивании
+              if (onShuffleWarning) {
+                onShuffleWarning();
+                // Ждем немного, чтобы показалось предупреждение
+                await new Promise((r) => setTimeout(r, 300));
+              }
+              
+              current++;
+              
               const shuffledBoard = shuffleBoardWithoutMatches(
                 boardToProcess,
                 currentLevel
               );
-              boardToProcess = shuffledBoard;
-              setBoard([...boardToProcess]);
-              await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
-              counter++; // Увеличиваем счетчик попыток
+              
+              if (shuffledBoard !== boardToProcess) {
+                boardToProcess = shuffledBoard;
+                setBoard([...boardToProcess]);
+                await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
-                // Если после шаффла все еще нет матчей, проверяем наличие ходов
+                // Проверяем наличие ходов после шаффла
                 const hasMovesAfterShuffle = checkPossibleMoves(boardToProcess);
                 if (hasMovesAfterShuffle) {
-                  
-                  console.log(`Шаффл ${counter}: есть возможные ходы`);
-                  // Выходим из цикла, так как есть ходы
+                  console.log(`Шаффл ${current}: есть возможные ходы`);
                   break;
                 } else {
-                  console.log(`Шаффл ${counter}: нет возможных ходов, продолжаем цикл`);
-                  // Устанавливаем флаг обратно, чтобы продолжить цикл
+                  console.log(`Шаффл ${current}: все еще нет ходов`);
                   hasMatches = true;
                 }
+              }
             }
-          } else {
-            // Если есть ходы, сбрасываем счетчик попыток шаффла
-            shuffleAttemptsRef.current = 0;
           }
 
           break;
@@ -766,6 +771,7 @@ export const useMatchProcessing = ({
       activeBonus,
       currentLevel,
       onSpecialCellsUpdate,
+      onShuffleWarning,
       getRandomBonus,
       getRandomFigure,
       replaceCompletedGoalsForLevel6,

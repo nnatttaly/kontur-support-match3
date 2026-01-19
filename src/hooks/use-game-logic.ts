@@ -1,3 +1,4 @@
+// hooks/use-game-logic.ts
 import { useState, useEffect } from "react";
 import { useBoardState } from "./use-board-state";
 import { useGameState } from "./use-game-state";
@@ -11,6 +12,7 @@ export const useGameLogic = () => {
   const { board, setBoard } = useBoardState();
   const gameState = useGameState();
   const [currentSpecialCells, setCurrentSpecialCells] = useState<SpecialCell[]>([]);
+  const [isShuffleWarning, setIsShuffleWarning] = useState(false); // Новое состояние
   
   const { levelState, currentLevel, handleLevelStart } = useLevelManagement({
     setBoard,
@@ -48,7 +50,13 @@ export const useGameLogic = () => {
     setBonuses: gameState.setBonuses,
     currentLevel: currentLevelWithSpecialCells,
     onSpecialCellsUpdate: setCurrentSpecialCells,
+    onShuffleWarning: () => setIsShuffleWarning(true), // Передаем функцию
   });
+
+  // Функция для скрытия предупреждения
+  const hideShuffleWarning = () => {
+    setIsShuffleWarning(false);
+  };
 
   const { handleBonus, deactivateBonus } = useBonuses({
     setBonuses: gameState.setBonuses,
@@ -61,8 +69,8 @@ export const useGameLogic = () => {
     setGoals: gameState.setGoals,
     processMatches,
     currentLevelId: currentLevel?.id,
-    specialCells: currentSpecialCells, // Передаем специальные клетки
-    setSpecialCells: setCurrentSpecialCells, // Передаем сеттер
+    specialCells: currentSpecialCells,
+    setSpecialCells: setCurrentSpecialCells,
   });
 
   const { 
@@ -98,8 +106,8 @@ export const useGameLogic = () => {
     setGoals: gameState.setGoals,
     setMatches: gameState.setMatches,
     processMatches,
-    specialCells: currentSpecialCells, // Передаем специальные клетки
-    setSpecialCells: setCurrentSpecialCells, // Передаем сеттер
+    specialCells: currentSpecialCells,
+    setSpecialCells: setCurrentSpecialCells,
   });
 
   return {
@@ -118,6 +126,8 @@ export const useGameLogic = () => {
     specialCells: currentSpecialCells,
     levelState,
     currentLevel: currentLevelWithSpecialCells,
+    isShuffleWarning, // Добавляем в возвращаемое значение
+    hideShuffleWarning, // Функция для скрытия
     handleCellClick,
     handleDragStart,
     handleDragOver,
