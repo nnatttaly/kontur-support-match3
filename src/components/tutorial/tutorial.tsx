@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect } from 'react';
 import './tutorial.css';
 import { TutorialStep } from './tutorial-data';
 import { DIALOG_BUBBLE_ICON_PATH, HERO_ICON_PATH } from 'consts/paths';
@@ -18,21 +18,21 @@ interface ElementRect {
 export const Tutorial = ({ steps, onComplete }: Props) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [coordsArray, setCoordsArray] = useState<ElementRect[]>([]);
-  const [viewBox, setViewBox] = useState(`0 0 ${window.innerWidth} ${window.innerHeight}`);
-  
+  // Состояние для размеров вьюпорта
+  const [screenSize, setScreenSize] = useState({ 
+    w: window.innerWidth, 
+    h: window.innerHeight 
+  });
+
   const step = steps[currentStep];
 
-  // Проверка, является ли устройство iOS
-  const isIOS = useMemo(() => {
-    return [
-      'iPad Simulator',
-      'iPhone Simulator',
-      'iPod Simulator',
-      'iPad',
-      'iPhone',
-      'iPod'
-    ].includes(navigator.platform)
-    || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+  // Обновляем размер экрана при ресайзе (важно для iOS при скрытии адресной строки)
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenSize({ w: window.innerWidth, h: window.innerHeight });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleNext = useCallback(() => {
@@ -43,65 +43,38 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     }
   }, [currentStep, onComplete, steps.length]);
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    const handleResize = () => {
-      setViewBox(`0 0 ${window.innerWidth} ${window.innerHeight}`);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => {
-      document.body.style.overflow = '';
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-  useEffect(() => {
-    const updateCoords = () => {
-      if (step.highlightSelector) {
-        const elements = document.querySelectorAll(step.highlightSelector);
-        
-        // На iOS берем смещение визуального вьюпорта
-        const offsetX = window.visualViewport?.offsetLeft || 0;
-        const offsetY = window.visualViewport?.offsetTop || 0;
-
-        if (elements.length > 0) {
-          const newCoords: ElementRect[] = Array.from(elements).map(el => {
-            const rect = el.getBoundingClientRect();
-            
-            // Если это айфон, применяем корректировку
-            // Если зона съезжает вниз и вправо, нам нужно ВЫЧЕСТЬ смещение
-            const correctionX = isIOS ? -10 : 0; // Можно подправить на 1-5 пикселей
-            const correctionY = isIOS ? -10 : 0; 
-
-            return {
-              x: rect.left - offsetX + correctionX,
-              y: rect.top - offsetY + correctionY,
-              width: rect.width,
-              height: rect.height
-            };
-          });
-          setCoordsArray(newCoords);
-        } else {
-          setCoordsArray([]);
-        }
+  // Используем useLayoutEffect, чтобы замерять координаты до отрисовки
+  useLayoutEffect(() => {
+    if (step.highlightSelector) {
+      const elements = document.querySelectorAll(step.highlightSelector);
+      
+      if (elements.length > 0) {
+        const newCoords: ElementRect[] = Array.from(elements).map(el => {
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.left,
+            y: rect.top,
+            width: rect.width,
+            height: rect.height
+          };
+        });
+        setCoordsArray(newCoords);
       } else {
         setCoordsArray([]);
       }
-    };
-
-    // На iOS вычисления лучше делать после микрозадержки
-    const timer = setTimeout(() => {
-      requestAnimationFrame(updateCoords);
-    }, 30);
-    
-    return () => clearTimeout(timer);
-  }, [currentStep, step.highlightSelector, isIOS]);
+    } else {
+      setCoordsArray([]);
+    }
+  }, [currentStep, step.highlightSelector, screenSize]); // Добавили screenSize в зависимости
 
   useEffect(() => {
     const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
-    if (bonusesContainer && step.highlightBonus) {
-      bonusesContainer.style.zIndex = '10001';
+    if (!bonusesContainer) return;
+    
+    if (step.highlightBonus) {
+      bonusesContainer.style.zIndex = '9999999';
       bonusesContainer.addEventListener('click', handleNext);
+      
       return () => {
         bonusesContainer.removeEventListener('click', handleNext);
         bonusesContainer.style.zIndex = '';
@@ -109,28 +82,35 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     }
   }, [currentStep, step.highlightBonus, handleNext]);
 
-  const defaultPosition = { bottom: '10%', left: '50%', transform: 'translateX(-50%)' };
+  const defaultPosition = {
+    bottom: '10%',
+    left: '50%',
+    transform: 'translateX(-50%)'
+  };
+
   const currentStyle = step.position || defaultPosition;
 
   return (
     <div className="tutorial-overlay" onClick={handleNext}>
       <svg 
         className="tutorial-svg-mask" 
-        viewBox={viewBox}
-        xmlns="http://www.w3.org/2000/svg"
+        // viewBox — ключевой момент для iOS, синхронизирует систему координат SVG с пикселями
+        viewBox={`0 0 ${screenSize.w} ${screenSize.h}`}
+        preserveAspectRatio="none"
       >
         <defs>
-          <mask id="tutorial-hole">
+          <mask id="hole">
             <rect width="100%" height="100%" fill="white" />
             {coordsArray.map((coords, index) => (
               <rect
-                key={`${currentStep}-${index}`}
-                x={coords.x - 8}
+                key={index}
+                x={coords.x - 8} 
                 y={coords.y - 8}
                 width={coords.width + 16}
                 height={coords.height + 16}
                 fill="black"
                 rx="12"
+                style={{ transition: 'all 0.3s ease' }}
               />
             ))}
           </mask>
@@ -139,7 +119,7 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
           width="100%" 
           height="100%" 
           fill="rgba(0,0,0,0.7)" 
-          mask="url(#tutorial-hole)" 
+          mask="url(#hole)" 
         />
       </svg>
 
@@ -150,12 +130,13 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
         <div className="character-icon">
           <img src={HERO_ICON_PATH} alt="hero" />
         </div>
+        
         <div className="dialog-container">
           <div className={`dialog-bubble ${step.characterPos}`}>
             <img src={DIALOG_BUBBLE_ICON_PATH} alt="dialog-bubble" />
             <p>{step.text}</p>
           </div>
-          <span className="click-hint">Кликни, чтобы продолжить</span>
+          <span className="click-hint">Кликни по экрану, чтобы продолжить</span>
         </div>
       </div>
     </div>
