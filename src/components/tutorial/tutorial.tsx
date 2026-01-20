@@ -94,8 +94,8 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     }
     
     // Для не-Apple устройств используем существующую логику
-    return !!step.highlightBonus && !!step.highlightSelectorMobile;
-  }, [isAppleDevice, step.highlightSelector, step.highlightBonus, step.highlightSelectorMobile]);
+    return !!step.highlightBonus 
+  }, [isAppleDevice, step.highlightSelector, step.highlightBonus]);
 
   // Определяем селектор для мобильного выделения
   const getMobileSelector = useCallback(() => {
