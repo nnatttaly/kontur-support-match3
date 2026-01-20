@@ -21,6 +21,8 @@ body {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   -webkit-touch-callout: none;
+  height: 100%;
+  overflow: hidden;
 }
 
 #root {
