@@ -1,115 +1,144 @@
-import { useState, useCallback, useLayoutEffect, useRef} from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useCallback } from 'react';
 import './tutorial.css';
 import { TutorialStep } from './tutorial-data';
 import { DIALOG_BUBBLE_ICON_PATH, HERO_ICON_PATH } from 'consts/paths';
-
-// ПАРАМЕТРЫ СДВИГА (если маска съезжает вправо-вниз, ставим отрицательные значения)
-const IS_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-const OFFSET_X = IS_IOS ? -50 : 0; // Сдвиг влево на 10px для iOS
-const OFFSET_Y = IS_IOS ? -50 : 0; // Сдвиг вверх на 10px для iOS
 
 interface Props {
   steps: TutorialStep[];
   onComplete: () => void;
 }
 
+interface ElementRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return isMobile;
+};
+
+
 export const Tutorial = ({ steps, onComplete }: Props) => {
+  const isMobile = useIsMobile();
   const [currentStep, setCurrentStep] = useState(0);
-  const [coordsArray, setCoordsArray] = useState<any[]>([]);
-  const svgRef = useRef<SVGSVGElement>(null);
+  const [coordsArray, setCoordsArray] = useState<ElementRect[]>([]);
 
   const step = steps[currentStep];
 
-  const updateCoords = useCallback(() => {
-    if (step.highlightSelector && svgRef.current) {
-      const elements = document.querySelectorAll(step.highlightSelector);
-      
-      // На iOS координаты лучше брать относительно вьюпорта с учетом visualViewport
-      const vv = window.visualViewport;
-      const vOffsetX = vv ? vv.offsetLeft : 0;
-      const vOffsetY = vv ? vv.offsetTop : 0;
-
-      if (elements.length > 0) {
-        const newCoords = Array.from(elements).map(el => {
-          const rect = el.getBoundingClientRect();
-          return {
-            // Применяем ручной сдвиг + учитываем смещение вьюпорта
-            x: rect.left - vOffsetX + OFFSET_X,
-            y: rect.top - vOffsetY + OFFSET_Y,
-            width: rect.width,
-            height: rect.height
-          };
-        });
-        setCoordsArray(newCoords);
-      } else {
-        setCoordsArray([]);
-      }
-    }
-  }, [step.highlightSelector]);
-
-  useLayoutEffect(() => {
-    updateCoords();
-    // Слушаем ресайз и скролл
-    window.addEventListener('resize', updateCoords);
-    window.visualViewport?.addEventListener('resize', updateCoords);
-    window.visualViewport?.addEventListener('scroll', updateCoords);
-    
-    return () => {
-      window.removeEventListener('resize', updateCoords);
-      window.visualViewport?.removeEventListener('resize', updateCoords);
-      window.visualViewport?.removeEventListener('scroll', updateCoords);
-    };
-  }, [updateCoords, currentStep]);
-
-  const handleNext = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleNext = useCallback(() => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
       onComplete();
     }
+  }, [currentStep, onComplete, steps.length]);
+
+  useEffect(() => {
+      if (step.highlightSelector) {
+        // Находим ВСЕ элементы по селектору
+        const elements = document.querySelectorAll(step.highlightSelector);
+        
+        if (elements.length > 0) {
+          const newCoords: ElementRect[] = Array.from(elements).map(el => {
+            const rect = el.getBoundingClientRect();
+            return {
+              x: rect.left,
+              y: rect.top,
+              width: rect.width,
+              height: rect.height
+            };
+          });
+          setCoordsArray(newCoords);
+        } else {
+          setCoordsArray([]);
+        }
+      } else {
+        setCoordsArray([]);
+      }
+    }, [currentStep, step.highlightSelector]);
+
+    useEffect(() => {
+      const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
+      if (!bonusesContainer) return;
+
+      if (step.highlightBonus) {
+        bonusesContainer.style.zIndex = '9999999';
+        // Добавляем обработчик клика на бонусы для переход к следующему шагу
+        bonusesContainer.addEventListener('click', handleNext);
+        
+        return () => {
+          bonusesContainer.removeEventListener('click', handleNext);
+          bonusesContainer.style.zIndex = '';
+        };
+      } else {
+        bonusesContainer.style.zIndex = '';
+      }
+    }, [currentStep, step.highlightBonus, handleNext]);
+
+  // Дефолтные стили, если позиция не передана (по центру внизу)
+  const defaultPosition = {
+    bottom: '10%',
+    left: '50%',
+    transform: 'translateX(-50%)'
   };
 
-  const tutorialJSX = (
-    <div className="tutorial-overlay" onClick={handleNext}>
-      <svg ref={svgRef} className="tutorial-svg-mask">
-        <defs>
-          <mask id="hole" maskUnits="userSpaceOnUse">
-            <rect width="100%" height="100%" fill="white" />
-            {coordsArray.map((coords, index) => (
-              <rect
-                key={`${currentStep}-${index}`}
-                x={coords.x - 8}
-                y={coords.y - 8}
-                width={coords.width + 16}
-                height={coords.height + 16}
-                fill="black"
-                rx="14"
-              />
-            ))}
-          </mask>
-        </defs>
-        <rect width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#hole)" />
-      </svg>
+  const currentStyle = isMobile && step.mobilePosition 
+    ? step.mobilePosition 
+    : (step.position || defaultPosition);
 
-      <div
-        className={`tutorial-content ${step.characterPos}`}
-        style={(step.position || { bottom: '10%', left: '50%', transform: 'translateX(-50%)' }) as React.CSSProperties}
+  return (
+    <div className="tutorial-overlay" onClick={handleNext}>
+    <svg className="tutorial-svg-mask">
+      <defs>
+        <mask id="hole">
+          {/* Белый фон — всё, что под ним, будет темным */}
+          <rect width="100%" height="100%" fill="white" />
+          
+          {/* Отрисовываем "дырку" для каждого найденного элемента */}
+          {coordsArray.map((coords, index) => (
+            <rect 
+              key={index}
+              x={coords.x - 8} // небольшой отступ
+              y={coords.y - 8} 
+              width={coords.width + 16} 
+              height={coords.height + 16} 
+              fill="black" // Черный цвет в маске = прозрачность в итоговом слое
+              rx="12"      // скругление
+              style={{ transition: 'all 0.3s ease' }} // плавно, если элементы меняются
+            />
+          ))}
+        </mask>
+      </defs>
+      <rect width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#hole)" />
+    </svg>
+
+      {/* Применяем динамические стили здесь */}
+      <div 
+        className={`tutorial-content ${step.characterPos}`} 
+        style={currentStyle as React.CSSProperties}
       >
         <div className="character-icon">
           <img src={HERO_ICON_PATH} alt="hero" />
         </div>
+        
         <div className="dialog-container">
           <div className={`dialog-bubble ${step.characterPos}`}>
             <img src={DIALOG_BUBBLE_ICON_PATH} alt="dialog-bubble" />
             <p>{step.text}</p>
           </div>
-          <span className="click-hint">Кликни, чтобы продолжить</span>
+          <span className="click-hint">Кликни по экрану, чтобы продолжить</span>
         </div>
       </div>
     </div>
   );
-
-  return createPortal(tutorialJSX, document.body);
-};
+}
