@@ -16,42 +16,6 @@ interface ElementRect {
   height: number;
 }
 
-const waitForStableLayout = (target: Element | null, stableMs = 80) => {
-  return new Promise<void>((resolve) => {
-    if (!target || !('ResizeObserver' in window)) {
-      // fallback — просто подождать кадр
-      requestAnimationFrame(() => resolve());
-      return;
-    }
-
-    let timeoutId: number | null = null;
-
-    const ro = new ResizeObserver(() => {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      timeoutId = window.setTimeout(() => {
-        ro.disconnect();
-        resolve();
-      }, stableMs);
-    });
-
-    ro.observe(target);
-
-    // стартовый пинок
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!timeoutId) {
-          timeoutId = window.setTimeout(() => {
-            ro.disconnect();
-            resolve();
-          }, stableMs);
-        }
-      });
-    });
-  });
-};
-
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -81,63 +45,28 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
   }, [currentStep, onComplete, steps.length]);
 
   useEffect(() => {
-    let cancelled = false;
-
-    const calculateCoords = async () => {
-      if (!step.highlightSelector) {
+      if (step.highlightSelector) {
+        // Находим ВСЕ элементы по селектору
+        const elements = document.querySelectorAll(step.highlightSelector);
+        
+        if (elements.length > 0) {
+          const newCoords: ElementRect[] = Array.from(elements).map(el => {
+            const rect = el.getBoundingClientRect();
+            return {
+              x: rect.left,
+              y: rect.top,
+              width: rect.width,
+              height: rect.height
+            };
+          });
+          setCoordsArray(newCoords);
+        } else {
+          setCoordsArray([]);
+        }
+      } else {
         setCoordsArray([]);
-        return;
       }
-
-      // ⚠️ ЭТО ВАЖНО
-      // ждём, пока zoom / media-query реально применятся
-      const layoutAnchor =
-        document.querySelector('.game-main') ||
-        document.querySelector('.page') ||
-        document.body;
-
-      await waitForStableLayout(layoutAnchor);
-
-      // дополнительная гарантия для iOS
-      await new Promise<void>(r =>
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => r())
-        )
-      );
-
-      if (cancelled) return;
-
-      const elements = document.querySelectorAll(step.highlightSelector);
-
-      if (!elements.length) {
-        setCoordsArray([]);
-        return;
-      }
-
-      const vv = window.visualViewport;
-      const offsetTop = vv?.offsetTop || 0;
-      const offsetLeft = vv?.offsetLeft || 0;
-
-      const newCoords: ElementRect[] = Array.from(elements).map(el => {
-        const rect = el.getBoundingClientRect();
-        return {
-          x: rect.left + offsetLeft,
-          y: rect.top + offsetTop,
-          width: rect.width,
-          height: rect.height
-        };
-      });
-
-      setCoordsArray(newCoords);
-    };
-
-    calculateCoords();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [currentStep, step.highlightSelector]);
-
+    }, [currentStep, step.highlightSelector]);
 
     useEffect(() => {
       const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
@@ -168,6 +97,43 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     isMobile && step.mobilePosition
       ? step.mobilePosition
       : step.position || defaultPosition;
+
+      useEffect(() => {
+  if (!step.highlightSelector) {
+    setCoordsArray([]);
+    return;
+  }
+
+  const elements = document.querySelectorAll(step.highlightSelector);
+  if (elements.length === 0) return;
+
+  // Функция для обновления координат
+  const updateCoords = () => {
+    const newCoords = Array.from(elements).map(el => {
+      const rect = el.getBoundingClientRect();
+      return {
+        x: rect.left,
+        y: rect.top,
+        width: rect.width,
+        height: rect.height
+      };
+    });
+    setCoordsArray(newCoords);
+  };
+
+  // Создаем observer, который будет вызывать апдейт при любом изменении размера
+  const observer = new ResizeObserver(() => {
+    // Используем requestAnimationFrame, чтобы расчеты попадали в цикл отрисовки
+    requestAnimationFrame(updateCoords);
+  });
+
+  elements.forEach(el => observer.observe(el));
+
+  // Первичный вызов
+  updateCoords();
+
+  return () => observer.disconnect();
+}, [currentStep, step.highlightSelector]);
 
   return (
     <div className="tutorial-overlay" onClick={handleNext}>
