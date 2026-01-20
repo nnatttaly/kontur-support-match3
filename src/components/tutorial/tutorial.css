@@ -117,3 +117,22 @@
 @keyframes blink {
   60% { opacity: 0.5; }
 }
+
+
+@media (max-width: 768px) {
+  .dialog-bubble p {
+    font-size: 13px;
+    line-height: 1.1;
+  }
+  .dialog-bubble {
+    width: 225px;
+  }
+  .click-hint {
+    font-size: 12px;
+  }
+
+  .character-icon {
+    width: 75px; 
+    height: 75px;
+  }
+}

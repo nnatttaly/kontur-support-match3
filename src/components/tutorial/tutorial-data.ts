@@ -20,8 +20,8 @@ export interface TutorialStep {
 
 export const TUTORIALS: Record<number, TutorialStep[]> = {
   1: [
-    { text: "Привет! Я твой наставник", characterPos: 'left', highlightSelector: undefined, position: { top: '40%', left: '37%' }, mobilePosition: { top: '45%', left: '10%' }},
-    { text: "Перетаскивай фигурки на поле и накапливай знания, которые пригодятся в дальнейшем", characterPos: 'left', highlightSelector: '.field', position: { top: '64%', left: '25%' }, mobilePosition: { top: '10%', left: '10%' } },
+    { text: "Привет! Я твой наставник", characterPos: 'left', highlightSelector: undefined, position: { top: '40%', left: '37%' }, mobilePosition: { top: '42%', left: '10%' }},
+    { text: "Перетаскивай фигурки на поле и накапливай знания, которые пригодятся в дальнейшем", characterPos: 'left', highlightSelector: '.field', position: { top: '64%', left: '25%' }, mobilePosition: { top: '7%', left: '10%' } },
 
     { text: "Это твои цели уровня. Собери нужное количество рядов, чтобы перейти дальше", characterPos: 'right', highlightSelector: '.goals-container', position: { top: '35%', left: '30.5%' }, mobilePosition: { top: '30%', left: '10%' }, highlightBonus: true },
     { text: "Это количество оставшихся ходов", characterPos: 'right', highlightSelector: '.moves-container', position: { top: '17%', left: '40%' }, mobilePosition: { top: '35%', left: '15%' }  },
