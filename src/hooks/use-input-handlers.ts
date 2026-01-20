@@ -274,7 +274,7 @@ export const useInputHandlers = ({
     }
 
     // Для itSphere и remoteWork: если не было удалено ни одной фигуры, не тратим бонус
-    if ((type === "itSphere" || type === "remoteWork") && matchedPositions.length === 0) {
+    if ((type === "dms" || type === "remoteWork") && matchedPositions.length === 0) {
       setActiveBonus(null);
       return;
     }
@@ -381,7 +381,7 @@ export const useInputHandlers = ({
 
       if (processMatches) {
         // Для бонусов itSphere и remoteWork передаем обновленные specialCells и флаг skipGoldenRestore
-        const skipGoldenRestore = (type === "itSphere" || type === "remoteWork");
+        const skipGoldenRestore = (type === "dms" || type === "remoteWork");
         await processMatches(updatedBoard, updatedSpecialCells, { skipGoldenRestore });
       }
     } finally {
@@ -486,7 +486,7 @@ export const useInputHandlers = ({
             return;
           }
 
-          if (activeBonus.type === "itSphere") {
+          if (activeBonus.type === "dms") {
             console.log("это it sphere бабаба бобобо");
             const result = effect.applyAt(board, position, undefined, specialCells);
             if (!result || !result.board || result.matchedPositions.length === 0) {
@@ -537,7 +537,7 @@ export const useInputHandlers = ({
       return;
     }
 
-    if (activeBonus && activeBonus.isActive && activeBonus.type !== "careerGrowth") {
+    if (activeBonus && activeBonus.isActive && activeBonus.type !== "itSphere") {
       return;
     }
 
@@ -555,7 +555,7 @@ export const useInputHandlers = ({
       return;
     }
 
-    if (activeBonus && activeBonus.isActive && activeBonus.type !== "careerGrowth") {
+    if (activeBonus && activeBonus.isActive && activeBonus.type !== "itSphere") {
       return;
     }
 

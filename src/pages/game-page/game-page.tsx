@@ -1,3 +1,4 @@
+// pages/game-page/game-page.tsx
 import { GameField } from "@components/game-field/game-field";
 import { Score } from "@components/score/score";
 import { Moves } from "@components/moves/moves";
@@ -10,6 +11,7 @@ import { LEVELS, LAST_LEVEL } from "consts";
 import { useEffect, useState } from "react";
 import { TUTORIALS } from "@components/tutorial/tutorial-data";
 import { Tutorial } from "@components/tutorial/tutorial";
+import { ShuffleWarning } from "@components/shuffle-warning/shuffle-warning"; // Импорт нового компонента
 import "./game-page.styles.css";
 
 export default function GamePage() {
@@ -56,15 +58,20 @@ export default function GamePage() {
 
   return (
     <div className="page">
-
       {showTutorial && (
         <Tutorial 
           steps={TUTORIALS[currentLevelId]} 
           onComplete={handleCloseTutorial} 
         />
       )}
-      <div className="game-main">
+      
+      {/* Добавляем ShuffleWarning */}
+      <ShuffleWarning 
+        isVisible={gameLogic.isShuffleWarning}
+        onClose={gameLogic.hideShuffleWarning}
+      />
 
+      <div className="game-main">
         <div className="game-content">
           <div className="left-panel">
             <img src="src/assets/logo/logo-kontur.png" alt="Logo Kontur" className="game-logo" />

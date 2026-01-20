@@ -7,7 +7,7 @@ const ALL_BONUSES: Array<{ type: BonusType; сount: number;}> = [
   { type: "sportCompensation", сount: 1 },
   { type: "modernProducts", сount: 1 },
   { type: "remoteWork", сount: 1 },
-  { type: "dms", сount: 1 },
+  { type: "itSphere", сount: 1 },
   { type: "friendlyTeam", сount: 1 },
   { type: "careerGrowth", сount: 1 }
 ];

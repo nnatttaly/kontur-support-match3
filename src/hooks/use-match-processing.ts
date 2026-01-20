@@ -1,3 +1,4 @@
+// hooks/use-match-processing.tsx
 import { useCallback, useRef } from "react";
 import {
   Board,
@@ -43,6 +44,7 @@ type UseMatchProcessingProps = {
   setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
   currentLevel?: Level;
   onSpecialCellsUpdate?: (specialCells: SpecialCell[]) => void;
+  onShuffleWarning?: () => void; // Добавляем новый пропс
 };
 
 export const useMatchProcessing = ({
@@ -57,9 +59,12 @@ export const useMatchProcessing = ({
   setBonuses,
   currentLevel,
   onSpecialCellsUpdate,
+  onShuffleWarning, // Получаем обработчик
 }: UseMatchProcessingProps) => {
   // Флаг для предотвращения повторной обработки матчей
   const isProcessingMatchesRef = useRef(false);
+  // Счетчик попыток шаффла для предотвращения бесконечного цикла
+  const MAX_SHUFFLE_ATTEMPTS = 7;
 
   const getRandomBonus = useCallback((): BonusType => {
     const allBonuses: BonusType[] = [
@@ -92,8 +97,6 @@ export const useMatchProcessing = ({
     return filteredFigures[Math.floor(Math.random() * filteredFigures.length)];
   }, []);
 
-  // Changed: now returns both updated goals and the bonuses to add, but DOES NOT apply bonuses itself.
-  // This prevents duplicate application when called multiple times.
   const replaceCompletedGoalsForLevel6 = useCallback((goals: Goal[]): { goals: Goal[]; bonuses: BonusType[] } => {
     if (currentLevel?.id !== 6) return { goals, bonuses: [] };
 
@@ -136,6 +139,72 @@ export const useMatchProcessing = ({
 
     return { goals: updatedGoals, bonuses: newBonuses };
   }, [currentLevel, getRandomBonus, getRandomFigure]);
+
+  const checkPossibleMoves = useCallback((board: Board): boolean => {
+    const rows = board.length;
+    const cols = board[0].length;
+
+    const UNMOVABLE_FIGURES = [
+      "team",
+      "teamImage0",
+      "teamImage1",
+      "teamImage2",
+      "teamImage3",
+      "goldenCell",
+      "teamCell",
+    ];
+
+    const canSwapFigure = (figure: string | null): boolean => {
+      if (!figure) return false;
+      if (UNMOVABLE_FIGURES.includes(figure)) return false;
+      return true;
+    };
+
+    for (let row = 0; row < rows; row++) {
+      for (let col = 0; col < cols; col++) {
+        const currentFigure = board[row][col];
+        if (!canSwapFigure(currentFigure)) continue;
+
+        if (col < cols - 1) {
+          const rightFigure = board[row][col + 1];
+          if (canSwapFigure(rightFigure)) {
+            if (currentFigure === "star" && rightFigure === "star") {
+              continue;
+            }
+
+            const tempBoard = board.map(r => [...r]);
+            tempBoard[row][col] = rightFigure;
+            tempBoard[row][col + 1] = currentFigure;
+
+            const matchesAfterSwap = findAllMatches(tempBoard);
+            if (matchesAfterSwap.length > 0) {
+              return true;
+            }
+          }
+        }
+
+        if (row < rows - 1) {
+          const bottomFigure = board[row + 1][col];
+          if (canSwapFigure(bottomFigure)) {
+            if (currentFigure === "star" && bottomFigure === "star") {
+              continue;
+            }
+
+            const tempBoard = board.map(r => [...r]);
+            tempBoard[row][col] = bottomFigure;
+            tempBoard[row + 1][col] = currentFigure;
+
+            const matchesAfterSwap = findAllMatches(tempBoard);
+            if (matchesAfterSwap.length > 0) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    return false;
+  }, []);
 
   const processMatches = useCallback(
     async (currentBoard: Board, currentSpecialCells: SpecialCell[] = [], options?: { skipGoldenRestore: boolean }): Promise<Board> => {
@@ -610,21 +679,37 @@ export const useMatchProcessing = ({
         ) {
           hasMatches = false;
 
-          const finalMatches = findAllMatches(boardToProcess);
-          if (finalMatches.length === 0) {
-            const hasMoves = checkPossibleMoves(boardToProcess);
-            if (!hasMoves) {
+          const hasMoves = checkPossibleMoves(boardToProcess);
+          if (!hasMoves) {
+            // Проверяем, не превысили ли максимальное количество попыток шаффла
+            let current = 0;
+            while (current< MAX_SHUFFLE_ATTEMPTS) {
+              // Показываем предупреждение о перемешивании
+              if (onShuffleWarning) {
+                onShuffleWarning();
+                // Ждем немного, чтобы показалось предупреждение
+                await new Promise((r) => setTimeout(r, 300));
+              }
+              
+              current++;
+              
               const shuffledBoard = shuffleBoardWithoutMatches(
                 boardToProcess,
                 currentLevel
               );
+              
               if (shuffledBoard !== boardToProcess) {
                 boardToProcess = shuffledBoard;
                 setBoard([...boardToProcess]);
                 await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
-                const matchesAfterShuffle = findAllMatches(boardToProcess);
-                if (matchesAfterShuffle.length > 0) {
+                // Проверяем наличие ходов после шаффла
+                const hasMovesAfterShuffle = checkPossibleMoves(boardToProcess);
+                if (hasMovesAfterShuffle) {
+                  console.log(`Шаффл ${current}: есть возможные ходы`);
+                  break;
+                } else {
+                  console.log(`Шаффл ${current}: все еще нет ходов`);
                   hasMatches = true;
                 }
               }
@@ -686,76 +771,13 @@ export const useMatchProcessing = ({
       activeBonus,
       currentLevel,
       onSpecialCellsUpdate,
+      onShuffleWarning,
       getRandomBonus,
       getRandomFigure,
       replaceCompletedGoalsForLevel6,
+      checkPossibleMoves,
     ]
   );
 
   return { processMatches };
-};
-
-// Функция для проверки возможных ходов
-const checkPossibleMoves = (board: Board): boolean => {
-  const rows = board.length;
-  const cols = board[0].length;
-
-  const UNMOVABLE_FIGURES = [
-    "team",
-    "teamImage0",
-    "teamImage1",
-    "teamImage2",
-    "teamImage3",
-  ];
-
-  const canSwapFigure = (figure: string | null): boolean => {
-    if (!figure) return false;
-    if (UNMOVABLE_FIGURES.includes(figure)) return false;
-    return true;
-  };
-
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const currentFigure = board[row][col];
-      if (!canSwapFigure(currentFigure)) continue;
-
-      if (col < cols - 1) {
-        const rightFigure = board[row][col + 1];
-        if (canSwapFigure(rightFigure)) {
-          if (currentFigure === "star" && rightFigure === "star") {
-            continue;
-          }
-
-          const tempBoard = board.map(r => [...r]);
-          tempBoard[row][col] = rightFigure;
-          tempBoard[row][col + 1] = currentFigure;
-
-          const matchesAfterSwap = findAllMatches(tempBoard);
-          if (matchesAfterSwap.length > 0) {
-            return true;
-          }
-        }
-      }
-
-      if (row < rows - 1) {
-        const bottomFigure = board[row + 1][col];
-        if (canSwapFigure(bottomFigure)) {
-          if (currentFigure === "star" && bottomFigure === "star") {
-            continue;
-          }
-
-          const tempBoard = board.map(r => [...r]);
-          tempBoard[row][col] = bottomFigure;
-          tempBoard[row + 1][col] = currentFigure;
-
-          const matchesAfterSwap = findAllMatches(tempBoard);
-          if (matchesAfterSwap.length > 0) {
-            return true;
-          }
-        }
-      }
-    }
-  }
-
-  return false;
 };

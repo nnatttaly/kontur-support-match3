@@ -26,6 +26,7 @@ type UseGameActionsProps = {
   setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
   currentLevel?: Level;
   onSpecialCellsUpdate?: (specialCells: SpecialCell[]) => void;
+  onShuffleWarning?: () => void; // Добавляем новый пропс
 };
 
 export const useGameActions = ({
@@ -43,6 +44,7 @@ export const useGameActions = ({
   setBonuses,
   currentLevel,
   onSpecialCellsUpdate,
+  onShuffleWarning, // Получаем пропс
 }: UseGameActionsProps) => {
   const { processMatches } = useMatchProcessing({
     setBoard,
@@ -56,6 +58,7 @@ export const useGameActions = ({
     setBonuses,
     currentLevel,
     onSpecialCellsUpdate,
+    onShuffleWarning, // Передаем дальше
   });
 
   const { areAdjacent, swapFigures } = useSwapLogic(

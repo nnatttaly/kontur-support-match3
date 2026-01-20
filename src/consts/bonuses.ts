@@ -26,14 +26,14 @@ export const BONUS_PATHS: Record<BonusType, string> = {
 
 export const BONUS_EFFECTS: Record<BonusType, string> = {
   friendlyTeam: "Перемешивает все фигурки на поле",
-  careerGrowth: "Удваивает очки и прогресс за все ряды следующего хода",
+  careerGrowth: "Дает 3 дополнительных хода",
   sportCompensation: "Дает дополнительный ход",
   knowledgeBase: "Дает 2 дополнительных хода",
   remoteWork: "Удаляет выбранную фигурку с поля",
   openGuide: "Автоматически засчитывает 1 ряд для цели",
   modernProducts: "Заменяет фигурку на выбранную",
-  itSphere: "Убирает все фигурки выбранного типа на поле",
-  dms: 'Дает 3 дополнительных хода'
+  itSphere: "Удваивает очки и прогресс за все ряды следующего хода",
+  dms: "Убирает все фигурки выбранного типа на поле"
 };
 
 export const BONUS_DESCRIPTIONS: Record<BonusType, string> = {
