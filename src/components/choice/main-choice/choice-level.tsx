@@ -13,14 +13,14 @@ function ChoiceLevel({ onChoiceConfirm }: ChoiceLevelProps) {
       <Congr />
       <div className="cards-container">
         <ChoiceCard 
-          title="Эксперт"
-          description="Эксперт — тот самый человек, к которому идут, когда «никто больше не смог». Самые сложные задачи дрожат, когда слышат твое имя." 
-          onSelect={() => onChoiceConfirm(4)}
-        />
-        <ChoiceCard 
           title="Тимлид"
           description="Тимлиду не нужно самому общаться с клиентами. Его задача помогать им работать лучше и поддерживать по сложным вопросам от клиентов." 
           onSelect={() => onChoiceConfirm(5)}
+        />
+        <ChoiceCard 
+          title="Эксперт"
+          description="Эксперт — тот самый человек, к которому идут, когда «никто больше не смог». Самые сложные задачи дрожат, когда слышат твое имя." 
+          onSelect={() => onChoiceConfirm(4)}
         />
       </div>
     </div>
