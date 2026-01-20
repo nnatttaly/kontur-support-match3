@@ -6,9 +6,9 @@ export const LEVELS: Level[] = [
     name: "Новичок",
     description: "Сегодня твой первый день в команде поддержки. Твоя цель — накапливать знания по продуктам Контура, задавать вопросы наставнику и погружаться в жизнь Контура. Удачи!",
     goals: [
-      { figure: "pencil", target: 7, collected: 0 },
-      { figure: "bonnet", target: 7, collected: 0 },
-      { figure: "briefcase", target: 7, collected: 0 },
+      { figure: "pencil", target: 13, collected: 0 },
+      { figure: "bonnet", target: 13, collected: 0 },
+      { figure: "briefcase", target: 13, collected: 0 },
     ],
     bonuses: [
       { type: "remoteWork", count: 3 },
@@ -92,8 +92,8 @@ export const LEVELS: Level[] = [
       }
     ],
     bonuses: [
-      { type: "modernProducts", count: 2 },
-      { type: "careerGrowth", count: 1 }
+      { type: "modernProducts", count: 3 },
+      { type: "careerGrowth", count: 2 }
     ],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "bulb", "rectangleMessage", "phone"],
