@@ -51,9 +51,11 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
         if (elements.length > 0) {
           const newCoords: ElementRect[] = Array.from(elements).map(el => {
             const rect = el.getBoundingClientRect();
+            const offsetTop = window.visualViewport?.offsetTop || 0;
+            const offsetLeft = window.visualViewport?.offsetLeft || 0;
             return {
-              x: rect.left,
-              y: rect.top,
+              x: rect.left + offsetLeft,
+              y: rect.top + offsetTop,
               width: rect.width,
               height: rect.height
             };
