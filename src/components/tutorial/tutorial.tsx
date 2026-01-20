@@ -16,6 +16,24 @@ interface ElementRect {
   height: number;
 }
 
+// Функция для определения устройств Apple
+const useIsAppleDevice = () => {
+  const [isAppleDevice, setIsAppleDevice] = useState(false);
+
+  useEffect(() => {
+    const checkAppleDevice = () => {
+      // Проверяем user agent на наличие ключевых слов Apple
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isIOS = /iphone|ipad|ipod/.test(userAgent);
+      
+      setIsAppleDevice(isIOS);
+    };
+
+    checkAppleDevice();
+  }, []);
+
+  return isAppleDevice;
+};
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
@@ -31,6 +49,7 @@ const useIsMobile = () => {
 
 export const Tutorial = ({ steps, onComplete }: Props) => {
   const isMobile = useIsMobile();
+  const isAppleDevice = useIsAppleDevice();
   const [currentStep, setCurrentStep] = useState(0);
   const [coordsArray, setCoordsArray] = useState<ElementRect[]>([]);
 
@@ -44,51 +63,104 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     }
   }, [currentStep, onComplete, steps.length]);
 
+  // Определяем, нужно ли применять обычное выделение через SVG маску
+  const shouldApplySvgHighlight = useCallback(() => {
+    // Если это устройство Apple и есть селектор для мобильных устройств, 
+    // или если это не устройство Apple и есть обычный селектор
+    if (isAppleDevice) {
+      // На устройствах Apple не используем SVG маску
+      return false;
+    }
+    
+    // Для не-Apple устройств используем обычную логику
+    return !!step.highlightSelector;
+  }, [isAppleDevice, step.highlightSelector]);
+
+  // Определяем, нужно ли применять мобильное выделение (clickable элементы)
+  const shouldApplyMobileHighlight = useCallback(() => {
+    // На устройствах Apple всегда применяем мобильное выделение, если есть селектор
+    if (isAppleDevice && step.highlightSelector) {
+      return true;
+    }
+    
+    // Для не-Apple устройств используем существующую логику
+    return !!step.highlightBonus && !!step.highlightSelectorMobile;
+  }, [isAppleDevice, step.highlightSelector, step.highlightBonus, step.highlightSelectorMobile]);
+
+  // Определяем селектор для мобильного выделения
+  const getMobileSelector = useCallback(() => {
+    // На устройствах Apple используем основной селектор
+    if (isAppleDevice) {
+      return step.highlightSelector || step.highlightSelectorMobile;
+    }
+    
+    // Для не-Apple устройств используем существующую логику
+    return step.highlightSelectorMobile || step.highlightSelector;
+  }, [isAppleDevice, step.highlightSelector, step.highlightSelectorMobile]);
+
   useEffect(() => {
-      if (step.highlightSelector) {
-        // Находим ВСЕ элементы по селектору
-        const elements = document.querySelectorAll(step.highlightSelector);
-        
-        if (elements.length > 0) {
-          const newCoords: ElementRect[] = Array.from(elements).map(el => {
-            const rect = el.getBoundingClientRect();
-            return {
-              x: rect.left,
-              y: rect.top,
-              width: rect.width,
-              height: rect.height
-            };
-          });
-          setCoordsArray(newCoords);
-        } else {
-          setCoordsArray([]);
-        }
+    if (shouldApplySvgHighlight()) {
+      // Находим ВСЕ элементы по селектору
+      const elements = document.querySelectorAll(step.highlightSelector!);
+      
+      if (elements.length > 0) {
+        const newCoords: ElementRect[] = Array.from(elements).map(el => {
+          const rect = el.getBoundingClientRect();
+          return {
+            x: rect.left,
+            y: rect.top,
+            width: rect.width,
+            height: rect.height
+          };
+        });
+        setCoordsArray(newCoords);
       } else {
         setCoordsArray([]);
       }
-    }, [currentStep, step.highlightSelector]);
+    } else {
+      setCoordsArray([]);
+    }
+  }, [currentStep, step.highlightSelector, shouldApplySvgHighlight]);
 
   useEffect(() => {
-    const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
+    // Если не нужно применять мобильное выделение, выходим
+    if (!shouldApplyMobileHighlight()) return;
 
-    if (!bonusesContainer) return;
+    const mobileSelector = getMobileSelector();
+    if (!mobileSelector) return;
 
-    if (step.highlightBonus) {
-      bonusesContainer.style.zIndex = '9999999';
-      // Тут переход к след шагу при нажатии на бонус (поэтому handleNext пришлось выше сделать)
-      bonusesContainer.addEventListener('click', handleNext);
+    const elements = document.querySelectorAll(mobileSelector);
+    const elementsArray = Array.from(elements) as HTMLElement[];
+
+    if (elementsArray.length === 0) return;
+
+    // Применяем стили и обработчики к каждому найденному элементу
+    elementsArray.forEach(el => {
+      el.style.zIndex = '9999999';
+      el.style.position = el.style.position || 'relative'; // z-index работает только с позиционированием
+      el.style.pointerEvents = 'auto'; // На случай, если перекрыто чем-то другим
       
-      return () => {
-        bonusesContainer.removeEventListener('click', handleNext);
-        bonusesContainer.style.zIndex = '';
-      };
-    } else {
-      bonusesContainer.style.zIndex+=1;
-      return () => {
-        bonusesContainer.style.zIndex = '';
-      };
-    }
-  }, [currentStep, step.highlightBonus, handleNext]);
+      // Для устройств Apple добавляем визуальную подсветку
+      if (isAppleDevice) {
+        el.style.boxShadow = '0 0 0 3px rgba(66, 153, 225, 0.5)';
+        el.style.borderRadius = '6px';
+        el.style.transition = 'box-shadow 0.3s ease';
+      }
+      
+      el.addEventListener('click', handleNext);
+    });
+
+    // Cleanup функция: возвращаем всё как было
+    return () => {
+      elementsArray.forEach(el => {
+        el.style.zIndex = '';
+        el.style.position = '';
+        el.style.boxShadow = '';
+        el.style.borderRadius = '';
+        el.removeEventListener('click', handleNext);
+      });
+    };
+  }, [currentStep, shouldApplyMobileHighlight, getMobileSelector, handleNext, isAppleDevice]);
 
   // Дефолтные стили, если позиция не передана (по центру внизу)
   const defaultPosition = {
@@ -104,31 +176,47 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
 
   return (
     <div className="tutorial-overlay" onClick={handleNext}>
-      <svg className="tutorial-svg-mask">
-        <defs>
-          <mask id="hole">
-            <rect width="100%" height="100%" fill="white" />
-            {coordsArray.map((coords, index) => (
-              <rect
-                key={index}
-                x={coords.x - 8}
-                y={coords.y - 8}
-                width={coords.width + 16}
-                height={coords.height + 16}
-                fill="black"
-                rx="12"
-                style={{ transition: 'all 0.3s ease' }}
-              />
-            ))}
-          </mask>
-        </defs>
-        <rect
-          width="100%"
-          height="100%"
-          fill="rgba(0,0,0,0.7)"
-          mask="url(#hole)"
-        />
-      </svg>
+      {/* Показываем SVG маску только если нужно */}
+      {shouldApplySvgHighlight() && (
+        <svg className="tutorial-svg-mask">
+          <defs>
+            <mask id="hole">
+              <rect width="100%" height="100%" fill="white" />
+              {coordsArray.map((coords, index) => (
+                <rect
+                  key={index}
+                  x={coords.x - 8}
+                  y={coords.y - 8}
+                  width={coords.width + 16}
+                  height={coords.height + 16}
+                  fill="black"
+                  rx="12"
+                  style={{ transition: 'all 0.3s ease' }}
+                />
+              ))}
+            </mask>
+          </defs>
+          <rect
+            width="100%"
+            height="100%"
+            fill="rgba(0,0,0,0.7)"
+            mask="url(#hole)"
+          />
+        </svg>
+      )}
+
+      {/* Для устройств Apple без SVG маски показываем просто затемнение */}
+      {!shouldApplySvgHighlight() && isAppleDevice && (
+        <div className="apple-device-overlay" style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          pointerEvents: 'none'
+        }} />
+      )}
 
       <div
         className={`tutorial-content ${step.characterPos}`}
