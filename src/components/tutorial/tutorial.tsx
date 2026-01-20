@@ -98,43 +98,6 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
       ? step.mobilePosition
       : step.position || defaultPosition;
 
-      useEffect(() => {
-  if (!step.highlightSelector) {
-    setCoordsArray([]);
-    return;
-  }
-
-  const elements = document.querySelectorAll(step.highlightSelector);
-  if (elements.length === 0) return;
-
-  // Функция для обновления координат
-  const updateCoords = () => {
-    const newCoords = Array.from(elements).map(el => {
-      const rect = el.getBoundingClientRect();
-      return {
-        x: rect.left,
-        y: rect.top,
-        width: rect.width,
-        height: rect.height
-      };
-    });
-    setCoordsArray(newCoords);
-  };
-
-  // Создаем observer, который будет вызывать апдейт при любом изменении размера
-  const observer = new ResizeObserver(() => {
-    // Используем requestAnimationFrame, чтобы расчеты попадали в цикл отрисовки
-    requestAnimationFrame(updateCoords);
-  });
-
-  elements.forEach(el => observer.observe(el));
-
-  // Первичный вызов
-  updateCoords();
-
-  return () => observer.disconnect();
-}, [currentStep, step.highlightSelector]);
-
   return (
     <div className="tutorial-overlay" onClick={handleNext}>
       <svg className="tutorial-svg-mask">

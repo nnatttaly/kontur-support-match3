@@ -25,8 +25,8 @@ export const TUTORIALS: Record<number, TutorialStep[]> = {
 
     { text: "Это количество оставшихся ходов", characterPos: 'right', highlightSelector: '.moves-container', position: { top: '17%', left: '40%' }, mobilePosition: { top: '35%', left: '15%' } },
     { text: "А тут будет отображаться твой прогресс. Попробуй набрать как можно больше очков!", characterPos: 'left', highlightSelector: '.score-container', position: { top: '17%', left: '23%' }, mobilePosition: { top: '35%', left: '5%' }  },
-    { text: "Здесь твои бонусы — пользуйся ими, чтобы быстрее достичь целей", characterPos: 'left', highlightSelector: '.bonuses-container', highlightBonus: true, position: { top: '54%', left: '23%' }, mobilePosition: { top: '60%', left: '10%' } },
-    { text: "Попробуй)", characterPos: 'left', highlightSelector: '.bonuses-container', position: { top: '54%', left: '23%' }, highlightBonus: true, mobilePosition: { top: '60%', left: '10%' }  },
+    { text: "Здесь твои бонусы — пользуйся ими, чтобы быстрее достичь целей", characterPos: 'left', highlightSelector: '.bonuses-container', highlightBonus: false, position: { top: '54%', left: '23%' }, mobilePosition: { top: '60%', left: '10%' } },
+    { text: "Попробуй)", characterPos: 'left', highlightSelector: '.bonuses-container', position: { top: '54%', left: '23%' }, highlightBonus: false, mobilePosition: { top: '60%', left: '10%' }  },
 
   ],
   2: [
