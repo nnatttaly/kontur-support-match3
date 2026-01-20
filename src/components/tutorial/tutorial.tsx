@@ -6,8 +6,8 @@ import { DIALOG_BUBBLE_ICON_PATH, HERO_ICON_PATH } from 'consts/paths';
 
 // ПАРАМЕТРЫ СДВИГА (если маска съезжает вправо-вниз, ставим отрицательные значения)
 const IS_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-const OFFSET_X = IS_IOS ? -100 : 0; // Сдвиг влево на 10px для iOS
-const OFFSET_Y = IS_IOS ? -100 : 0; // Сдвиг вверх на 10px для iOS
+const OFFSET_X = IS_IOS ? -50 : 0; // Сдвиг влево на 10px для iOS
+const OFFSET_Y = IS_IOS ? -50 : 0; // Сдвиг вверх на 10px для iOS
 
 interface Props {
   steps: TutorialStep[];
