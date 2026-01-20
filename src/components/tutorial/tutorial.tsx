@@ -69,31 +69,31 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     }, [currentStep, step.highlightSelector]);
 
   useEffect(() => {
-        // Если флаг не активен или селектор не передан, выходим
-        if (!step.highlightBonus || !step.highlightSelector) return;
+  // Если флаг не активен или селектор не передан, выходим
+    if (!step.highlightBonus || !step.aboba) return;
 
-        const elements = document.querySelectorAll(step.highlightSelector);
-        const elementsArray = Array.from(elements) as HTMLElement[];
+    const elements = document.querySelectorAll(step.aboba);
+    const elementsArray = Array.from(elements) as HTMLElement[];
 
-        if (elementsArray.length === 0) return;
+    if (elementsArray.length === 0) return;
 
-        // Применяем стили и обработчики к каждому найденному элементу
+    // Применяем стили и обработчики к каждому найденному элементу
+    elementsArray.forEach(el => {
+      el.style.zIndex = '9999999';
+      el.style.position = el.style.position || 'relative'; // z-index работает только с позиционированием
+      el.style.pointerEvents = 'auto'; // На случай, если перекрыто чем-то другим
+      el.addEventListener('click', handleNext);
+    });
+
+      // Cleanup функция: возвращаем всё как было
+      return () => {
         elementsArray.forEach(el => {
-          el.style.zIndex = '9999999';
-          el.style.position = el.style.position || 'relative'; // z-index работает только с позиционированием
-          el.style.pointerEvents = 'auto'; // На случай, если перекрыто чем-то другим
-          el.addEventListener('click', handleNext);
+          el.style.zIndex = '';
+          el.style.position = '';
+          el.removeEventListener('click', handleNext);
         });
-
-        // Cleanup функция: возвращаем всё как было
-        return () => {
-          elementsArray.forEach(el => {
-            el.style.zIndex = '';
-            el.style.position = '';
-            el.removeEventListener('click', handleNext);
-          });
-        };
-      }, [currentStep, step.highlightBonus, step.highlightSelector, handleNext]);
+      };
+    }, [currentStep, step.highlightBonus, step.highlightSelector, handleNext, step.aboba]);
 
   // Дефолтные стили, если позиция не передана (по центру внизу)
   const defaultPosition = {
