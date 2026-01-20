@@ -1,41 +1,42 @@
-import { useState, useCallback, useLayoutEffect, useRef, useEffect } from 'react';
-import { createPortal } from 'react-dom'; // Импортируем портал
+import { useState, useCallback, useLayoutEffect, useRef} from 'react';
+import { createPortal } from 'react-dom';
 import './tutorial.css';
 import { TutorialStep } from './tutorial-data';
 import { DIALOG_BUBBLE_ICON_PATH, HERO_ICON_PATH } from 'consts/paths';
+
+// ПАРАМЕТРЫ СДВИГА (если маска съезжает вправо-вниз, ставим отрицательные значения)
+const IS_IOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+const OFFSET_X = IS_IOS ? -100 : 0; // Сдвиг влево на 10px для iOS
+const OFFSET_Y = IS_IOS ? -100 : 0; // Сдвиг вверх на 10px для iOS
 
 interface Props {
   steps: TutorialStep[];
   onComplete: () => void;
 }
 
-interface ElementRect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
 export const Tutorial = ({ steps, onComplete }: Props) => {
   const [currentStep, setCurrentStep] = useState(0);
-  const [coordsArray, setCoordsArray] = useState<ElementRect[]>([]);
+  const [coordsArray, setCoordsArray] = useState<any[]>([]);
   const svgRef = useRef<SVGSVGElement>(null);
 
   const step = steps[currentStep];
 
-  // Метод для точного расчета координат относительно SVG-контейнера
   const updateCoords = useCallback(() => {
     if (step.highlightSelector && svgRef.current) {
       const elements = document.querySelectorAll(step.highlightSelector);
-      const svgRect = svgRef.current.getBoundingClientRect();
+      
+      // На iOS координаты лучше брать относительно вьюпорта с учетом visualViewport
+      const vv = window.visualViewport;
+      const vOffsetX = vv ? vv.offsetLeft : 0;
+      const vOffsetY = vv ? vv.offsetTop : 0;
 
       if (elements.length > 0) {
         const newCoords = Array.from(elements).map(el => {
           const rect = el.getBoundingClientRect();
-          // Вычитаем положение самого SVG, чтобы нивелировать любые сдвиги оверлея
           return {
-            x: rect.left - svgRect.left,
-            y: rect.top - svgRect.top,
+            // Применяем ручной сдвиг + учитываем смещение вьюпорта
+            x: rect.left - vOffsetX + OFFSET_X,
+            y: rect.top - vOffsetY + OFFSET_Y,
             width: rect.width,
             height: rect.height
           };
@@ -44,59 +45,37 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
       } else {
         setCoordsArray([]);
       }
-    } else {
-      setCoordsArray([]);
     }
   }, [step.highlightSelector]);
 
-  // Следим за изменениями экрана и шага
   useLayoutEffect(() => {
     updateCoords();
+    // Слушаем ресайз и скролл
     window.addEventListener('resize', updateCoords);
-    window.addEventListener('scroll', updateCoords);
+    window.visualViewport?.addEventListener('resize', updateCoords);
+    window.visualViewport?.addEventListener('scroll', updateCoords);
+    
     return () => {
       window.removeEventListener('resize', updateCoords);
-      window.removeEventListener('scroll', updateCoords);
+      window.visualViewport?.removeEventListener('resize', updateCoords);
+      window.visualViewport?.removeEventListener('scroll', updateCoords);
     };
   }, [updateCoords, currentStep]);
 
-  // Блокируем скролл страницы на время обучения
-  useEffect(() => {
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = originalStyle;
-    };
-  }, []);
-
-  const handleNext = useCallback((e: React.MouseEvent) => {
-    // Предотвращаем срабатывание клика по элементам "под" оверлеем
+  const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
-    
     if (currentStep < steps.length - 1) {
       setCurrentStep(prev => prev + 1);
     } else {
       onComplete();
     }
-  }, [currentStep, onComplete, steps.length]);
-
-  const defaultPosition = {
-    bottom: '10%',
-    left: '50%',
-    transform: 'translateX(-50%)'
   };
 
-  const currentStyle = step.position || defaultPosition;
-
-  // Сама разметка туториала
   const tutorialJSX = (
     <div className="tutorial-overlay" onClick={handleNext}>
-      <svg 
-        ref={svgRef}
-        className="tutorial-svg-mask"
-      >
+      <svg ref={svgRef} className="tutorial-svg-mask">
         <defs>
-          <mask id="hole">
+          <mask id="hole" maskUnits="userSpaceOnUse">
             <rect width="100%" height="100%" fill="white" />
             {coordsArray.map((coords, index) => (
               <rect
@@ -106,40 +85,31 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
                 width={coords.width + 16}
                 height={coords.height + 16}
                 fill="black"
-                rx="12"
-                style={{ transition: 'all 0.3s ease' }}
+                rx="14"
               />
             ))}
           </mask>
         </defs>
-        <rect 
-          width="100%" 
-          height="100%" 
-          fill="rgba(0,0,0,0.7)" 
-          mask="url(#hole)" 
-        />
+        <rect width="100%" height="100%" fill="rgba(0,0,0,0.7)" mask="url(#hole)" />
       </svg>
 
       <div
         className={`tutorial-content ${step.characterPos}`}
-        style={currentStyle as React.CSSProperties}
-        onClick={(e) => e.stopPropagation()} // Клик по самому тексту не закрывает шаг
+        style={(step.position || { bottom: '10%', left: '50%', transform: 'translateX(-50%)' }) as React.CSSProperties}
       >
         <div className="character-icon">
           <img src={HERO_ICON_PATH} alt="hero" />
         </div>
-        
         <div className="dialog-container">
           <div className={`dialog-bubble ${step.characterPos}`}>
             <img src={DIALOG_BUBBLE_ICON_PATH} alt="dialog-bubble" />
             <p>{step.text}</p>
           </div>
-          <span className="click-hint">Кликни по экрану, чтобы продолжить</span>
+          <span className="click-hint">Кликни, чтобы продолжить</span>
         </div>
       </div>
     </div>
   );
 
-  // Рендерим всё это в body, а не туда, где вызван компонент
   return createPortal(tutorialJSX, document.body);
 };
