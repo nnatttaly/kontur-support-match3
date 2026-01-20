@@ -68,23 +68,32 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
       }
     }, [currentStep, step.highlightSelector]);
 
-    useEffect(() => {
-      const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
-      if (!bonusesContainer) return;
+  useEffect(() => {
+        // Если флаг не активен или селектор не передан, выходим
+        if (!step.highlightBonus || !step.highlightSelector) return;
 
-      if (step.highlightBonus) {
-        bonusesContainer.style.zIndex = '9999999';
-        // Добавляем обработчик клика на бонусы для переход к следующему шагу
-        bonusesContainer.addEventListener('click', handleNext);
-        
+        const elements = document.querySelectorAll(step.highlightSelector);
+        const elementsArray = Array.from(elements) as HTMLElement[];
+
+        if (elementsArray.length === 0) return;
+
+        // Применяем стили и обработчики к каждому найденному элементу
+        elementsArray.forEach(el => {
+          el.style.zIndex = '9999999';
+          el.style.position = el.style.position || 'relative'; // z-index работает только с позиционированием
+          el.style.pointerEvents = 'auto'; // На случай, если перекрыто чем-то другим
+          el.addEventListener('click', handleNext);
+        });
+
+        // Cleanup функция: возвращаем всё как было
         return () => {
-          bonusesContainer.removeEventListener('click', handleNext);
-          bonusesContainer.style.zIndex = '';
+          elementsArray.forEach(el => {
+            el.style.zIndex = '';
+            el.style.position = '';
+            el.removeEventListener('click', handleNext);
+          });
         };
-      } else {
-        bonusesContainer.style.zIndex = '';
-      }
-    }, [currentStep, step.highlightBonus, handleNext]);
+      }, [currentStep, step.highlightBonus, step.highlightSelector, handleNext]);
 
   // Дефолтные стили, если позиция не передана (по центру внизу)
   const defaultPosition = {
