@@ -121,11 +121,11 @@
 
 @media (max-width: 768px) {
   .dialog-bubble p {
-    font-size: 13px;
+    font-size: 14px;
     line-height: 1.1;
   }
   .dialog-bubble {
-    width: 225px;
+    width: 235px;
   }
   .click-hint {
     font-size: 12px;

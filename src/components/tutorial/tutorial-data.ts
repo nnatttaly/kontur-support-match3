@@ -33,25 +33,25 @@ export const TUTORIALS: Record<number, TutorialStep[]> = {
 
   ],
   2: [
-    { text: "Настало время переходить к рабочим задачам. Как видишь, фигурки поменялись", characterPos: 'left', highlightSelector: '.field', position: { top: '64%', left: '25%' }, mobilePosition: { top: '10%', left: '10%' } },
+    { text: "Настало время переходить к рабочим задачам. Как видишь, фигурки поменялись", characterPos: 'left', highlightSelector: '.field', position: { top: '64%', left: '25%' }, mobilePosition: { top: '7%', left: '10%' } },
     { text: "В этих клетках задачи посложнее, для выполнения которых нужно собирать комбинации с их участием", characterPos: 'right', highlightSelector: '.cell--golden', position: { top: '10%', left: '35%' }, mobilePosition: { top: '25%', left: '10%' } },
-    { text: "Задача исчезнет, а ты приблизишься к цели", characterPos: 'left', highlightSelector: '.goal-item', position: { top: '62%', left: '19%' }, mobilePosition: { top: '35%', left: '10%' } },
+    { text: "Задача исчезнет, а ты приблизишься к цели", characterPos: 'left', highlightSelector: '.goal-item', position: { top: '62%', left: '19%' }, mobilePosition: { top: '30%', left: '10%' } },
   ],
   3: [
-        { text: "Работать нужно на 5 звёзд!", characterPos: 'left', highlightSelector: '.goal-item', position: { top: '62%', left: '19%' }, mobilePosition: { top: '35%', left: '10%' } },
+    { text: "Работать нужно на 5 звёзд!", characterPos: 'left', highlightSelector: '.goal-item', position: { top: '62%', left: '19%' }, mobilePosition: { top: '30%', left: '10%' } },
     { text: "Для выполнения цели опусти все звезды вниз", characterPos: 'right', highlightSelector: '.cell--star', position: { top: '64%', left: '40%' }, mobilePosition: { top: '70%', left: '10%' }},
   ],
   4: [
-    { text: "Бриллианты работают так же, как и звезды. Доведи их в низ игрового поля", characterPos: 'right', highlightSelector: '.figure--diamond', position: { top: '43%', left: '40%' }, mobilePosition: { top: '60%', left: '10%' } },
+    { text: "Бриллианты работают так же, как и звезды. Доведи их в низ игрового поля", characterPos: 'right', highlightSelector: '.cell--diamond', position: { top: '43%', left: '40%' }, mobilePosition: { top: '60%', left: '10%' } },
   ],
   5: [
-    { text: "Теперь, как у тимлида, у тебя есть своя команда. Помогай ей развиваться и достигать новых высот", characterPos: 'right', highlightSelector: '.figure--big--image', position: { top: '60%', left: '40%' }, mobilePosition: { top: '28%', left: '10%' } },
-    { text: "Твоя цель — их улыбки! Собирай комбинации рядом с ними", characterPos: 'left', highlightSelector: '.figure--big--image', position: { top: '60%', left: '28%' }, mobilePosition: { top: '70%', left: '10%' } },
+    { text: "Теперь, как у тимлида, у тебя есть своя команда. Помогай ей развиваться и достигать новых высот", characterPos: 'right', highlightSelector: '.figure--big--image', position: { top: '60%', left: '40%' }, mobilePosition: { top: '28%', left: '10%' }, highlightSelectorMobile: '.cell--blocked' },
+    { text: "Твоя цель — их улыбки! Собирай комбинации рядом с ними", characterPos: 'left', highlightSelector: '.figure--big--image', position: { top: '60%', left: '28%' }, mobilePosition: { top: '67%', left: '10%' }, highlightSelectorMobile: '.cell--blocked' },
   ],
   6: [
-    { text: "Это игра в бесконечном режиме. Играй, сколько хочешь", characterPos: 'right', highlightSelector: undefined, position: { top: '60%', left: '40%' }, mobilePosition: { top: '45%', left: '10%' } },
+    { text: "Это игра в бесконечном режиме. Играй, сколько хочешь", characterPos: 'right', highlightSelector: undefined, position: { top: '60%', left: '40%' }, mobilePosition: { top: '42%', left: '10%' } },
     { text: "Твоя цель - набрать максимум очков. Используй бонусы", characterPos: 'right', highlightSelector: '.score-container, .bonuses-container', position: { top: '37%', left: '40%' }, mobilePosition: { top: '50%', left: '10%' } },
-    { text: "По мере выполнения одних целей будут появляться новые, а в награду выдаваться бонусы", characterPos: 'right', highlightSelector: '.goal-item, .bonuses-container', position: { top: '50%', left: '32%' }, mobilePosition: { top: '40%', left: '10%' } },
+    { text: "По мере выполнения одних целей будут появляться новые, а в награду выдаваться бонусы", characterPos: 'right', highlightSelector: '.goal-item, .bonuses-container', position: { top: '50%', left: '32%' }, mobilePosition: { top: '42%', left: '10%' } },
     { text: "Но учти, бонусов одного типа может быть не больше 3. Профи не полагаются на подарки судьбы", characterPos: 'left', highlightSelector: '.bonuses-container', position: { top: '52%', left: '28%' }, mobilePosition: { top: '60%', left: '10%' }  },
   ],
 };

@@ -101,7 +101,7 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
   const getMobileSelector = useCallback(() => {
     // На устройствах Apple используем основной селектор
     if (isAppleDevice) {
-      return step.highlightSelector || step.highlightSelectorMobile;
+      return step.highlightSelectorMobile || step.highlightSelector;
     }
     
     // Для не-Apple устройств используем существующую логику
