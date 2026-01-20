@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import './tutorial.css';
 import { TutorialStep } from './tutorial-data';
 import { DIALOG_BUBBLE_ICON_PATH, HERO_ICON_PATH } from 'consts/paths';
@@ -18,21 +18,53 @@ interface ElementRect {
 export const Tutorial = ({ steps, onComplete }: Props) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [coordsArray, setCoordsArray] = useState<ElementRect[]>([]);
-  // Состояние для размеров вьюпорта
-  const [screenSize, setScreenSize] = useState({ 
-    w: window.innerWidth, 
-    h: window.innerHeight 
-  });
+  const svgRef = useRef<SVGSVGElement>(null); // Реф для SVG
 
   const step = steps[currentStep];
 
-  // Обновляем размер экрана при ресайзе (важно для iOS при скрытии адресной строки)
-  useEffect(() => {
-    const handleResize = () => {
-      setScreenSize({ w: window.innerWidth, h: window.innerHeight });
+  const updateCoords = useCallback(() => {
+    if (step.highlightSelector && svgRef.current) {
+      const elements = document.querySelectorAll(step.highlightSelector);
+      const svgRect = svgRef.current.getBoundingClientRect(); // Замеряем сам SVG
+
+      if (elements.length > 0) {
+        const newCoords = Array.from(elements).map(el => {
+          const rect = el.getBoundingClientRect();
+          // ВЫЧИТАЕМ координаты SVG из координат элемента
+          // Это гарантирует, что "дырка" будет ровно там, где элемент
+          return {
+            x: rect.left - svgRect.left,
+            y: rect.top - svgRect.top,
+            width: rect.width,
+            height: rect.height
+          };
+        });
+        setCoordsArray(newCoords);
+      } else {
+        setCoordsArray([]);
+      }
+    }
+  }, [step.highlightSelector]);
+
+  // Следим за всем: ресайз, скролл, смена шага
+  useLayoutEffect(() => {
+    updateCoords();
+    window.addEventListener('resize', updateCoords);
+    window.addEventListener('scroll', updateCoords); // На всякий случай
+    return () => {
+      window.removeEventListener('resize', updateCoords);
+      window.removeEventListener('scroll', updateCoords);
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+  }, [updateCoords, currentStep]);
+
+  // Блокировка скролла (Критично для iOS)
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none'; // Запрет жестов
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
   }, []);
 
   const handleNext = useCallback(() => {
@@ -43,74 +75,32 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     }
   }, [currentStep, onComplete, steps.length]);
 
-  // Используем useLayoutEffect, чтобы замерять координаты до отрисовки
-  useLayoutEffect(() => {
-    if (step.highlightSelector) {
-      const elements = document.querySelectorAll(step.highlightSelector);
-      
-      if (elements.length > 0) {
-        const newCoords: ElementRect[] = Array.from(elements).map(el => {
-          const rect = el.getBoundingClientRect();
-          return {
-            x: rect.left,
-            y: rect.top,
-            width: rect.width,
-            height: rect.height
-          };
-        });
-        setCoordsArray(newCoords);
-      } else {
-        setCoordsArray([]);
-      }
-    } else {
-      setCoordsArray([]);
-    }
-  }, [currentStep, step.highlightSelector, screenSize]); // Добавили screenSize в зависимости
-
-  useEffect(() => {
-    const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
-    if (!bonusesContainer) return;
-    
-    if (step.highlightBonus) {
-      bonusesContainer.style.zIndex = '9999999';
-      bonusesContainer.addEventListener('click', handleNext);
-      
-      return () => {
-        bonusesContainer.removeEventListener('click', handleNext);
-        bonusesContainer.style.zIndex = '';
-      };
-    }
-  }, [currentStep, step.highlightBonus, handleNext]);
-
-  const defaultPosition = {
-    bottom: '10%',
-    left: '50%',
-    transform: 'translateX(-50%)'
-  };
-
-  const currentStyle = step.position || defaultPosition;
-
   return (
     <div className="tutorial-overlay" onClick={handleNext}>
       <svg 
-        className="tutorial-svg-mask" 
-        // viewBox — ключевой момент для iOS, синхронизирует систему координат SVG с пикселями
-        viewBox={`0 0 ${screenSize.w} ${screenSize.h}`}
-        preserveAspectRatio="none"
+        ref={svgRef}
+        className="tutorial-svg-mask"
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%',
+          pointerEvents: 'none' 
+        }}
       >
         <defs>
           <mask id="hole">
             <rect width="100%" height="100%" fill="white" />
             {coordsArray.map((coords, index) => (
               <rect
-                key={index}
-                x={coords.x - 8} 
+                key={`${currentStep}-${index}`}
+                x={coords.x - 8}
                 y={coords.y - 8}
                 width={coords.width + 16}
                 height={coords.height + 16}
                 fill="black"
                 rx="12"
-                style={{ transition: 'all 0.3s ease' }}
               />
             ))}
           </mask>
@@ -120,23 +110,24 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
           height="100%" 
           fill="rgba(0,0,0,0.7)" 
           mask="url(#hole)" 
+          style={{ pointerEvents: 'auto' }}
         />
       </svg>
 
       <div
         className={`tutorial-content ${step.characterPos}`}
-        style={currentStyle as React.CSSProperties}
+        style={(step.position || { bottom: '10%', left: '50%', transform: 'translateX(-50%)' }) as React.CSSProperties}
       >
+        {/* Контент (иконка, диалог) */}
         <div className="character-icon">
           <img src={HERO_ICON_PATH} alt="hero" />
         </div>
-        
         <div className="dialog-container">
           <div className={`dialog-bubble ${step.characterPos}`}>
             <img src={DIALOG_BUBBLE_ICON_PATH} alt="dialog-bubble" />
             <p>{step.text}</p>
           </div>
-          <span className="click-hint">Кликни по экрану, чтобы продолжить</span>
+          <span className="click-hint">Кликни, чтобы продолжить</span>
         </div>
       </div>
     </div>

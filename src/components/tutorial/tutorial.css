@@ -1,23 +1,19 @@
 .tutorial-overlay {
   position: fixed;
-  /* Заменяем 100vh на явные границы, чтобы избежать проблем с адресной строкой Safari */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9999;
-  cursor: pointer;
-  /* Предотвращаем скролл фона на iOS */
-  touch-action: none; 
+  /* Используем inset вместо top/left/width/height для лучшей поддержки Safari */
+  inset: 0; 
+  z-index: 99999;
+  /* Убираем любые системные отступы */
+  margin: 0;
+  padding: 0;
+  /* Критично для iOS: предотвращаем сдвиги при кликах */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .tutorial-svg-mask {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
+  /* Гарантируем, что SVG не смещается */
+  transform: translateZ(0); 
+  backface-visibility: hidden;
 }
 
 .tutorial-content {
@@ -30,6 +26,9 @@
   pointer-events: none;
   z-index: 10000;
   transition: all 0.4s ease-out;
+  -webkit-font-smoothing: antialiased;
+  /* Чтобы контент не влиял на расчеты маски */
+  pointer-events: none;
 }
 
 /* Отражение иконки и бабла для правой позиции */
