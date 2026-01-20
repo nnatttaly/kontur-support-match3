@@ -18,10 +18,10 @@ interface ElementRect {
 
 
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
 
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    const handleResize = () => setIsMobile(window.innerWidth <= 1024);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -69,33 +69,26 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     }, [currentStep, step.highlightSelector]);
 
   useEffect(() => {
-      const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
+    const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
 
-      if (!bonusesContainer) {
-        const overlay = document.querySelector('.tutorial-overlay') as HTMLElement;
-        const oldZIndex = overlay.style.zIndex;
-        overlay.style.zIndex+=1;
-        return () => {
-          overlay.style.zIndex = oldZIndex;
-        };
+    if (!bonusesContainer) return;
+
+    if (step.highlightBonus) {
+      bonusesContainer.style.zIndex = '9999999';
+      // Тут переход к след шагу при нажатии на бонус (поэтому handleNext пришлось выше сделать)
+      bonusesContainer.addEventListener('click', handleNext);
+      
+      return () => {
+        bonusesContainer.removeEventListener('click', handleNext);
+        bonusesContainer.style.zIndex = '';
       };
-
-      if (step.highlightBonus) {
-        bonusesContainer.style.zIndex = '9999999';
-        // Тут переход к след шагу при нажатии на бонус (поэтому handleNext пришлось выше сделать)
-        bonusesContainer.addEventListener('click', handleNext);
-        
-        return () => {
-          bonusesContainer.removeEventListener('click', handleNext);
-          bonusesContainer.style.zIndex = '';
-        };
-      } else {
-        bonusesContainer.style.zIndex+=1;
-        return () => {
-          bonusesContainer.style.zIndex = '';
-        };
-      }
-    }, [currentStep, step.highlightBonus, handleNext]);
+    } else {
+      bonusesContainer.style.zIndex+=1;
+      return () => {
+        bonusesContainer.style.zIndex = '';
+      };
+    }
+  }, [currentStep, step.highlightBonus, handleNext]);
 
   // Дефолтные стили, если позиция не передана (по центру внизу)
   const defaultPosition = {
