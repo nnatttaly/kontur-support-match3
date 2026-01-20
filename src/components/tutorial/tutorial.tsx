@@ -25,6 +25,7 @@ const useIsAppleDevice = () => {
       // Проверяем user agent на наличие ключевых слов Apple
       const userAgent = navigator.userAgent.toLowerCase();
       const isIOS = /iphone|ipad|ipod/.test(userAgent);
+
       
       setIsAppleDevice(isIOS);
     };
@@ -74,6 +75,15 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     
     // Для не-Apple устройств используем обычную логику
     return !!step.highlightSelector;
+  }, [isAppleDevice, step.highlightSelector]);
+
+  // Определяем, нужно ли показывать полное затемнение
+  const shouldShowFullOverlay = useCallback(() => {
+    // Если это устройство Apple - никогда не показываем полное затемнение
+    if (isAppleDevice) return false;
+    
+    // На не-телефонах Apple показываем полное затемнение если нет highlightSelector
+    return !step.highlightSelector;
   }, [isAppleDevice, step.highlightSelector]);
 
   // Определяем, нужно ли применять мобильное выделение (clickable элементы)
@@ -176,8 +186,21 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
 
   return (
     <div className="tutorial-overlay" onClick={handleNext}>
-      {/* Показываем SVG маску только если нужно */}
-      {shouldApplySvgHighlight() && (
+      {/* Показываем полное затемнение на не-телефонах Apple если нет highlightSelector */}
+      {shouldShowFullOverlay() && (
+        <div className="full-overlay" style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          backgroundColor: 'rgba(0,0,0,0.7)',
+          pointerEvents: 'none'
+        }} />
+      )}
+      
+      {/* Показываем SVG маску только если нужно и есть что выделять */}
+      {shouldApplySvgHighlight() && coordsArray.length > 0 && (
         <svg className="tutorial-svg-mask">
           <defs>
             <mask id="hole">
@@ -206,7 +229,7 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
       )}
 
       {/* Для устройств Apple без SVG маски показываем просто затемнение */}
-      {!shouldApplySvgHighlight() && isAppleDevice && (
+      {isAppleDevice && !shouldApplySvgHighlight() && !shouldShowFullOverlay() && (
         <div className="apple-device-overlay" style={{
           position: 'absolute',
           top: 0,
