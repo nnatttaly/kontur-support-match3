@@ -16,6 +16,43 @@ interface ElementRect {
   height: number;
 }
 
+const waitForStableLayout = (target: Element | null, stableMs = 80) => {
+  return new Promise<void>((resolve) => {
+    if (!target || !('ResizeObserver' in window)) {
+      // fallback — просто подождать кадр
+      requestAnimationFrame(() => resolve());
+      return;
+    }
+
+    let timeoutId: number | null = null;
+
+    const ro = new ResizeObserver(() => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      timeoutId = window.setTimeout(() => {
+        ro.disconnect();
+        resolve();
+      }, stableMs);
+    });
+
+    ro.observe(target);
+
+    // стартовый пинок
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!timeoutId) {
+          timeoutId = window.setTimeout(() => {
+            ro.disconnect();
+            resolve();
+          }, stableMs);
+        }
+      });
+    });
+  });
+};
+
+
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
 
@@ -43,72 +80,84 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
     }
   }, [currentStep, onComplete, steps.length]);
 
-  // === ПЕРЕСЧЁТ КООРДИНАТ ===
-  const recalcCoords = useCallback(() => {
-    if (!step.highlightSelector) {
-      setCoordsArray([]);
-      return;
-    }
-
-    const elements = document.querySelectorAll(step.highlightSelector);
-
-    if (elements.length === 0) {
-      setCoordsArray([]);
-      return;
-    }
-
-    const offsetTop = window.visualViewport?.offsetTop || 0;
-    const offsetLeft = window.visualViewport?.offsetLeft || 0;
-
-    const newCoords: ElementRect[] = Array.from(elements).map(el => {
-      const rect = el.getBoundingClientRect();
-      return {
-        x: rect.left + offsetLeft,
-        y: rect.top + offsetTop,
-        width: rect.width,
-        height: rect.height
-      };
-    });
-
-    setCoordsArray(newCoords);
-  }, [step.highlightSelector]);
-
-  // === iOS FIX: двойной requestAnimationFrame ===
   useEffect(() => {
-    // Первый расчёт
-    recalcCoords();
+    let cancelled = false;
 
-    // Второй — после рендера overlay + SVG
-    const raf1 = requestAnimationFrame(() => {
-      const raf2 = requestAnimationFrame(() => {
-        recalcCoords();
+    const calculateCoords = async () => {
+      if (!step.highlightSelector) {
+        setCoordsArray([]);
+        return;
+      }
+
+      // ⚠️ ЭТО ВАЖНО
+      // ждём, пока zoom / media-query реально применятся
+      const layoutAnchor =
+        document.querySelector('.game-main') ||
+        document.querySelector('.page') ||
+        document.body;
+
+      await waitForStableLayout(layoutAnchor);
+
+      // дополнительная гарантия для iOS
+      await new Promise<void>(r =>
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => r())
+        )
+      );
+
+      if (cancelled) return;
+
+      const elements = document.querySelectorAll(step.highlightSelector);
+
+      if (!elements.length) {
+        setCoordsArray([]);
+        return;
+      }
+
+      const vv = window.visualViewport;
+      const offsetTop = vv?.offsetTop || 0;
+      const offsetLeft = vv?.offsetLeft || 0;
+
+      const newCoords: ElementRect[] = Array.from(elements).map(el => {
+        const rect = el.getBoundingClientRect();
+        return {
+          x: rect.left + offsetLeft,
+          y: rect.top + offsetTop,
+          width: rect.width,
+          height: rect.height
+        };
       });
 
-      return () => cancelAnimationFrame(raf2);
-    });
+      setCoordsArray(newCoords);
+    };
 
-    return () => cancelAnimationFrame(raf1);
-  }, [currentStep, recalcCoords]);
+    calculateCoords();
 
-  // === Z-INDEX И КЛИК ПО БОНУСАМ ===
-  useEffect(() => {
-    const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
-    if (!bonusesContainer) return;
+    return () => {
+      cancelled = true;
+    };
+  }, [currentStep, step.highlightSelector]);
 
-    if (step.highlightBonus) {
-      bonusesContainer.style.zIndex = '9999999';
-      bonusesContainer.addEventListener('click', handleNext);
 
-      return () => {
-        bonusesContainer.removeEventListener('click', handleNext);
+    useEffect(() => {
+      const bonusesContainer = document.querySelector('.bonuses-container') as HTMLElement;
+      if (!bonusesContainer) return;
+
+      if (step.highlightBonus) {
+        bonusesContainer.style.zIndex = '9999999';
+        // Добавляем обработчик клика на бонусы для переход к следующему шагу
+        bonusesContainer.addEventListener('click', handleNext);
+        
+        return () => {
+          bonusesContainer.removeEventListener('click', handleNext);
+          bonusesContainer.style.zIndex = '';
+        };
+      } else {
         bonusesContainer.style.zIndex = '';
-      };
-    } else {
-      bonusesContainer.style.zIndex = '';
-    }
-  }, [currentStep, step.highlightBonus, handleNext]);
+      }
+    }, [currentStep, step.highlightBonus, handleNext]);
 
-  // === ПОЗИЦИЯ ДИАЛОГА ===
+  // Дефолтные стили, если позиция не передана (по центру внизу)
   const defaultPosition = {
     bottom: '10%',
     left: '50%',
