@@ -1,4 +1,14 @@
-import { BonusType, Board, GameModifiers, Position, Goal, SpecialCell, Figure, Level } from "types";
+import {
+  BonusType,
+  Board,
+  GameModifiers,
+  Position,
+  Goal,
+  SpecialCell,
+  Figure,
+  Level,
+} from "types";
+
 import { applyFriendlyTeamEffect } from "./friendly-team";
 import {
   applyCareerGrowthEffect,
@@ -17,24 +27,36 @@ import {
   applyModernProductsAt,
 } from "./modern-products";
 import { applyItSphereEffect, applyItSphereAt } from "./it-sphere";
-import { applyDMSEffect } from "./dms"
+import { applyDMSEffect } from "./dms";
 
 export type BonusEffect = {
-  apply: (board: Board, specialCells?: SpecialCell[], currentLevel?: Level) => { 
-    board: Board, 
-    matchedPositions: Position[],
-    removedFigures?: Array<{position: Position, figure: Figure}>,
-    removedGoldenCells?: Position[]
+  apply: (
+    board: Board,
+    specialCells?: SpecialCell[],
+    currentLevel?: Level
+  ) => {
+    board: Board;
+    matchedPositions: Position[];
+    removedFigures?: Array<{ position: Position; figure: Figure }>;
+    removedGoldenCells?: Position[];
   };
-  applyAt?: (board: Board, pos: Position, secondPos?: Position, specialCells?: SpecialCell[]) => { 
-    board: Board, 
-    matchedPositions: Position[],
-    removedFigures?: Array<{position: Position, figure: Figure}>,
-    removedGoldenCells?: Position[]
+
+  applyAt?: (
+    board: Board,
+    pos: Position,
+    secondPos?: Position,
+    specialCells?: SpecialCell[]
+  ) => {
+    board: Board;
+    matchedPositions: Position[];
+    removedFigures?: Array<{ position: Position; figure: Figure }>;
+    removedGoldenCells?: Position[];
   };
+
   isInstant?: boolean;
 
   onApply?: (setMoves: (updater: (moves: number) => number) => void) => void;
+
   onApplyGoals?: (
     setGoals: (updater: (goals: Goal[]) => Goal[]) => void
   ) => void;
@@ -45,44 +67,43 @@ export type BonusEffect = {
 
 export const BONUS_EFFECTS: Record<BonusType, BonusEffect> = {
   friendlyTeam: {
-    apply: (board, specialCells, currentLevel) => ({ 
-      board: applyFriendlyTeamEffect(board, currentLevel), 
+    apply: (board, _specialCells, currentLevel) => ({
+      board: applyFriendlyTeamEffect(board, currentLevel),
       matchedPositions: [],
       removedFigures: [],
-      removedGoldenCells: []
+      removedGoldenCells: [],
     }),
     isInstant: true,
   },
 
   careerGrowth: {
-
-    apply: (board, specialCells, currentLevel) => ({ 
-      board: applyDMSEffect(board), 
+    apply: (board, _specialCells, _currentLevel) => ({
+      board: applyDMSEffect(board),
       matchedPositions: [],
       removedFigures: [],
-      removedGoldenCells: []
+      removedGoldenCells: [],
     }),
     isInstant: true,
     onApply: (setMoves) => setMoves((m) => m + 3),
   },
 
   sportCompensation: {
-    apply: (board, specialCells, currentLevel) => ({ 
-      board: applySportCompensationEffect(board), 
+    apply: (board, _specialCells, _currentLevel) => ({
+      board: applySportCompensationEffect(board),
       matchedPositions: [],
       removedFigures: [],
-      removedGoldenCells: []
+      removedGoldenCells: [],
     }),
     isInstant: true,
     onApply: (setMoves) => setMoves((m) => m + 1),
   },
 
   knowledgeBase: {
-    apply: (board, specialCells, currentLevel) => ({ 
-      board: applyKnowledgeBaseEffect(board), 
+    apply: (board, _specialCells, _currentLevel) => ({
+      board: applyKnowledgeBaseEffect(board),
       matchedPositions: [],
       removedFigures: [],
-      removedGoldenCells: []
+      removedGoldenCells: [],
     }),
     isInstant: true,
     onApply: (setMoves) => setMoves((m) => m + 2),
@@ -95,11 +116,11 @@ export const BONUS_EFFECTS: Record<BonusType, BonusEffect> = {
   },
 
   openGuide: {
-    apply: (board, specialCells, currentLevel) => ({ 
-      board, 
+    apply: (board, _specialCells, _currentLevel) => ({
+      board,
       matchedPositions: [],
       removedFigures: [],
-      removedGoldenCells: []
+      removedGoldenCells: [],
     }),
     isInstant: true,
     onApplyGoals: onApplyOpenGuide,
@@ -112,11 +133,11 @@ export const BONUS_EFFECTS: Record<BonusType, BonusEffect> = {
   },
 
   itSphere: {
-    apply: (board, specialCells, currentLevel) => ({ 
-      board, 
+    apply: (board, _specialCells, _currentLevel) => ({
+      board,
       matchedPositions: [],
       removedFigures: [],
-      removedGoldenCells: []
+      removedGoldenCells: [],
     }),
     isInstant: false,
     applyModifiers: applyCareerGrowthEffect,

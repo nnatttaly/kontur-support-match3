@@ -4,7 +4,6 @@ import { Board, Goal } from "types";
  * Бонус НЕ трогает доску.
  * Он напрямую модифицирует цели.
  */
-
 export const applyOpenGuideEffect = (board: Board): Board => {
   return board;
 };
@@ -24,9 +23,8 @@ export const onApplyOpenGuide = (
     const { g, i } =
       unfinished[Math.floor(Math.random() * unfinished.length)];
 
-    const oldCollected = g.collected;
     const newCollected = Math.min(g.target, g.collected + 1);
-    
+
     next[i] = {
       ...g,
       collected: newCollected,
