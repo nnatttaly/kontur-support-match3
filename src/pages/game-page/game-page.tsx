@@ -11,7 +11,8 @@ import { LEVELS, LAST_LEVEL } from "consts";
 import { useEffect, useState } from "react";
 import { TUTORIALS } from "@components/tutorial/tutorial-data";
 import { Tutorial } from "@components/tutorial/tutorial";
-import { ShuffleWarning } from "@components/shuffle-warning/shuffle-warning"; // Импорт нового компонента
+import { ShuffleWarning } from "@components/shuffle-warning/shuffle-warning";
+import logoKontur from "@/assets/logo/logo-kontur.png"; // ✅ импорт логотипа
 import "./game-page.styles.css";
 
 export default function GamePage() {
@@ -22,16 +23,18 @@ export default function GamePage() {
   const currentLevelId = gameLogic.levelState.currentLevel;
 
   useEffect(() => {
-    if (!gameLogic.levelState.isLevelTransition && 
-        TUTORIALS[currentLevelId] && 
-        !viewedTutorials.includes(currentLevelId)) {
+    if (
+      !gameLogic.levelState.isLevelTransition &&
+      TUTORIALS[currentLevelId] &&
+      !viewedTutorials.includes(currentLevelId)
+    ) {
       setShowTutorial(true);
     }
   }, [gameLogic.levelState.isLevelTransition, currentLevelId, viewedTutorials]);
 
   const handleCloseTutorial = () => {
     setShowTutorial(false);
-    setViewedTutorials(prev => [...prev, currentLevelId]);
+    setViewedTutorials((prev) => [...prev, currentLevelId]);
   };
 
   if (gameLogic.levelState.isLevelTransition) {
@@ -41,12 +44,15 @@ export default function GamePage() {
           isLastLevel={gameLogic.levelState.currentLevel === LAST_LEVEL}
           score={gameLogic.score}
           onRestart={() => {
-            const fixedBonuses = LEVELS[gameLogic.levelState.currentLevel - 1].bonuses;
-            gameLogic.handleLevelStart(gameLogic.levelState.currentLevel, fixedBonuses);
+            const fixedBonuses =
+              LEVELS[gameLogic.levelState.currentLevel - 1].bonuses;
+            gameLogic.handleLevelStart(
+              gameLogic.levelState.currentLevel,
+              fixedBonuses
+            );
           }}
-          
         />
-      )
+      );
     }
     return (
       <LevelTransition
@@ -59,14 +65,13 @@ export default function GamePage() {
   return (
     <div className="page">
       {showTutorial && (
-        <Tutorial 
-          steps={TUTORIALS[currentLevelId]} 
-          onComplete={handleCloseTutorial} 
+        <Tutorial
+          steps={TUTORIALS[currentLevelId]}
+          onComplete={handleCloseTutorial}
         />
       )}
-      
-      {/* Добавляем ShuffleWarning */}
-      <ShuffleWarning 
+
+      <ShuffleWarning
         isVisible={gameLogic.isShuffleWarning}
         onClose={gameLogic.hideShuffleWarning}
       />
@@ -74,14 +79,18 @@ export default function GamePage() {
       <div className="game-main">
         <div className="game-content">
           <div className="left-panel">
-            <img src="src/assets/logo/logo-kontur.png" alt="Logo Kontur" className="game-logo" />
+            {/* ✅ Используем импортированный логотип */}
+            <img src={logoKontur} alt="Logo Kontur" className="game-logo" />
             <Goals goals={gameLogic.goals} />
           </div>
 
           <div className="game-field-section">
             <div className="game-info">
               <Score score={gameLogic.score} />
-              <div className="level-name" data-text={gameLogic.currentLevel?.name}>
+              <div
+                className="level-name"
+                data-text={gameLogic.currentLevel?.name}
+              >
                 {gameLogic.currentLevel?.name}
               </div>
               <Moves moves={gameLogic.moves} />
