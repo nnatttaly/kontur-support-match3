@@ -92,8 +92,8 @@ export const LEVELS: Level[] = [
       }
     ],
     bonuses: [
-      { type: "modernProducts", count: 2 },
-      { type: "careerGrowth", count: 1 }
+      { type: "modernProducts", count: 3 },
+      { type: "careerGrowth", count: 2 }
     ],
     moves: 23,
     availableFigures: ["roundMessage", "letter", "bulb", "rectangleMessage", "phone"],

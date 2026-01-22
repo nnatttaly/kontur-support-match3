@@ -22,13 +22,15 @@ const isRemovable = (f: Figure | null) => {
 };
 
 /** случайное удаление */
-export const applyRemoteWorkEffect = (board: Board, specialCells: SpecialCell[] = []): { 
-  board: Board, 
-  matchedPositions: Position[],
-  removedFigures: Array<{position: Position, figure: Figure}>,
-  removedGoldenCells: Position[]
+export const applyRemoteWorkEffect = (
+  board: Board,
+  specialCells: SpecialCell[] = []
+): {
+  board: Board;
+  matchedPositions: Position[];
+  removedFigures: Array<{ position: Position; figure: Figure }>;
+  removedGoldenCells: Position[];
 } => {
-  console.log('applyRemoteWorkEffect specialCells:', specialCells);
   const positions: Position[] = [];
 
   for (let r = 0; r < BOARD_ROWS; r++) {
@@ -39,28 +41,33 @@ export const applyRemoteWorkEffect = (board: Board, specialCells: SpecialCell[] 
     }
   }
 
-  if (positions.length === 0) return { 
-    board, 
-    matchedPositions: [],
-    removedFigures: [],
-    removedGoldenCells: []
-  };
+  if (positions.length === 0) {
+    return {
+      board,
+      matchedPositions: [],
+      removedFigures: [],
+      removedGoldenCells: [],
+    };
+  }
 
   const { row, col } = positions[Math.floor(Math.random() * positions.length)];
   const figure = board[row][col];
-  
-  const removedFigures: Array<{position: Position, figure: Figure}> = [
-    { position: { row, col }, figure: figure! }
+
+  const removedFigures: Array<{ position: Position; figure: Figure }> = [
+    { position: { row, col }, figure: figure! },
   ];
-  
+
   const removedGoldenCells: Position[] = [];
-  
-  // Ищем golden-cell на этой позиции
+
   for (let i = 0; i < specialCells.length; i++) {
     const sc = specialCells[i];
-    if (sc.row === row && sc.col === col && sc.type === 'golden' && sc.isActive !== false) {
+    if (
+      sc.row === row &&
+      sc.col === col &&
+      sc.type === "golden" &&
+      sc.isActive !== false
+    ) {
       removedGoldenCells.push({ row, col });
-      console.log('Found golden cell at:', { row, col });
       break;
     }
   }
@@ -68,16 +75,11 @@ export const applyRemoteWorkEffect = (board: Board, specialCells: SpecialCell[] 
   const newBoard = board.map((r) => [...r]);
   newBoard[row][col] = null;
 
-  console.log('remoteWork removed:', {
-    figure: figure,
-    hasGoldenCell: removedGoldenCells.length > 0
-  });
-
-  return { 
-    board: newBoard, 
-    matchedPositions: [{ row, col }], 
+  return {
+    board: newBoard,
+    matchedPositions: [{ row, col }],
     removedFigures,
-    removedGoldenCells
+    removedGoldenCells,
   };
 };
 
@@ -85,15 +87,14 @@ export const applyRemoteWorkEffect = (board: Board, specialCells: SpecialCell[] 
 export const applyRemoteWorkAt = (
   board: Board,
   pos: Position,
-  secondPos?: Position,
+  _secondPos?: Position,
   specialCells: SpecialCell[] = []
-): { 
-  board: Board, 
-  matchedPositions: Position[],
-  removedFigures: Array<{position: Position, figure: Figure}>,
-  removedGoldenCells: Position[]
+): {
+  board: Board;
+  matchedPositions: Position[];
+  removedFigures: Array<{ position: Position; figure: Figure }>;
+  removedGoldenCells: Position[];
 } => {
-  console.log('applyRemoteWorkAt specialCells:', specialCells);
   const { row, col } = pos;
 
   if (
@@ -102,34 +103,39 @@ export const applyRemoteWorkAt = (
     row >= BOARD_ROWS ||
     col >= (board[0]?.length ?? 0)
   ) {
-    return { 
-      board, 
+    return {
+      board,
       matchedPositions: [],
       removedFigures: [],
-      removedGoldenCells: []
+      removedGoldenCells: [],
     };
   }
 
   const figure = board[row][col];
-  if (!isRemovable(figure)) return { 
-    board, 
-    matchedPositions: [],
-    removedFigures: [],
-    removedGoldenCells: []
-  };
+  if (!isRemovable(figure)) {
+    return {
+      board,
+      matchedPositions: [],
+      removedFigures: [],
+      removedGoldenCells: [],
+    };
+  }
 
-  const removedFigures: Array<{position: Position, figure: Figure}> = [
-    { position: { row, col }, figure: figure! }
+  const removedFigures: Array<{ position: Position; figure: Figure }> = [
+    { position: { row, col }, figure: figure! },
   ];
-  
+
   const removedGoldenCells: Position[] = [];
-  
-  // Ищем golden-cell на этой позиции
+
   for (let i = 0; i < specialCells.length; i++) {
     const sc = specialCells[i];
-    if (sc.row === row && sc.col === col && sc.type === 'golden' && sc.isActive !== false) {
+    if (
+      sc.row === row &&
+      sc.col === col &&
+      sc.type === "golden" &&
+      sc.isActive !== false
+    ) {
       removedGoldenCells.push({ row, col });
-      console.log('Found golden cell at:', { row, col });
       break;
     }
   }
@@ -137,15 +143,10 @@ export const applyRemoteWorkAt = (
   const newBoard = board.map((r) => [...r]);
   newBoard[row][col] = null;
 
-  console.log('remoteWorkAt removed:', {
-    figure: figure,
-    hasGoldenCell: removedGoldenCells.length > 0
-  });
-
-  return { 
-    board: newBoard, 
-    matchedPositions: [{ row, col }], 
+  return {
+    board: newBoard,
+    matchedPositions: [{ row, col }],
     removedFigures,
-    removedGoldenCells
+    removedGoldenCells,
   };
 };

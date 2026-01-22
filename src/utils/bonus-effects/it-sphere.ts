@@ -22,13 +22,15 @@ const isUsable = (f: Figure | null) => {
 };
 
 /** legacy: удалить самый частый тип */
-export const applyItSphereEffect = (board: Board, specialCells: SpecialCell[] = []): { 
-  board: Board, 
-  matchedPositions: Position[],
-  removedFigures: Array<{position: Position, figure: Figure}>,
-  removedGoldenCells: Position[]
+export const applyItSphereEffect = (
+  board: Board,
+  specialCells: SpecialCell[] = []
+): {
+  board: Board;
+  matchedPositions: Position[];
+  removedFigures: Array<{ position: Position; figure: Figure }>;
+  removedGoldenCells: Position[];
 } => {
-  console.log('applyItSphereEffect specialCells:', specialCells);
   const freq = new Map<Figure, number>();
 
   for (let r = 0; r < BOARD_ROWS; r++) {
@@ -50,15 +52,17 @@ export const applyItSphereEffect = (board: Board, specialCells: SpecialCell[] = 
     }
   });
 
-  if (!target) return { 
-    board, 
-    matchedPositions: [],
-    removedFigures: [],
-    removedGoldenCells: []
-  };
+  if (!target) {
+    return {
+      board,
+      matchedPositions: [],
+      removedFigures: [],
+      removedGoldenCells: [],
+    };
+  }
 
   const matchedPositions: Position[] = [];
-  const removedFigures: Array<{position: Position, figure: Figure}> = [];
+  const removedFigures: Array<{ position: Position; figure: Figure }> = [];
   const removedGoldenCells: Position[] = [];
   const newBoard = board.map((r) => [...r]);
 
@@ -69,13 +73,16 @@ export const applyItSphereEffect = (board: Board, specialCells: SpecialCell[] = 
         matchedPositions.push(pos);
         removedFigures.push({ position: pos, figure: target });
         newBoard[r][c] = null;
-        
-        // Ищем golden-cell на этой позиции
+
         for (let i = 0; i < specialCells.length; i++) {
           const sc = specialCells[i];
-          if (sc.row === r && sc.col === c && sc.type === 'golden' && sc.isActive !== false) {
+          if (
+            sc.row === r &&
+            sc.col === c &&
+            sc.type === "golden" &&
+            sc.isActive !== false
+          ) {
             removedGoldenCells.push(pos);
-            console.log('Found golden cell at:', pos);
             break;
           }
         }
@@ -83,16 +90,11 @@ export const applyItSphereEffect = (board: Board, specialCells: SpecialCell[] = 
     }
   }
 
-  console.log('itSphere removed:', {
-    figures: removedFigures.length,
-    goldenCells: removedGoldenCells.length
-  });
-
-  return { 
-    board: newBoard, 
-    matchedPositions, 
+  return {
+    board: newBoard,
+    matchedPositions,
     removedFigures,
-    removedGoldenCells 
+    removedGoldenCells,
   };
 };
 
@@ -100,15 +102,14 @@ export const applyItSphereEffect = (board: Board, specialCells: SpecialCell[] = 
 export const applyItSphereAt = (
   board: Board,
   pos: Position,
-  secondPos?: Position,
+  _secondPos?: Position,
   specialCells: SpecialCell[] = []
-): { 
-  board: Board, 
-  matchedPositions: Position[],
-  removedFigures: Array<{position: Position, figure: Figure}>,
-  removedGoldenCells: Position[]
+): {
+  board: Board;
+  matchedPositions: Position[];
+  removedFigures: Array<{ position: Position; figure: Figure }>;
+  removedGoldenCells: Position[];
 } => {
-  console.log('applyItSphereAt specialCells:', specialCells);
   const { row, col } = pos;
 
   if (
@@ -117,24 +118,26 @@ export const applyItSphereAt = (
     row >= BOARD_ROWS ||
     col >= (board[0]?.length ?? 0)
   ) {
-    return { 
-      board, 
+    return {
+      board,
       matchedPositions: [],
       removedFigures: [],
-      removedGoldenCells: []
+      removedGoldenCells: [],
     };
   }
 
   const targetFig = board[row][col];
-  if (!isUsable(targetFig)) return { 
-    board, 
-    matchedPositions: [],
-    removedFigures: [],
-    removedGoldenCells: []
-  };
+  if (!isUsable(targetFig)) {
+    return {
+      board,
+      matchedPositions: [],
+      removedFigures: [],
+      removedGoldenCells: [],
+    };
+  }
 
   const matchedPositions: Position[] = [];
-  const removedFigures: Array<{position: Position, figure: Figure}> = [];
+  const removedFigures: Array<{ position: Position; figure: Figure }> = [];
   const removedGoldenCells: Position[] = [];
   const newBoard = board.map((r) => [...r]);
 
@@ -145,13 +148,16 @@ export const applyItSphereAt = (
         matchedPositions.push(pos);
         removedFigures.push({ position: pos, figure: targetFig! });
         newBoard[r][c] = null;
-        
-        // Ищем golden-cell на этой позиции
+
         for (let i = 0; i < specialCells.length; i++) {
           const sc = specialCells[i];
-          if (sc.row === r && sc.col === c && sc.type === 'golden' && sc.isActive !== false) {
+          if (
+            sc.row === r &&
+            sc.col === c &&
+            sc.type === "golden" &&
+            sc.isActive !== false
+          ) {
             removedGoldenCells.push(pos);
-            console.log('Found golden cell at:', pos);
             break;
           }
         }
@@ -159,15 +165,10 @@ export const applyItSphereAt = (
     }
   }
 
-  console.log('itSphereAt removed:', {
-    figures: removedFigures.length,
-    goldenCells: removedGoldenCells.length
-  });
-
-  return { 
-    board: newBoard, 
-    matchedPositions, 
+  return {
+    board: newBoard,
+    matchedPositions,
     removedFigures,
-    removedGoldenCells 
+    removedGoldenCells,
   };
 };

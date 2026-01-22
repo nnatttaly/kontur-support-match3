@@ -1,4 +1,13 @@
 import { BonusType } from "types/bonus-type";
+import friendlyTeamImg from "@/assets/bonuses/friendlyTeam.svg";
+import careerGrowthImg from "@/assets/bonuses/careerGrowth.svg";
+import sportCompensationImg from "@/assets/bonuses/sportCompensation.svg";
+import knowledgeBaseImg from "@/assets/bonuses/knowledgeBase.svg";
+import remoteWorkImg from "@/assets/bonuses/remoteWork.svg";
+import openGuideImg from "@/assets/bonuses/openGuide.svg";
+import modernProductsImg from "@/assets/bonuses/modernProducts.svg";
+import itSphereImg from "@/assets/bonuses/itSphere.svg";
+import dmsImg from "@/assets/bonuses/dms.svg";
 
 export const BONUS_NAMES: Record<BonusType, string> = {
   friendlyTeam: "Дружная команда",
@@ -13,15 +22,15 @@ export const BONUS_NAMES: Record<BonusType, string> = {
 };
 
 export const BONUS_PATHS: Record<BonusType, string> = {
-  friendlyTeam: "src/assets/bonuses/friendlyTeam.svg",
-  careerGrowth: "src/assets/bonuses/careerGrowth.svg",
-  sportCompensation: "src/assets/bonuses/sportCompensation.svg",
-  knowledgeBase: "src/assets/bonuses/knowledgeBase.svg",
-  remoteWork: "src/assets/bonuses/remoteWork.svg",
-  openGuide: "src/assets/bonuses/openGuide.svg",
-  modernProducts: "src/assets/bonuses/modernProducts.svg",
-  itSphere: "src/assets/bonuses/itSphere.svg",
-  dms: "src/assets/bonuses/dms.svg",
+  friendlyTeam: friendlyTeamImg,
+  careerGrowth: careerGrowthImg,
+  sportCompensation: sportCompensationImg,
+  knowledgeBase: knowledgeBaseImg,
+  remoteWork: remoteWorkImg,
+  openGuide: openGuideImg,
+  modernProducts: modernProductsImg,
+  itSphere: itSphereImg,
+  dms: dmsImg,
 };
 
 export const BONUS_EFFECTS: Record<BonusType, string> = {
