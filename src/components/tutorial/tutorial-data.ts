@@ -34,7 +34,7 @@ export const TUTORIALS: Record<number, TutorialStep[]> = {
   ],
   2: [
     { text: "Настало время переходить к рабочим задачам. Как видишь, фигурки поменялись", characterPos: 'left', highlightSelector: '.field', position: { top: '64%', left: '25%' }, mobilePosition: { top: '7%', left: '10%' } },
-    { text: "В этих клетках задачи посложнее, для выполнения которых нужно собирать комбинации с их участием", characterPos: 'right', highlightSelector: '.cell--golden', position: { top: '10%', left: '35%' }, mobilePosition: { top: '25%', left: '10%' } },
+    { text: "Собирай комбинации с участием иконок, выделенных жёлтым", characterPos: 'right', highlightSelector: '.cell--golden', position: { top: '10%', left: '35%' }, mobilePosition: { top: '25%', left: '10%' } },
     { text: "Задача исчезнет, а ты приблизишься к цели", characterPos: 'left', highlightSelector: '.goal-item', position: { top: '62%', left: '19%' }, mobilePosition: { top: '30%', left: '10%' } },
   ],
   3: [
