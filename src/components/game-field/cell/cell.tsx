@@ -125,6 +125,7 @@ export const Cell: React.FC<CellProps> = ({
         ${!figure ? "cell--empty" : ""} 
         ${specialCell ? `cell--${specialCell.type}` : ""} 
         ${isStar ? "cell--star" : ""}
+        ${isDiamond ? "cell--diamond" : ""}
         ${isBlocked ? "cell--blocked" : ""}
       `}
       onClick={handleClick}

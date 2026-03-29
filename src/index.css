@@ -13,7 +13,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   max-width: 100vw;
-  max-height: 100dvh;
+  max-height: 100vh;
   position: relative;
   overscroll-behavior: none;
   user-select: none;
@@ -21,6 +21,8 @@ body {
   -moz-user-select: none; /* Firefox */
   -ms-user-select: none; /* Internet Explorer/Edge */
   -webkit-touch-callout: none;
+  height: 100%;
+  overflow: hidden;
 }
 
 #root {
