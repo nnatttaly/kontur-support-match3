@@ -44,7 +44,12 @@ type UseMatchProcessingProps = {
   setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
   currentLevel?: Level;
   onSpecialCellsUpdate?: (specialCells: SpecialCell[]) => void;
-  onShuffleWarning?: () => void; // Добавляем новый пропс
+  onShuffleWarning?: () => void;
+};
+
+const DEBUG_MATCH_PROCESSING = true;
+const log = (...args: any[]) => {
+  if (DEBUG_MATCH_PROCESSING) console.log(...args);
 };
 
 export const useMatchProcessing = ({
@@ -59,7 +64,7 @@ export const useMatchProcessing = ({
   setBonuses,
   currentLevel,
   onSpecialCellsUpdate,
-  onShuffleWarning, // Получаем обработчик
+  onShuffleWarning,
 }: UseMatchProcessingProps) => {
   // Флаг для предотвращения повторной обработки матчей
   const isProcessingMatchesRef = useRef(false);
@@ -206,6 +211,7 @@ export const useMatchProcessing = ({
     return false;
   }, []);
 
+  // ✅ ИСПРАВЛЕННАЯ ФУНКЦИЯ: горизонтальная гравитация интегрирована в цикл заполнения
   const applyGravityAndFillStepwise = async (
     boardState: Board,
     level?: Level
@@ -213,13 +219,42 @@ export const useMatchProcessing = ({
     let boardToProcess = boardState;
 
     while (boardToProcess.some((row) => row.some((cell) => cell === null))) {
+      // 1️⃣ Вертикальная гравитация (фигуры падают на 1 клетку вниз)
+      log("⬇️ applyGravityAndFillStepwise: before vertical gravity", boardToProcess);
       boardToProcess = applyGravity(boardToProcess);
+      log("⬇️ applyGravityAndFillStepwise: after vertical gravity", boardToProcess);
       setBoard([...boardToProcess]);
       await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
+      // 2️⃣ Горизонтальная гравитация (только уровень 5, после вертикальной)
+      // Применяется ТОЛЬКО если есть изменения и только для уровня 5
+      if (level?.id === 5) {
+        const horizontalResult = applyHorizontalGravity(boardToProcess);
+        if (horizontalResult.isChanged) {
+          boardToProcess = horizontalResult.board;
+          setBoard([...boardToProcess]);
+          log("➡️ Horizontal gravity applied, board updated");
+          await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+        }
+      }
+
+      // 3️⃣ Заполнение пустых слотов сверху
+      log("🧩 applyGravityAndFillStepwise: before fill", boardToProcess);
       boardToProcess = fillEmptySlots(boardToProcess, level);
+      log("🧩 applyGravityAndFillStepwise: after fill", boardToProcess);
       setBoard([...boardToProcess]);
       await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+      
+      // 4️⃣ Повторная горизонтальная гравитация после заполнения
+      // (новые фигуры тоже могут нуждаться в горизонтальном выравнивании)
+      if (level?.id === 5) {
+        const horizontalResult = applyHorizontalGravity(boardToProcess);
+        if (horizontalResult.isChanged) {
+          boardToProcess = horizontalResult.board;
+          setBoard([...boardToProcess]);
+          await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+        }
+      }
     }
 
     return boardToProcess;
@@ -249,8 +284,18 @@ export const useMatchProcessing = ({
       // Track how many level-6 bonuses we've applied during this processMatches invocation to avoid double-applying
       let appliedLevel6Bonuses = 0;
 
+      console.group("🔁 processMatches");
+      log("start board", boardToProcess);
+      log("currentSpecialCells", currentSpecialCells);
+      log("currentLevel", currentLevel);
+
       while (hasMatches) {
+        console.group("🔄 iteration");
+        log("board at start of iteration", boardToProcess);
+
         const foundMatches = findAllMatches(boardToProcess);
+
+        log("foundMatches", foundMatches);
 
         if (foundMatches.length > 0) {
           // Используем Set для хранения УНИКАЛЬНЫХ позиций golden cells
@@ -443,35 +488,31 @@ export const useMatchProcessing = ({
             usedModifiers = true;
 
           setMatches(foundMatches);
+          log("setMatches", foundMatches);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
           // УДАЛЯЕМ ВСЕ МАТЧИ, включая фигуры на golden cell
           // Это ключевое исправление: все фигуры в матчах должны быть удалены
           boardToProcess = updateBoardAfterMatches(boardToProcess);
 
+          console.log("💥 After matches removal", boardToProcess);
+
           setBoard(boardToProcess);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
           setMatches([]);
 
           // Применяем гравитацию + заполнение «по одной клетке» пока есть пустые
+          // ✅ Включает горизонтальную гравитацию для уровня 5
           const lvl = currentLevel
             ? { ...currentLevel, specialCells: updatedSpecialCells }
             : undefined;
 
           boardToProcess = await applyGravityAndFillStepwise(boardToProcess, lvl);
 
-          // Для 5 уровня применяем горизонтальную гравитацию
-          if (lvl?.id === 5) {
-            const result = applyHorizontalGravity(boardToProcess);
-            boardToProcess = result.board;
-            setBoard(boardToProcess);
-            await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+          console.log("⬇️ After gravity/fill stepwise", boardToProcess);
 
-            if (result.isChanged) {
-              boardToProcess = await applyGravityAndFillStepwise(boardToProcess, lvl);
-              await new Promise((r) => setTimeout(r, ANIMATION_DURATION / 2));
-            }
-          }
+          // ✅ УДАЛЕНО: горизонтальная гравитация теперь в applyGravityAndFillStepwise
+          // Больше не нужно дублировать код здесь
 
           // Восстанавливаем golden cells только если не пропущено и они активны
           // НО: мы пометили golden cells как неактивные, поэтому они не восстановятся
@@ -488,6 +529,7 @@ export const useMatchProcessing = ({
           });
 
           setBoard([...boardToProcess]);
+          console.log("🧩 After restore golden cells", boardToProcess);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
         }
 
@@ -505,6 +547,9 @@ export const useMatchProcessing = ({
           diamondsToRemove.forEach(
             ({ row, col }) => (boardToProcess[row][col] = null)
           );
+
+          console.log("💎 diamondsToRemove", diamondsToRemove);
+          console.log("💎 After diamond removal", boardToProcess);
 
           setGoals((prev) => {
             const next = [...prev];
@@ -532,6 +577,8 @@ export const useMatchProcessing = ({
 
           boardToProcess = await applyGravityAndFillStepwise(boardToProcess, lvl);
 
+          console.log("⬇️ After diamonds gravity/fill", boardToProcess);
+
           // Восстанавливаем golden cells если не пропущено
           updatedSpecialCells.forEach((sc) => {
             if (!skipGoldenRestore && sc.type === "golden" && sc.isActive !== false) {
@@ -543,6 +590,7 @@ export const useMatchProcessing = ({
           });
 
           setBoard([...boardToProcess]);
+          console.log("🧩 After diamonds golden restore", boardToProcess);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
         }
 
@@ -560,6 +608,9 @@ export const useMatchProcessing = ({
           starsToRemove.forEach(
             ({ row, col }) => (boardToProcess[row][col] = null)
           );
+
+          console.log("⭐ starsToRemove", starsToRemove);
+          console.log("⭐ After star removal", boardToProcess);
 
           setGoals((prev) => {
             const next = [...prev];
@@ -587,6 +638,8 @@ export const useMatchProcessing = ({
 
           boardToProcess = await applyGravityAndFillStepwise(boardToProcess, lvl);
 
+          console.log("⬇️ After stars gravity/fill", boardToProcess);
+
           // Восстанавливаем golden cells если не пропущено
           updatedSpecialCells.forEach((sc) => {
             if (!skipGoldenRestore && sc.type === "golden" && sc.isActive !== false) {
@@ -598,6 +651,7 @@ export const useMatchProcessing = ({
           });
 
           setBoard([...boardToProcess]);
+          console.log("🧩 After stars golden restore", boardToProcess);
           await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
         }
 
@@ -666,6 +720,13 @@ export const useMatchProcessing = ({
           }
         }
 
+        console.log("🔎 end-of-iteration checks", {
+          newMatches,
+          moreStars,
+          moreDiamonds,
+          boardToProcess,
+        });
+
         if (
           newMatches.length === 0 &&
           moreStars.length === 0 &&
@@ -692,6 +753,8 @@ export const useMatchProcessing = ({
                 currentLevel
               );
               
+              console.log(`🔀 shuffle attempt ${current}`, shuffledBoard);
+              
               if (shuffledBoard !== boardToProcess) {
                 boardToProcess = shuffledBoard;
                 setBoard([...boardToProcess]);
@@ -710,12 +773,18 @@ export const useMatchProcessing = ({
             }
           }
 
+          console.log("🏁 iteration finished", boardToProcess);
+          console.groupEnd();
           break;
         }
+
+        console.log("🔁 will continue loop");
+        console.groupEnd();
       }
 
       if (totalRoundScore > 0) {
         setScore((prev) => prev + totalRoundScore);
+        console.log("🏆 totalRoundScore applied", totalRoundScore);
       }
 
       // RESET MODIFIERS AFTER BONUS - сначала сбрасываем бонусы с модификаторами (включая careerGrowth)
@@ -748,6 +817,9 @@ export const useMatchProcessing = ({
           });
         }
       }
+
+      console.log("✅ processMatches done", boardToProcess);
+      console.groupEnd();
 
       // Сбрасываем флаг после завершения обработки
       isProcessingMatchesRef.current = false;

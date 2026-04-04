@@ -1,24 +1,30 @@
 :root {
+  --cell-size: 50px;
   --cell-gap: 10px;
-}
-
-.field {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  grid-template-rows: repeat(6, 1fr);
-  gap: var(--cell-gap);
-  padding: 24px;
-  background-color: #f6f6f6;
-  border-radius: 24px;
-  width: fit-content;
-  margin: 0 auto;
-  box-sizing: border-box;
-  height: 452px;
-  overflow: visible;
+  --field-padding: 24px;
 }
 
 .field-wrapper {
   position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: repeat(7, var(--cell-size));
+  grid-template-rows: repeat(6, var(--cell-size));
+  gap: var(--cell-gap);
+  padding: var(--field-padding);
+  background-color: #f6f6f6;
+  border-radius: 24px;
+  box-sizing: border-box;
+  width: 458px;
+  height: 398px;
+  margin: 0 auto;
+  overflow: hidden;
+  align-content: start;
+  justify-content: start;
 }
 
 .figure-overlay {

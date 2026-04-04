@@ -1,3 +1,42 @@
+:root {
+  --cell-size: 50px;
+  --cell-gap: 10px;
+  --field-padding: 24px;
+}
+
+.field-wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: visible;
+}
+
+.field {
+  display: grid;
+  grid-template-columns: repeat(7, var(--cell-size));
+  grid-template-rows: repeat(6, var(--cell-size));
+  gap: var(--cell-gap);
+  padding: var(--field-padding);
+  background-color: #f6f6f6;
+  border-radius: 24px;
+  box-sizing: border-box;
+  width: 458px;
+  height: 398px;
+  margin: 0 auto;
+  overflow: hidden;
+  align-content: start;
+  justify-content: start;
+}
+
+.figure-overlay {
+  pointer-events: none;
+}
+
+.figure-overlay-img {
+  object-fit: contain;
+  width: 100%;
+  height: 100%;
+}
+
 .cell {
   width: 50px;
   height: 50px;
@@ -11,6 +50,7 @@
   transition: all 0.2s ease;
   overflow: visible;
   position: relative;
+  z-index: 1;
 }
 
 .cell-content {
@@ -23,6 +63,38 @@
   align-items: center;
   justify-content: center;
   pointer-events: none;
+  z-index: 20;
+}
+
+.figure-motion {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.figure-motion--swap {
+  z-index: 40;
+}
+
+.figure-motion--disabled {
+  transition: none !important;
+  animation: none !important;
+  transform: translate3d(0px, 0px, 0) !important;
+}
+
+.figure-motion--horizontal {
+  transform-origin: center center;
+}
+
+.figure-motion--vertical,
+.figure-motion--swap-axis {
+  transform-origin: center center;
 }
 
 .cell:hover {
@@ -128,7 +200,17 @@
   width: 36px;
   height: 36px;
   object-fit: contain;
-  transition: transform 0.3s ease;
+  display: block;
+  position: relative;
+  z-index: 30;
+  animation: none;
+}
+
+.figure--big,
+.figure--big--image {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
 }
 
 .figure--big--image {
@@ -138,22 +220,6 @@
   top: -68px;
   left: -112px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.cell--selected .figure {
-  transform: scale(1.2);
-}
-
-.cell--selected .figure--big {
-  transform: none !important;
-}
-
-.cell--modern-source .figure {
-  transform: scale(1.2);
-}
-
-.cell--modern-source .figure--big {
-  transform: none !important;
 }
 
 @keyframes matchAnimation {
@@ -228,7 +294,6 @@
 }
 
 .figure--diamond {
-
   animation: diamondBrilliance 2.5s infinite ease-in-out;
   filter: drop-shadow(0 0 2px rgba(0, 183, 255, 0.2));
 }
