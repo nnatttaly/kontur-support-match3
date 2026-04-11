@@ -6,9 +6,9 @@ import { useBonuses } from "./use-bonuses";
 import { useGameActions } from "./use-game-actions";
 import { useLevelManagement } from "./use-level-management";
 import { useInputHandlers } from "./use-input-handlers";
-import { SpecialCell, Level } from "types";
+import { Position, FigureType, SpecialCell } from "types";
 
-export const useGameLogic = () => {
+export const useGameLogic = (onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void) => {
   const { board, setBoard } = useBoardState();
   const gameState = useGameState();
   const [currentSpecialCells, setCurrentSpecialCells] = useState<SpecialCell[]>([]);
@@ -43,6 +43,7 @@ export const useGameLogic = () => {
     setMatches: gameState.setMatches,
     setScore: gameState.setScore,
     setGoals: gameState.setGoals,
+    goals: gameState.goals,
     modifiers: gameState.modifiers,
     setModifiers: gameState.setModifiers,
     activeBonus: gameState.activeBonus,
@@ -51,6 +52,7 @@ export const useGameLogic = () => {
     currentLevel: currentLevelWithSpecialCells,
     onSpecialCellsUpdate: setCurrentSpecialCells,
     onShuffleWarning: () => setIsShuffleWarning(true), // Передаем функцию
+    onGoalCollected,
   });
 
   // Функция для скрытия предупреждения
@@ -105,9 +107,11 @@ export const useGameLogic = () => {
     setMoves: gameState.setMoves,
     setGoals: gameState.setGoals,
     setMatches: gameState.setMatches,
+    goals: gameState.goals,
     processMatches,
     specialCells: currentSpecialCells,
     setSpecialCells: setCurrentSpecialCells,
+    onGoalCollected,
   });
 
   return {

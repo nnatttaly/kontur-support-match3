@@ -42,8 +42,10 @@ type UseMatchProcessingProps = {
   setActiveBonus: (bonus: ActiveBonus | null) => void;
   setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
   currentLevel?: Level;
+  goals: Goal[];
   onSpecialCellsUpdate?: (specialCells: SpecialCell[]) => void;
   onShuffleWarning?: () => void;
+  onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void;
 };
 
 const DEBUG_MATCH_PROCESSING = true;
@@ -74,8 +76,10 @@ export const useMatchProcessing = ({
   setActiveBonus,
   setBonuses,
   currentLevel,
+  goals,
   onSpecialCellsUpdate,
   onShuffleWarning,
+  onGoalCollected,
 }: UseMatchProcessingProps) => {
   const isProcessingMatchesRef = useRef(false);
   const MAX_SHUFFLE_ATTEMPTS = 7;
@@ -318,10 +322,11 @@ export const useMatchProcessing = ({
             }
 
             const goldenCellsInMatchesSet = new Set<string>();
-            let collectedTeamMatches = 0;
+            let teamPositions: Position[] = [];
 
             foundMatches.forEach((match) => {
-              let matchHasTeam = false;
+              let teamMatchFound = false;
+              let teamMatchPosition: Position | null = null;
 
               match.positions.forEach((pos) => {
                 const goldenCellIndex = updatedSpecialCells.findIndex(
@@ -349,12 +354,19 @@ export const useMatchProcessing = ({
                 );
 
                 if (teamCellIndex !== -1) {
-                  matchHasTeam = true;
+                  if (!teamMatchFound) {
+                    teamMatchFound = true;
+                    teamMatchPosition = pos;
+                  }
+
+                  if (currentLevel?.id !== 5) {
+                    teamPositions.push(pos);
+                  }
                 }
               });
 
-              if (matchHasTeam) {
-                collectedTeamMatches += 1;
+              if (teamMatchFound && currentLevel?.id === 5 && teamMatchPosition) {
+                teamPositions.push(teamMatchPosition);
               }
             });
 
@@ -381,12 +393,19 @@ export const useMatchProcessing = ({
                     ...next[idx],
                     collected: Math.min(next[idx].collected + inc, next[idx].target),
                   };
+
+                  // Trigger animations for golden cells
+                  if (onGoalCollected) {
+                    goldenCellsInMatches.forEach((pos) => {
+                      onGoalCollected(pos, "goldenCell", idx);
+                    });
+                  }
                 }
                 return next;
               });
             }
 
-            if (collectedTeamMatches > 0) {
+            if (teamPositions.length > 0) {
               setGoals((prev) => {
                 const next = [...prev];
                 const teamGoalIndex = next.findIndex((g) => g.figure === "teamCell");
@@ -394,8 +413,8 @@ export const useMatchProcessing = ({
                 if (teamGoalIndex !== -1) {
                   const teamGoal = next[teamGoalIndex];
                   const inc = modifiers.doubleGoalProgress
-                    ? collectedTeamMatches * 2
-                    : collectedTeamMatches;
+                    ? teamPositions.length * 2
+                    : teamPositions.length;
                   const oldCollected = teamGoal.collected;
                   const newCollected = Math.min(
                     oldCollected + inc,
@@ -406,6 +425,13 @@ export const useMatchProcessing = ({
                     ...teamGoal,
                     collected: newCollected,
                   };
+
+                  // Trigger animations for team cells
+                  if (onGoalCollected) {
+                    teamPositions.forEach((pos) => {
+                      onGoalCollected(pos, "teamCell", teamGoalIndex);
+                    });
+                  }
 
                   if (currentLevel?.id === 5) {
                     if (newCollected >= 14 && oldCollected < 14) {
@@ -427,7 +453,7 @@ export const useMatchProcessing = ({
 
             setGoals((prevGoals) => {
               const updatedGoals = [...prevGoals];
-              const figureCountMap = new Map<FigureType, number>();
+              const figurePositionsMap = new Map<FigureType, Position[]>();
 
               foundMatches.forEach((match) => {
                 match.positions.forEach((pos) => {
@@ -437,22 +463,30 @@ export const useMatchProcessing = ({
                     figure.type !== "teamCell" &&
                     figure.type !== "goldenCell"
                   ) {
-                    const count = figureCountMap.get(figure.type) || 0;
-                    figureCountMap.set(figure.type, count + 1);
+                    const positions = figurePositionsMap.get(figure.type) || [];
+                    positions.push(pos);
+                    figurePositionsMap.set(figure.type, positions);
                   }
                 });
               });
 
               updatedGoals.forEach((goal, index) => {
-                if (figureCountMap.has(goal.figure)) {
-                  const count = figureCountMap.get(goal.figure)!;
+                if (figurePositionsMap.has(goal.figure)) {
+                  const positions = figurePositionsMap.get(goal.figure)!;
                   const increment = modifiers.doubleGoalProgress
-                    ? count * 2
-                    : count;
+                    ? positions.length * 2
+                    : positions.length;
                   updatedGoals[index] = {
                     ...goal,
                     collected: Math.min(goal.collected + increment, goal.target),
                   };
+
+                  // Trigger animations for each collected figure
+                  if (onGoalCollected) {
+                    positions.forEach((pos) => {
+                      onGoalCollected(pos, goal.figure, index);
+                    });
+                  }
                 }
               });
 
@@ -516,6 +550,13 @@ export const useMatchProcessing = ({
               ({ row, col }) => (boardToProcess[row][col] = null)
             );
 
+            const diamondGoalIndex = goals.findIndex((g) => g.figure === "diamond");
+            if (onGoalCollected && diamondGoalIndex !== -1) {
+              diamondsToRemove.forEach((pos) => {
+                onGoalCollected(pos, "diamond", diamondGoalIndex);
+              });
+            }
+
             setGoals((prev) => {
               const next = [...prev];
               const idx = next.findIndex((g) => g.figure === "diamond");
@@ -567,6 +608,13 @@ export const useMatchProcessing = ({
             starsToRemove.forEach(
               ({ row, col }) => (boardToProcess[row][col] = null)
             );
+
+            const starGoalIndex = goals.findIndex((g) => g.figure === "star");
+            if (onGoalCollected && starGoalIndex !== -1) {
+              starsToRemove.forEach((pos) => {
+                onGoalCollected(pos, "star", starGoalIndex);
+              });
+            }
 
             setGoals((prev) => {
               const next = [...prev];

@@ -19,6 +19,7 @@ type UseGameActionsProps = {
   setMatches: (matches: Match[]) => void;
   setScore: (updater: (score: number) => number) => void;
   setGoals: (updater: (goals: Goal[]) => Goal[]) => void;
+  goals: Goal[];
   modifiers: GameModifiers;
   setModifiers: (modifiers: GameModifiers) => void;
   activeBonus: ActiveBonus | null;
@@ -26,7 +27,8 @@ type UseGameActionsProps = {
   setBonuses: (updater: (bonuses: Bonus[]) => Bonus[]) => void;
   currentLevel?: Level;
   onSpecialCellsUpdate?: (specialCells: SpecialCell[]) => void;
-  onShuffleWarning?: () => void; // Добавляем новый пропс
+  onShuffleWarning?: () => void;
+  onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void;
 };
 
 export const useGameActions = ({
@@ -37,6 +39,7 @@ export const useGameActions = ({
   setMatches,
   setScore,
   setGoals,
+  goals,
   modifiers,
   setModifiers,
   activeBonus,
@@ -45,12 +48,14 @@ export const useGameActions = ({
   currentLevel,
   onSpecialCellsUpdate,
   onShuffleWarning, // Получаем пропс
+  onGoalCollected,
 }: UseGameActionsProps) => {
   const { processMatches } = useMatchProcessing({
     setBoard,
     setMatches,
     setScore,
     setGoals,
+    goals,
     modifiers,
     setModifiers,
     activeBonus,
@@ -59,6 +64,7 @@ export const useGameActions = ({
     currentLevel,
     onSpecialCellsUpdate,
     onShuffleWarning, // Передаем дальше
+    onGoalCollected,
   });
 
   const { areAdjacent, swapFigures } = useSwapLogic(

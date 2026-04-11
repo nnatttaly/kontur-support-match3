@@ -1,6 +1,6 @@
-import { Figure, FIGURES } from "types";
+import { FIGURES, FigureType } from "types";
 
-export const getRandomFigure = (availableFigures?: Figure[]): Figure => {
+export const getRandomFigure = (availableFigures?: FigureType[]): FigureType => {
   const figures = availableFigures || FIGURES;
   return figures[Math.floor(Math.random() * figures.length)];
 };

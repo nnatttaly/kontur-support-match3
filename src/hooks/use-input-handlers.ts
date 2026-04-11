@@ -9,6 +9,7 @@ import {
   Figure,
   FigureType,
   SpecialCell,
+  Goal,
 } from "types";
 import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
 import { applyGravity, fillEmptySlots, applyHorizontalGravity } from "@utils/game-logic";
@@ -46,8 +47,9 @@ type UseInputHandlersProps = {
   setBoard: (board: Board) => void;
   setIsAnimating: (animating: boolean) => void;
   setMoves: (updater: (moves: number) => number) => void;
-  setGoals: (updater: (goals: import("types").Goal[]) => import("types").Goal[]) => void;
+  setGoals: (updater: (goals: Goal[]) => Goal[]) => void;
   setMatches: (matches: Match[]) => void;
+  goals: Goal[];
   processMatches?: (
     board: Board,
     specialCells: SpecialCell[],
@@ -55,6 +57,7 @@ type UseInputHandlersProps = {
   ) => Promise<Board>;
   specialCells?: SpecialCell[];
   setSpecialCells?: (cells: SpecialCell[]) => void;
+  onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void;
 };
 
 export const useInputHandlers = ({
@@ -72,9 +75,11 @@ export const useInputHandlers = ({
   setMoves,
   setGoals,
   setMatches,
+  goals,
   processMatches,
   specialCells = [],
   setSpecialCells,
+  onGoalCollected,
 }: UseInputHandlersProps) => {
   const [modernProductsSourcePos, setModernProductsSourcePos] = useState<Position | null>(null);
   const isProcessingClick = useRef(false);
@@ -133,6 +138,8 @@ export const useInputHandlers = ({
           boardCopy[row][col] = null;
         });
 
+        const diamondGoalIndex = goals.findIndex((g) => g.figure === "diamond");
+
         setGoals((prev) => {
           const next = [...prev];
           const idx = next.findIndex((g) => g.figure === "diamond");
@@ -145,6 +152,12 @@ export const useInputHandlers = ({
           }
           return next;
         });
+
+        if (onGoalCollected && diamondGoalIndex !== -1) {
+          diamondsToRemove.forEach((pos) => {
+            onGoalCollected(pos, "diamond", diamondGoalIndex);
+          });
+        }
       }
 
       if (starsToRemove.length > 0) {
@@ -152,6 +165,8 @@ export const useInputHandlers = ({
         starsToRemove.forEach(({ row, col }) => {
           boardCopy[row][col] = null;
         });
+
+        const starGoalIndex = goals.findIndex((g) => g.figure === "star");
 
         setGoals((prev) => {
           const next = [...prev];
@@ -165,6 +180,12 @@ export const useInputHandlers = ({
           }
           return next;
         });
+
+        if (onGoalCollected && starGoalIndex !== -1) {
+          starsToRemove.forEach((pos) => {
+            onGoalCollected(pos, "star", starGoalIndex);
+          });
+        }
       }
 
       return { board: boardCopy, hasSpecialFigures };

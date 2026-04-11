@@ -25,6 +25,7 @@ type CellProps = {
   onClick: (position: Position) => void;
   onDragStart: (position: Position) => void;
   onDragOver: (position: Position) => void;
+  innerRef?: React.Ref<HTMLDivElement>;
 };
 
 const useIsomorphicLayoutEffect =
@@ -48,6 +49,7 @@ export const Cell: React.FC<CellProps> = ({
   onClick,
   onDragStart,
   onDragOver,
+  innerRef,
 }) => {
   const [animateToOrigin, setAnimateToOrigin] = useState(false);
   const rafRef = useRef<number | null>(null);
@@ -145,6 +147,7 @@ export const Cell: React.FC<CellProps> = ({
 
   return (
     <div
+      ref={innerRef}
       data-row={position.row}
       data-col={position.col}
       data-figure-id={figureId}

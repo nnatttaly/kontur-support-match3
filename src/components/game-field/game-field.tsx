@@ -21,6 +21,7 @@ type GameFieldProps = {
   onCellClick: (position: Position) => void;
   onDragStart: (position: Position) => void;
   onDragOver: (position: Position) => void;
+  onCellPositionsChange?: (positions: Record<string, { x: number; y: number; width: number; height: number; row: number; col: number }>) => void;
 };
 
 type CellOffset = { x: number; y: number };
@@ -75,6 +76,7 @@ export const GameField = ({
   onCellClick,
   onDragStart,
   onDragOver,
+  onCellPositionsChange,
 }: GameFieldProps) => {
   const safeBoard = useMemo(() => normalizeBoard(board), [board]);
 
@@ -231,8 +233,32 @@ export const GameField = ({
     onDragOver(pos);
   };
 
+  // refs для всех клеток
+  const cellRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const fieldRef = useRef<HTMLDivElement | null>(null);
+
+  // Собираем координаты клеток после рендера
+  useLayoutEffect(() => {
+    if (!onCellPositionsChange) return;
+    const positions: Record<string, { x: number; y: number; width: number; height: number; row: number; col: number }> = {};
+    Object.entries(cellRefs.current).forEach(([id, el]) => {
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        positions[id] = {
+          x: rect.left,
+          y: rect.top,
+          width: rect.width,
+          height: rect.height,
+          row: Number(el.dataset.row),
+          col: Number(el.dataset.col),
+        };
+      }
+    });
+    onCellPositionsChange(positions);
+  }, [safeBoard, onCellPositionsChange]);
+
   return (
-    <div className="field-wrapper">
+    <div className="field-wrapper" ref={fieldRef}>
       <div className="field">
         {safeBoard.map((row, r) =>
           row.map((figure, c) => {
@@ -246,6 +272,9 @@ export const GameField = ({
             return (
               <Cell
                 key={`cell-${r}-${c}`}
+                innerRef={el => {
+                  if (figure && id) cellRefs.current[id] = el;
+                }}
                 figure={figure}
                 figureId={id}
                 motionKey={motionKey}
