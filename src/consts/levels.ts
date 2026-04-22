@@ -11,8 +11,8 @@ export const LEVELS: Level[] = [
       { figure: "briefcase", target: 10, collected: 0 },
     ],
     bonuses: [
-      { type: "openGuide", count: 122 },
-      //{ type: "remoteWork", count: 3 },
+      //{ type: "openGuide", count: 122 },
+      { type: "remoteWork", count: 3 },
       { type: "itSphere", count: 2 }
     ],
     moves: 21,
@@ -36,8 +36,8 @@ export const LEVELS: Level[] = [
       },
     ],
     bonuses: [
-      { type: "openGuide", count: 122 },
-      //{ type: "knowledgeBase", count: 2 },
+      //{ type: "openGuide", count: 122 },
+      { type: "knowledgeBase", count: 2 },
       { type: "friendlyTeam", count: 3 }
     ],
     moves: 22,
@@ -68,8 +68,8 @@ export const LEVELS: Level[] = [
       { figure: "star", target: 5, collected: 0 },
     ],
     bonuses: [
-      { type: "openGuide", count: 122 },
-      //{ type: "dms", count: 4 },
+      //{ type: "openGuide", count: 122 },
+      { type: "dms", count: 4 },
       { type: "sportCompensation", count: 3 }
     ],
     moves: 28,
@@ -132,7 +132,7 @@ export const LEVELS: Level[] = [
       }
     ],
     bonuses: [
-      { type: "openGuide", count: 12 },
+      { type: "openGuide", count: 2 },
       { type: "careerGrowth", count: 1 }
     ],
     moves: 23,
