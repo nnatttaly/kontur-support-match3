@@ -197,7 +197,7 @@ export const useInputHandlers = ({
   const updateGoalsAndSpecialCells = (
     removedFigures: Array<{ position: Position; figure: Figure }>,
     removedGoldenCells: Position[],
-    bonusType?: string
+    _bonusType?: string
   ): SpecialCell[] => {
     let updatedSpecialCells = specialCells ? [...specialCells] : [];
     let goldenCellsUpdated = false;

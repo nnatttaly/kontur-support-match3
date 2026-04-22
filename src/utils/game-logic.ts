@@ -3,7 +3,6 @@ import {
   Figure,
   FigureType,
   Level,
-  Match,
   Position,
   createFigure,
 } from "types";
@@ -380,7 +379,7 @@ export const hasPossibleMoves = (board: Board): boolean => {
 
 export const shuffleBoardWithoutMatches = (
   board: Board,
-  level?: Level
+  _level?: Level
 ): Board => {
   const safeBoard = normalizeBoard(board).map((row) => [...row]);
 
@@ -427,7 +426,8 @@ export const shuffleBoardWithoutMatches = (
 export const willCreateMatch = (
   board: Board,
   pos1: Position,
-  pos2: Position
+  pos2: Position,
+  _level?: Level
 ): boolean => {
   const safeBoard = normalizeBoard(board);
 

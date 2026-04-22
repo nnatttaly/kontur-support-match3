@@ -6,7 +6,7 @@ import { useBonuses } from "./use-bonuses";
 import { useGameActions } from "./use-game-actions";
 import { useLevelManagement } from "./use-level-management";
 import { useInputHandlers } from "./use-input-handlers";
-import { Position, FigureType, SpecialCell } from "types";
+import { Position, FigureType, SpecialCell, Level } from "types";
 
 export const useGameLogic = (onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void) => {
   const { board, setBoard } = useBoardState();

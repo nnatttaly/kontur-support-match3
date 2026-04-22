@@ -8,7 +8,9 @@ import {
   Bonus,
   Goal,
   Level,
-  SpecialCell,
+  SpecialCell, 
+  Position, 
+  FigureType,
 } from "types";
 
 type UseGameActionsProps = {
