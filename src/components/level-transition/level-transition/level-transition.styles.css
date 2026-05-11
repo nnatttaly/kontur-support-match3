@@ -9,6 +9,11 @@
   padding: 10px;
 }
 
+.lt-center-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
 .lt-modal {
   background: #f6f6f6;
   border-radius: 24px;
@@ -19,7 +24,6 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  margin: 0 auto;
 }
 
 .lt-actions {
@@ -57,4 +61,61 @@
 
 .lt-link-button:active {
   transform: translateY(1px);
+}
+
+.lt-sound-control {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  margin-left: 20px;
+  width: fit-content;
+  z-index: 20;
+}
+
+.lt-sound-toggle {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 14px;
+  background: #f6f6f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.lt-sound-toggle:hover {
+  background: #cfcfcf;
+}
+
+.lt-sound-toggle:active {
+  transform: translateY(1px);
+}
+
+.lt-sound-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  display: block;
+}
+
+.lt-sound-panel {
+  position: absolute;
+  left: 50%;
+  margin-top: 10px;
+  transform: translateX(-50%);
+  z-index: 20;
+  width: 160px;
+  padding: 6px 12px 2px;
+  border-radius: 14px;
+  background: rgba(246, 246, 246, 0.98);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.16);
+  box-sizing: border-box;
+}
+
+.lt-sound-slider {
+  width: 100%;
+  cursor: pointer;
+  accent-color: #ff8d28;
 }
