@@ -244,7 +244,7 @@ export const Tutorial = ({ steps, onComplete }: Props) => {
         className={`tutorial-content ${step.characterPos}`}
         style={currentStyle as React.CSSProperties}
       >
-        <div className="character-icon">
+        <div className={`character-icon ${step.characterPos === 'left' ? 'flip-icon' : ''}`}>
           <img src={HERO_ICON_PATH} alt="hero" />
         </div>
 

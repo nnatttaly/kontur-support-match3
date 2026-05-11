@@ -62,6 +62,10 @@
   display: block;
 }
 
+.character-icon.flip-icon img {
+  transform: scaleX(-1);
+}
+
 /* Диалоговое окно */
 .dialog-bubble {
   position: relative;

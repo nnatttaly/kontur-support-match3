@@ -8,7 +8,7 @@ import roundMessageImg from "@/assets/images/figures/roundMessage.svg";
 import rectangleMessageImg from "@/assets/images/figures/rectangleMessage.svg";
 import letterImg from "@/assets/images/figures/letter.svg";
 import phoneImg from "@/assets/images/figures/phone.svg";
-import smartphoneImg from "@/assets/images/figures/smartphone.svg";
+import microphoneImg from "@/assets/images/figures/microphone.svg";
 import goldenCellImg from "@/assets/images/figures/goldenCell.svg";
 import starImg from "@/assets/images/figures/star.svg";
 import diamondImg from "@/assets/images/figures/diamond.svg";
@@ -34,7 +34,7 @@ export const FIGURE_PATHS: Record<FigureType, string> = {
   rectangleMessage: rectangleMessageImg,
   letter: letterImg,
   phone: phoneImg,
-  smartphone: smartphoneImg,
+  microphone: microphoneImg,
   goldenCell: goldenCellImg,
   star: starImg,
   diamond: diamondImg,

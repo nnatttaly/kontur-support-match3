@@ -46,7 +46,7 @@ export const LEVELS: Level[] = [
       "rectangleMessage",
       "letter",
       "phone",
-      "smartphone",
+      "microphone",
     ],
     specialCells: [
       { row: 2, col: 2, type: "golden", isActive: true },
@@ -73,7 +73,7 @@ export const LEVELS: Level[] = [
       { type: "sportCompensation", count: 3 }
     ],
     moves: 28,
-    availableFigures: ["roundMessage", "letter", "smartphone", "rectangleMessage", "phone"],
+    availableFigures: ["roundMessage", "letter", "microphone", "rectangleMessage", "phone"],
     starPositions: [
       { row: 3, col: 1 },
       { row: 0, col: 2 },
@@ -165,7 +165,7 @@ export const LEVELS: Level[] = [
     goals: [
       { figure: "roundMessage", target: 8, collected: 0 },
       { figure: "letter", target: 8, collected: 0 },
-      { figure: "smartphone", target: 8, collected: 0 },
+      { figure: "microphone", target: 8, collected: 0 },
     ],
     bonuses: [], // Бонусы будут выбираться случайно с разным количеством
     moves: 20,
@@ -174,7 +174,7 @@ export const LEVELS: Level[] = [
       "rectangleMessage",
       "letter",
       "phone",
-      "smartphone",
+      "microphone",
     ],
   },
 ];

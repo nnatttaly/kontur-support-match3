@@ -8,7 +8,7 @@ export const FIGURES = {
   rectangleMessage: "rectangleMessage",
   letter: "letter",
   phone: "phone",
-  smartphone: "smartphone",
+  microphone: "microphone",
   goldenCell: "goldenCell",
   star: "star",
   diamond: "diamond",

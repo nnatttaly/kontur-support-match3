@@ -3,11 +3,8 @@
   background-color: #f6f6f6;
   border-radius: 24px;
   padding: 20px;
-  width: 446px;
+  width: 458px;
   height: 95px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e0e0e0;
-  box-sizing: border-box;
 }
 
 .bonuses-list {

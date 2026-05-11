@@ -44,7 +44,7 @@ export const shuffleBoardWithoutMatches = (
     level?.availableFigures || [
       "roundMessage",
       "letter",
-      "smartphone",
+      "microphone",
       "star",
       "phone",
     ];
