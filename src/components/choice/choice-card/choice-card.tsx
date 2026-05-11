@@ -7,7 +7,7 @@ interface ChoiceCardProps {
   onSelect: () => void;
 }
 
-function ChoiceCard ({ title, description, onSelect } : ChoiceCardProps)  {
+export function ChoiceCard ({ title, description, onSelect } : ChoiceCardProps)  {
   return (
     <div className="choice-card">
       <h2 className="card-title">{title}</h2>
@@ -16,5 +16,3 @@ function ChoiceCard ({ title, description, onSelect } : ChoiceCardProps)  {
     </div>
   );
 };
-
-export default ChoiceCard;

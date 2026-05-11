@@ -2,7 +2,6 @@ export const MIN_MATCH_LENGTH = 3 as const;
 export const ANIMATION_DURATION = 100 as const;
 export const INITIAL_MOVES = 20;
 export const LAST_LEVEL = 6 as const;
-export const MUSIC_VOLUME = 0.15 as const;
 export const MUSIC_LOOP_START = 29.5 as const;
 export const MUSIC_LOOP_END = 125.3 as const;
 

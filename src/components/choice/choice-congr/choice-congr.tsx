@@ -1,6 +1,6 @@
 import './choice-congr.css';
 
-function Congr() {
+export function Congr() {
   return (
     <div className="header-container">
       <h1>Поздравляем!</h1>
@@ -12,5 +12,3 @@ function Congr() {
     </div>
   );
 };
-
-export default Congr;

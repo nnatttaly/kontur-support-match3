@@ -1,13 +1,12 @@
-import Congr from '../choice-congr/choice-congr';
-import ChoiceCard from '../choice-card/choice-card';
+import { Congr } from '../choice-congr/choice-congr';
+import { ChoiceCard } from '../choice-card/choice-card';
 import './choice-level.css';
 
 type ChoiceLevelProps = {
   onChoiceConfirm: (level: number) => void; 
 }
 
-function ChoiceLevel({ onChoiceConfirm }: ChoiceLevelProps) {
-
+export function ChoiceLevel({ onChoiceConfirm }: ChoiceLevelProps) {
   return (
     <div className="main-wrapper">
       <Congr />
@@ -26,5 +25,3 @@ function ChoiceLevel({ onChoiceConfirm }: ChoiceLevelProps) {
     </div>
   );
 }
-
-export default ChoiceLevel;

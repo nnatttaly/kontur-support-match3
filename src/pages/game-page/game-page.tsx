@@ -10,17 +10,17 @@ import {
   Window,
   Tutorial,
   ShuffleWarning,
-  GoalAnimation
+  GoalAnimation,
+  SoundControl
 } from "../../components";
 import {
   LEVELS,
   LAST_LEVEL,
   SOUND_PATHS,
-  SOUND_ICON_PATHS,
   MUSIC_LOOP_START,
   MUSIC_LOOP_END,
   TUTORIALS,
-  KONTUR_SUPPORT_LINK
+  KONTUR_SUPPORT_LINK,
 } from "consts";
 import { Position, FigureType } from "types";
 import logoKontur from "@/assets/logo/logo-kontur.png";
@@ -48,12 +48,10 @@ export default function GamePage() {
   >({});
   const [showTutorial, setShowTutorial] = useState(false);
   const [viewedTutorials, setViewedTutorials] = useState<number[]>([]);
-  const [volume, setVolume] = useState(50);
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [volume, setVolume] = useState(15);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicStartedRef = useRef(false);
-  const soundControlRef = useRef<HTMLDivElement | null>(null);
 
   const onGoalCollected = (
     position: Position,
@@ -83,21 +81,14 @@ export default function GamePage() {
   const gameLogic = useGameLogic(onGoalCollected);
   const currentLevelId = gameLogic.levelState.currentLevel;
 
-  const volumeIcon =
-    volume === 0
-    ? SOUND_ICON_PATHS.soundOff
-    : volume < 60
-      ? SOUND_ICON_PATHS.soundMedium
-      : SOUND_ICON_PATHS.soundLoud;
-
   useEffect(() => {
     const audio = new Audio(SOUND_PATHS.background);
     audioRef.current = audio;
-    audio.volume = volume / 100;
+    audio.volume = volume / 600;
 
     const playMusic = async () => {
       try {
-        audio.volume = volume / 100;
+        audio.volume = volume / 600;
         await audio.play();
         musicStartedRef.current = true;
       } catch (error) {
@@ -135,27 +126,14 @@ export default function GamePage() {
       document.removeEventListener("click", handleFirstClick);
       audioRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = volume / 100;
+      audioRef.current.volume = volume / 600;
     }
   }, [volume]);
-
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!showVolumeSlider) return;
-
-      const target = event.target as Node;
-      if (soundControlRef.current && !soundControlRef.current.contains(target)) {
-        setShowVolumeSlider(false);
-      }
-    };
-
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [showVolumeSlider]);
 
   useEffect(() => {
     if (
@@ -235,7 +213,14 @@ export default function GamePage() {
       <div className="game-main">
         <div className="game-content">
           <div className="left-panel">
-            <img src={logoKontur} alt="Logo Kontur" className="game-logo" />
+            <div className="header-row">
+              <SoundControl
+                volume={volume}
+                onVolumeChange={setVolume}
+                containerClassName="gp-sound-control header-sound-control"
+              />
+              <img src={logoKontur} alt="Logo Kontur" className="game-logo" />
+            </div>
             <Goals goals={gameLogic.goals} onGoalPositionsChange={setGoalPositions} />
           </div>
 
@@ -246,32 +231,11 @@ export default function GamePage() {
                 {gameLogic.currentLevel?.name}
               </div>
               <Moves moves={gameLogic.moves} />
-
-              <div className="sound-control" ref={soundControlRef}>
-                <button
-                  type="button"
-                  className="sound-toggle"
-                  onClick={() => setShowVolumeSlider((prev) => !prev)}
-                  aria-label={showVolumeSlider ? "Скрыть громкость" : "Показать громкость"}
-                  aria-expanded={showVolumeSlider}
-                >
-                  <img src={volumeIcon} alt="" className="sound-icon" />
-                </button>
-
-                {showVolumeSlider && (
-                  <div className="sound-panel">
-                    <input
-                      className="sound-slider"
-                      type="range"
-                      min={0}
-                      max={100}
-                      value={volume}
-                      onChange={(e) => setVolume(Number(e.target.value))}
-                      aria-label="Громкость музыки"
-                    />
-                  </div>
-                )}
-              </div>
+              <SoundControl
+                volume={volume}
+                onVolumeChange={setVolume}
+                containerClassName="gp-sound-control game-info-sound-control"
+              />
             </div>
 
             <GameField

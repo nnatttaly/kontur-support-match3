@@ -10,5 +10,6 @@ export * from './level-transition';
 export * from './moves/moves';
 export * from './score/score';
 export * from './shuffle-warning/shuffle-warning';
+export * from './sound-control/sound-control';
 export * from './tutorial/tutorial';
 export * from './window';
