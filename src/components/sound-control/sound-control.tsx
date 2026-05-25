@@ -10,6 +10,11 @@ export type SoundControlProps = {
   gainNodeRef?: React.RefObject<GainNode | null>;
 };
 
+// Определяем, является ли устройство iOS (iPhone, iPad, iPod)
+const isIOS = (): boolean => {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+};
+
 export const SoundControl = ({
   volume,
   onVolumeChange,
@@ -18,12 +23,26 @@ export const SoundControl = ({
   gainNodeRef,
 }: SoundControlProps) => {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [isIOSDevice] = useState(isIOS());
   const soundControlRef = useRef<HTMLDivElement>(null);
   const sliderRef = useRef<HTMLInputElement>(null);
   const className = ["sound-control", containerClassName].filter(Boolean).join(" ");
 
   const volumeIcon =
     volume === 0 ? SOUND_ICON_PATHS.soundOff : volume < 60 ? SOUND_ICON_PATHS.soundMedium : SOUND_ICON_PATHS.soundLoud;
+
+  // Для iOS: включение/выключение воспроизведения (громкость только для чтения на iPhone)
+  const handleIOSToggle = () => {
+    if (audioRef?.current) {
+      if (audioRef.current.paused) {
+        audioRef.current.play();
+        onVolumeChange(60); // Показываем в UI как включено
+      } else {
+        audioRef.current.pause();
+        onVolumeChange(0); // Показываем в UI как выключено
+      }
+    }
+  };
 
   const handleSliderChange = (newVolume: number) => {
     const volumeValue = newVolume / 600;
@@ -108,11 +127,13 @@ export const SoundControl = ({
       <button
         type="button"
         className="sound-toggle"
-        onClick={() => setShowVolumeSlider((prev) => !prev)}
+        onClick={isIOSDevice ? handleIOSToggle : () => setShowVolumeSlider((prev) => !prev)}
         aria-label={
-          showVolumeSlider ? "Скрыть громкость" : "Показать громкость"
+          isIOSDevice 
+            ? (volume > 0 ? "Выключить музыку" : "Включить музыку")
+            : (showVolumeSlider ? "Скрыть громкость" : "Показать громкость")
         }
-        aria-expanded={showVolumeSlider}
+        aria-expanded={isIOSDevice ? undefined : showVolumeSlider}
       >
         <img 
           src={volumeIcon} 
@@ -121,7 +142,7 @@ export const SoundControl = ({
         />
       </button>
 
-      {showVolumeSlider && (
+      {!isIOSDevice && showVolumeSlider && (
         <div 
           className="sound-panel"
           onTouchStart={(e) => e.stopPropagation()}
