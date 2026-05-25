@@ -218,6 +218,7 @@ export default function GamePage() {
                 volume={volume}
                 onVolumeChange={setVolume}
                 containerClassName="gp-sound-control header-sound-control"
+                audioRef={audioRef}
               />
               <img src={logoKontur} alt="Logo Kontur" className="game-logo" />
             </div>
@@ -235,6 +236,7 @@ export default function GamePage() {
                 volume={volume}
                 onVolumeChange={setVolume}
                 containerClassName="gp-sound-control game-info-sound-control"
+                audioRef={audioRef}
               />
             </div>
 

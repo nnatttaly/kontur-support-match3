@@ -6,12 +6,14 @@ export type SoundControlProps = {
   volume: number;
   onVolumeChange: (volume: number) => void;
   containerClassName?: string;
+  audioRef?: React.RefObject<HTMLAudioElement>;
 };
 
 export const SoundControl = ({
   volume,
   onVolumeChange,
   containerClassName = "",
+  audioRef,
 }: SoundControlProps) => {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const soundControlRef = useRef<HTMLDivElement>(null);
@@ -70,6 +72,13 @@ export const SoundControl = ({
             max={100}
             value={volume}
             onChange={(e) => onVolumeChange(Number(e.target.value))}
+            onInput={(e) => {
+              const newVolume = Number((e.target as HTMLInputElement).value);
+              onVolumeChange(newVolume);
+              if (audioRef?.current) {
+                audioRef.current.volume = newVolume / 600;
+              }
+            }}
             onTouchStart={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
             aria-label="Громкость музыки"
