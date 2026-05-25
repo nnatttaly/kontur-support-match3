@@ -28,17 +28,24 @@ export const SoundControl = ({
   const handleSliderChange = (newVolume: number) => {
     const volumeValue = newVolume / 600;
     
-    // Обновляем громкость в Web Audio API если доступна (для iOS)
+    // На iOS управление громкостью работает только через Web Audio API GainNode
+    // audio.volume на iOS читается только и не может быть изменен
+    
+    // Обновляем громкость в Web Audio API (работает на всех платформах включая iOS)
     if (gainNodeRef?.current) {
       gainNodeRef.current.gain.value = volumeValue;
     }
     
-    // Также обновляем на audio элементе
-    if (audioRef?.current) {
-      audioRef.current.volume = volumeValue;
+    // На ПК также обновляем audio.volume для резервности
+    if (audioRef?.current && audioRef.current.volume !== undefined) {
+      try {
+        audioRef.current.volume = volumeValue;
+      } catch (e) {
+        // На iOS это может выбросить ошибку, но это ок - используем GainNode
+      }
     }
     
-    // Обновляем состояние
+    // Обновляем состояние компонента
     onVolumeChange(newVolume);
   };
 
@@ -59,18 +66,23 @@ export const SoundControl = ({
     // Обновляем значение input
     slider.value = String(newVolume);
     
-    // Обновляем громкость напрямую для немедленного эффекта на iPhone
     const volumeValue = newVolume / 600;
     
+    // Обновляем громкость через Web Audio API
     if (gainNodeRef?.current) {
       gainNodeRef.current.gain.value = volumeValue;
     }
     
+    // На ПК также обновляем audio.volume
     if (audioRef?.current) {
-      audioRef.current.volume = volumeValue;
+      try {
+        audioRef.current.volume = volumeValue;
+      } catch (e) {
+        // На iOS это может выбросить ошибку
+      }
     }
     
-    // И через callback
+    // Обновляем состояние
     onVolumeChange(newVolume);
   };
 

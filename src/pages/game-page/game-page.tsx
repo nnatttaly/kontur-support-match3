@@ -87,20 +87,23 @@ export default function GamePage() {
   useEffect(() => {
     const audio = new Audio(SOUND_PATHS.background);
     audioRef.current = audio;
-    audio.volume = volume / 600;
     audio.loop = false;
-
-    // Инициализируем Web Audio API для лучшей поддержки на iOS
-    const initAudioContext = async () => {
+    
+    // Инициализируем Web Audio API один раз при загрузке компонента
+    const initAudioContext = () => {
+      if (audioContextRef.current) return; // Уже инициализирован
+      
       try {
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
         audioContextRef.current = audioContext;
         
+        // Создаем GainNode для контроля громкости
         const gainNode = audioContext.createGain();
         gainNodeRef.current = gainNode;
         gainNode.gain.value = volume / 600;
         gainNode.connect(audioContext.destination);
         
+        // Подключаем audio элемент к Web Audio API
         const mediaSource = audioContext.createMediaElementAudioSource(audio);
         mediaSourceRef.current = mediaSource;
         mediaSource.connect(gainNode);
@@ -111,18 +114,16 @@ export default function GamePage() {
 
     const playMusic = async () => {
       try {
-        audio.volume = volume / 600;
-        
-        // Инициализируем Web Audio API при первом воспроизведении
-        if (!audioContextRef.current) {
-          await initAudioContext();
-        }
+        // Инициализируем Web Audio API перед воспроизведением
+        initAudioContext();
         
         // Resume audio context если необходимо (для iOS)
         if (audioContextRef.current?.state === 'suspended') {
           await audioContextRef.current.resume();
         }
         
+        // На iOS аудио громкость только для чтения, но GainNode работает
+        audio.volume = 1;
         await audio.play();
         musicStartedRef.current = true;
       } catch (error) {
