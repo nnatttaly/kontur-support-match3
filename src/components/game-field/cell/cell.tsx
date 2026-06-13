@@ -117,6 +117,7 @@ export const Cell: React.FC<CellProps> = ({
 
   const isStar = figure?.type === "star";
   const isDiamond = figure?.type === "diamond";
+  const isBomb = figure?.type === "bomb";
   const isTeamBigFigure =
     figure?.type === "team" || isTeamImage(figure?.type ?? null);
 
@@ -210,6 +211,7 @@ export const Cell: React.FC<CellProps> = ({
                 "figure",
                 isStar ? "figure--star" : "",
                 isDiamond ? "figure--diamond" : "",
+                isBomb ? "figure--bomb" : "",
                 isTeamBigFigure ? "figure--big" : "",
                 isTeamImage(figure.type) ? "figure--big--image" : "",
               ]

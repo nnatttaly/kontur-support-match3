@@ -13,6 +13,7 @@ import {
 } from "types";
 import { BONUS_EFFECTS } from "@utils/bonus-effects/effects-registry";
 import { applyGravity, fillEmptySlots, applyHorizontalGravity } from "@utils/game-logic";
+import { isTeamImage } from "@utils/game-utils";
 import { ANIMATION_DURATION, BOARD_ROWS, LEVELS } from "consts";
 import { applyModernProductsAt } from "@utils/bonus-effects/modern-products";
 
@@ -53,7 +54,7 @@ type UseInputHandlersProps = {
   processMatches?: (
     board: Board,
     specialCells: SpecialCell[],
-    options?: { skipGoldenRestore: boolean }
+    options?: { skipGoldenRestore: boolean; movedToPosition?: Position }
   ) => Promise<Board>;
   specialCells?: SpecialCell[];
   setSpecialCells?: (cells: SpecialCell[]) => void;
@@ -401,6 +402,172 @@ export const useInputHandlers = ({
     }
   };
 
+  // BFS: collect all positions cleared by a bomb (chain explosions included).
+  // excludePos: position that won't be cleared (source figure moving there).
+  const collectExplosion = (
+    workBoard: Board,
+    bombPos: Position,
+    excludePos?: Position
+  ): {
+    newBoard: Board;
+    removedFigures: Array<{ position: Position; figure: Figure }>;
+    removedGoldenCells: Position[];
+  } => {
+    const newBoard = workBoard.map((row) => [...row]);
+    const removedFigures: Array<{ position: Position; figure: Figure }> = [];
+    const removedGoldenCells: Position[] = [];
+
+    const toExplode: Position[] = [bombPos];
+    const explodedBombs = new Set<string>([`${bombPos.row},${bombPos.col}`]);
+    const clearedPositions = new Set<string>([`${bombPos.row},${bombPos.col}`]);
+
+    while (toExplode.length > 0) {
+      const cur = toExplode.shift()!;
+
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const r = cur.row + dr;
+          const c = cur.col + dc;
+          if (r < 0 || r >= BOARD_ROWS || c < 0 || c >= (newBoard[0]?.length ?? 0)) continue;
+          if (excludePos && r === excludePos.row && c === excludePos.col) continue;
+
+          const key = `${r},${c}`;
+          if (clearedPositions.has(key)) continue;
+          clearedPositions.add(key);
+
+          const figure = newBoard[r][c];
+          if (!figure) continue;
+
+          if (figure.type === "bomb" && !explodedBombs.has(key)) {
+            // Chain explosion
+            explodedBombs.add(key);
+            toExplode.push({ row: r, col: c });
+          } else if (
+            figure.type !== "teamCell" &&
+            figure.type !== "team" &&
+            figure.type !== "star" &&
+            figure.type !== "diamond" &&
+            !isTeamImage(figure.type)
+          ) {
+            removedFigures.push({ position: { row: r, col: c }, figure });
+            const isGolden = specialCells?.some(
+              (sc) => sc.row === r && sc.col === c && sc.type === "golden" && sc.isActive
+            );
+            if (isGolden) removedGoldenCells.push({ row: r, col: c });
+          }
+        }
+      }
+    }
+
+    clearedPositions.forEach((key) => {
+      const [r, c] = key.split(",").map(Number);
+      const fig = newBoard[r][c];
+      if (
+        fig &&
+        fig.type !== "teamCell" &&
+        fig.type !== "team" &&
+        fig.type !== "star" &&
+        fig.type !== "diamond" &&
+        !isTeamImage(fig.type)
+      ) {
+        newBoard[r][c] = null;
+      }
+    });
+
+    return { newBoard, removedFigures, removedGoldenCells };
+  };
+
+  const triggerGoalAnimations = (
+    removedFigures: Array<{ position: Position; figure: Figure }>,
+    removedGoldenCells: Position[]
+  ) => {
+    if (!onGoalCollected) return;
+
+    removedGoldenCells.forEach((pos) => {
+      const idx = goals.findIndex((g) => g.figure === "goldenCell");
+      if (idx !== -1) onGoalCollected(pos, "goldenCell", idx);
+    });
+
+    removedFigures.forEach(({ position, figure }) => {
+      if (figure.type === "goldenCell") return;
+      const idx = goals.findIndex((g) => g.figure === figure.type);
+      if (idx !== -1) onGoalCollected(position, figure.type, idx);
+    });
+  };
+
+  // Click on a bomb → explode it (BFS chain explosions)
+  const explodeBomb = async (bombPos: Position) => {
+    const { newBoard, removedFigures, removedGoldenCells } = collectExplosion(
+      board,
+      bombPos
+    );
+
+    triggerGoalAnimations(removedFigures, removedGoldenCells);
+    const updatedSpecialCells = updateGoalsAndSpecialCells(removedFigures, removedGoldenCells);
+    setMoves((prev) => (prev <= 0 ? 0 : prev - 1));
+    setBoard([...newBoard]);
+    await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+
+    setIsAnimating(true);
+    try {
+      let updatedBoard = await applyGravityAndFillStepwise(
+        newBoard,
+        LEVELS[levelState.currentLevel - 1]
+      );
+
+      if (processMatches) {
+        updatedBoard = await processMatches(updatedBoard, updatedSpecialCells, {
+          skipGoldenRestore: false,
+        });
+      }
+
+      setBoard([...updatedBoard]);
+    } finally {
+      setIsAnimating(false);
+    }
+  };
+
+  // Drag figure onto a bomb → explode bomb + move figure there + process matches
+  const explodeBombWithSwap = async (srcPos: Position, bombPos: Position) => {
+    const srcFigure = board[srcPos.row]?.[srcPos.col];
+    if (!srcFigure) return;
+
+    const { newBoard, removedFigures, removedGoldenCells } = collectExplosion(
+      board,
+      bombPos,
+      srcPos // don't clear source position — figure is moving there
+    );
+
+    // Move source figure to bomb's position
+    newBoard[bombPos.row][bombPos.col] = srcFigure;
+    newBoard[srcPos.row][srcPos.col] = null;
+
+    triggerGoalAnimations(removedFigures, removedGoldenCells);
+    const updatedSpecialCells = updateGoalsAndSpecialCells(removedFigures, removedGoldenCells);
+    setMoves((prev) => (prev <= 0 ? 0 : prev - 1));
+    setBoard([...newBoard]);
+    await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+
+    setIsAnimating(true);
+    try {
+      let updatedBoard = await applyGravityAndFillStepwise(
+        newBoard,
+        LEVELS[levelState.currentLevel - 1]
+      );
+
+      if (processMatches) {
+        updatedBoard = await processMatches(updatedBoard, updatedSpecialCells, {
+          skipGoldenRestore: false,
+          movedToPosition: bombPos,
+        });
+      }
+
+      setBoard([...updatedBoard]);
+    } finally {
+      setIsAnimating(false);
+    }
+  };
+
   const handleCellClick = async (position: Position) => {
     if (isProcessingClick.current) {
       return;
@@ -422,6 +589,12 @@ export const useInputHandlers = ({
     isProcessingClick.current = true;
 
     try {
+      const clickedFigure = board[position.row]?.[position.col];
+      if (clickedFigure?.type === "bomb" && !(activeBonus?.isActive)) {
+        await explodeBomb(position);
+        return;
+      }
+
       if (activeBonus && activeBonus.isActive && activeBonus.type !== "careerGrowth") {
         if (activeBonus.type === "modernProducts") {
           if (!modernProductsSourcePos) {
@@ -515,13 +688,18 @@ export const useInputHandlers = ({
         gameState.setSelectedPosition(position);
       } else {
         if (areAdjacent(gameState.selectedPosition, position)) {
-          await swapFigures(
-            gameState.selectedPosition,
-            position,
-            gameState.moves,
-            gameState.setMoves,
-            specialCells
-          );
+          const targetFigure = board[position.row]?.[position.col];
+          if (targetFigure?.type === "bomb") {
+            await explodeBombWithSwap(gameState.selectedPosition, position);
+          } else {
+            await swapFigures(
+              gameState.selectedPosition,
+              position,
+              gameState.moves,
+              gameState.setMoves,
+              specialCells
+            );
+          }
         }
         gameState.setSelectedPosition(null);
       }
@@ -544,6 +722,9 @@ export const useInputHandlers = ({
       return;
     }
 
+    const fig = board[position.row]?.[position.col];
+    if (fig?.type === "bomb") return;
+
     gameState.setSelectedPosition(position);
   };
 
@@ -563,14 +744,14 @@ export const useInputHandlers = ({
     }
 
     if (areAdjacent(gameState.selectedPosition, position)) {
-      swapFigures(
-        gameState.selectedPosition,
-        position,
-        gameState.moves,
-        gameState.setMoves,
-        specialCells
-      );
+      const targetFigure = board[position.row]?.[position.col];
+      const src = gameState.selectedPosition;
       gameState.setSelectedPosition(null);
+      if (targetFigure?.type === "bomb") {
+        void explodeBombWithSwap(src, position);
+      } else {
+        swapFigures(src, position, gameState.moves, gameState.setMoves, specialCells);
+      }
     }
   };
 

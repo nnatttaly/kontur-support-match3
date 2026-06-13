@@ -257,6 +257,31 @@
   filter: drop-shadow(0 0 2px rgba(0, 183, 255, 0.2));
 }
 
+.figure--bomb {
+  animation: bombPulse 1.2s infinite ease-in-out;
+  cursor: pointer;
+  filter: drop-shadow(0 0 4px rgba(255, 80, 0, 0.6));
+}
+
+.cell:has(.figure--bomb) {
+  cursor: pointer;
+}
+
+@keyframes bombPulse {
+  0% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 3px rgba(255, 80, 0, 0.5));
+  }
+  50% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 10px rgba(255, 120, 0, 0.9)) brightness(1.2);
+  }
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 3px rgba(255, 80, 0, 0.5));
+  }
+}
+
 @keyframes diamondBrilliance {
   0% {
     transform: scale(1);

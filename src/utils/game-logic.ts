@@ -56,6 +56,7 @@ const SPECIAL_FIGURES: FigureType[] = [
   "teamImage2",
   "teamImage3",
   "team",
+  "bomb",
 ];
 
 const isFixedFigure = (figure: Figure | null): boolean => {
@@ -331,6 +332,7 @@ export const hasPossibleMoves = (board: Board): boolean => {
     "teamImage2",
     "teamImage3",
     "goldenCell",
+    "bomb",
   ];
 
   const canSwapFigure = (figure: Figure | null): boolean => {

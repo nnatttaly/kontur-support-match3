@@ -105,6 +105,7 @@ export const useMatchProcessing = ({
         "teamImage3",
         "goldenCell",
         "teamCell",
+        "bomb",
       ];
 
       const filteredFigures = availableFigures.filter(
@@ -186,6 +187,7 @@ export const useMatchProcessing = ({
       "teamImage3",
       "goldenCell",
       "teamCell",
+      "bomb",
     ];
 
     const canSwapFigure = (figure: Figure | null): boolean => {
@@ -279,7 +281,7 @@ export const useMatchProcessing = ({
     async (
       currentBoard: Board,
       currentSpecialCells: SpecialCell[] = [],
-      options?: { skipGoldenRestore: boolean }
+      options?: { skipGoldenRestore: boolean; movedToPosition?: Position }
     ): Promise<Board> => {
       if (isProcessingMatchesRef.current) {
         console.warn("processMatches: already running, skipping duplicate call");
@@ -294,6 +296,7 @@ export const useMatchProcessing = ({
       let hasMatches = true;
       let totalRoundScore = 0;
       let usedModifiers = false;
+      let isFirstMatchRound = true;
 
       const initialSpecialCells =
         currentSpecialCells.length > 0
@@ -492,7 +495,11 @@ export const useMatchProcessing = ({
             setMatches(foundMatches);
             await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
-            boardToProcess = updateBoardAfterMatches(boardToProcess);
+            boardToProcess = updateBoardAfterMatches(
+              boardToProcess,
+              isFirstMatchRound ? options?.movedToPosition : undefined
+            );
+            isFirstMatchRound = false;
             setBoard(boardToProcess);
             await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
             setMatches([]);

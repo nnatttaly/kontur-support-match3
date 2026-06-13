@@ -23,6 +23,7 @@ export const FIGURES = {
   handshake: "handshake",
   kpi: "kpi",
   bulb: "bulb",
+  bomb: "bomb",
 } as const;
 
 export type FigureType = typeof FIGURES[keyof typeof FIGURES];

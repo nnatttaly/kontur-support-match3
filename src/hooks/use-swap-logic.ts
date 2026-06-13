@@ -12,7 +12,7 @@ export const useSwapLogic = (
   processMatches: (
     board: Board,
     specialCells: SpecialCell[],
-    options?: { skipGoldenRestore: boolean }
+    options?: { skipGoldenRestore: boolean; movedToPosition?: Position }
   ) => Promise<Board>
 ) => {
   const isSwappingInProgress = useRef(false);
@@ -30,6 +30,8 @@ export const useSwapLogic = (
     if (
       figure1?.type === "team" ||
       figure2?.type === "team" ||
+      figure1?.type === "bomb" ||
+      figure2?.type === "bomb" ||
       isTeamImage(figure1) ||
       isTeamImage(figure2)
     ) {
@@ -92,7 +94,10 @@ export const useSwapLogic = (
 
       setMoves((prevMoves) => (prevMoves <= 0 ? 0 : prevMoves - 1));
 
-      await processMatches(newBoard, specialCells, { skipGoldenRestore: false });
+      await processMatches(newBoard, specialCells, {
+        skipGoldenRestore: false,
+        movedToPosition: pos2,
+      });
       setIsAnimating(false);
 
       isSwappingInProgress.current = false;

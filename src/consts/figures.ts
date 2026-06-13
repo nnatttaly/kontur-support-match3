@@ -23,6 +23,7 @@ import heartImg from "@/assets/images/figures/heart.svg";
 import handshakeImg from "@/assets/images/figures/handshake.svg";
 import kpiImg from "@/assets/images/figures/kpi.svg";
 import bulbImg from "@/assets/images/figures/bulb.svg";
+import bombImg from "@/assets/images/figures/bomb.svg";
 
 export const FIGURE_PATHS: Record<FigureType, string> = {
   pencil: pencilImg,
@@ -49,4 +50,5 @@ export const FIGURE_PATHS: Record<FigureType, string> = {
   handshake: handshakeImg,
   kpi: kpiImg,
   bulb: bulbImg,
+  bomb: bombImg,
 };

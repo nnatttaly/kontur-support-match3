@@ -39,6 +39,7 @@ export const isSpecialFigure = (figure: Figure | FigureType | null): boolean => 
     type === "goldenCell" ||
     type === "diamond" ||
     type === "star" ||
+    type === "bomb" ||
     isTeamImage(type)
   );
 };
@@ -77,6 +78,7 @@ export const findAllMatches = (board: Board): Match[] => {
         figure === "star" ||
         figure === "diamond" ||
         figure === "team" ||
+        figure === "bomb" ||
         isTeamImage(figure)
       ) {
         col++;
@@ -115,6 +117,7 @@ export const findAllMatches = (board: Board): Match[] => {
         figure === "star" ||
         figure === "diamond" ||
         figure === "team" ||
+        figure === "bomb" ||
         isTeamImage(figure)
       ) {
         row++;
@@ -145,10 +148,114 @@ export const findAllMatches = (board: Board): Match[] => {
   return matches;
 };
 
-export const updateBoardAfterMatches = (board: Board): Board => {
+// Group matches that share at least one position into clusters.
+// A cluster with >= 4 total unique positions creates one bomb.
+const groupOverlappingMatches = (matches: Match[]): Match[][] => {
+  const groups: Match[][] = [];
+
+  for (const match of matches) {
+    const matchKeys = new Set(match.positions.map((p) => `${p.row},${p.col}`));
+
+    const overlapping: number[] = [];
+    groups.forEach((group, idx) => {
+      const hasOverlap = group.some((m) =>
+        m.positions.some((p) => matchKeys.has(`${p.row},${p.col}`))
+      );
+      if (hasOverlap) overlapping.push(idx);
+    });
+
+    if (overlapping.length === 0) {
+      groups.push([match]);
+    } else {
+      const merged: Match[] = [match];
+      [...overlapping].reverse().forEach((idx) => {
+        merged.push(...groups[idx]);
+        groups.splice(idx, 1);
+      });
+      groups.push(merged);
+    }
+  }
+
+  return groups;
+};
+
+const bombPositionForGroup = (
+  group: Match[],
+  uniqueKeys: Set<string>,
+  movedToPosition?: Position
+): Position | null => {
+  if (movedToPosition) {
+    const movedKey = `${movedToPosition.row},${movedToPosition.col}`;
+    if (uniqueKeys.has(movedKey)) return movedToPosition;
+  }
+
+  // Prefer intersection (position in multiple matches)
+  const counts = new Map<string, number>();
+  group.forEach((m) =>
+    m.positions.forEach((p) => {
+      const k = `${p.row},${p.col}`;
+      counts.set(k, (counts.get(k) ?? 0) + 1);
+    })
+  );
+  const intersectionKey = [...counts.entries()].find(([, n]) => n > 1)?.[0];
+  if (intersectionKey) {
+    const [r, c] = intersectionKey.split(",").map(Number);
+    return { row: r, col: c };
+  }
+
+  // Fallback: center of longest match
+  const longest = group.reduce((a, b) =>
+    a.positions.length >= b.positions.length ? a : b
+  );
+  return longest.positions[Math.floor(longest.positions.length / 2)];
+};
+
+export const updateBoardAfterMatches = (
+  board: Board,
+  movedToPosition?: Position
+): Board => {
   const newBoard = normalizeBoard(board).map((row) => [...row]);
   const matches = findAllMatches(newBoard);
 
+  if (matches.length === 0) return normalizeBoard(newBoard);
+
+  const matchGroups = groupOverlappingMatches(matches);
+
+  const bombPlacements: Array<{ row: number; col: number; id: string }> = [];
+  let movedPosUsed = false;
+
+  matchGroups.forEach((group) => {
+    const uniqueKeys = new Set<string>(
+      group.flatMap((m) => m.positions.map((p) => `${p.row},${p.col}`))
+    );
+
+    if (uniqueKeys.size < 4) return;
+
+    const bombPos = bombPositionForGroup(
+      group,
+      uniqueKeys,
+      movedPosUsed ? undefined : movedToPosition
+    );
+
+    if (!bombPos) return;
+
+    if (
+      movedToPosition &&
+      !movedPosUsed &&
+      bombPos.row === movedToPosition.row &&
+      bombPos.col === movedToPosition.col
+    ) {
+      movedPosUsed = true;
+    }
+
+    bombPlacements.push({
+      row: bombPos.row,
+      col: bombPos.col,
+      id: `bomb-${bombPos.row}-${bombPos.col}-${Math.random().toString(36).slice(2, 9)}`,
+    });
+  });
+
+  // Clear all matched positions
   matches.forEach((match) => {
     match.positions.forEach(({ row, col }) => {
       const figure = newBoard[row][col];
@@ -156,6 +263,11 @@ export const updateBoardAfterMatches = (board: Board): Board => {
         newBoard[row][col] = null;
       }
     });
+  });
+
+  // Place bombs last so they overwrite cleared positions
+  bombPlacements.forEach(({ row, col, id }) => {
+    newBoard[row][col] = { id, type: "bomb" };
   });
 
   return normalizeBoard(newBoard);
