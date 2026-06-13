@@ -217,13 +217,32 @@ export const fillEmptySlots = (board: Board, level?: Level): Board => {
       !isTeamImage(fig)
   );
 
+  const makeRandom = () =>
+    createFigure(
+      figuresWithoutSpecials[
+        Math.floor(Math.random() * figuresWithoutSpecials.length)
+      ]
+    );
+
   for (let col = 0; col < BOARD_COLS; col++) {
-    if (newBoard[0][col] === null) {
-      const randomFigure =
-        figuresWithoutSpecials[
-          Math.floor(Math.random() * figuresWithoutSpecials.length)
-        ];
-      newBoard[0][col] = createFigure(randomFigure);
+    for (let row = 0; row < BOARD_ROWS; row++) {
+      if (newBoard[row][col] !== null) continue;
+
+      // Check if any movable figure above can cascade down to this cell via gravity.
+      // A team/teamImage figure in the path blocks gravity completely.
+      let reachableFromAbove = false;
+      for (let r = row - 1; r >= 0; r--) {
+        const fig = newBoard[r][col];
+        if (fig === null) continue;
+        if (fig.type === "team" || isTeamImage(fig)) break; // immovable — path blocked
+        reachableFromAbove = true; // movable figure above, gravity will deliver it
+        break;
+      }
+
+      if (!reachableFromAbove) {
+        // Either row 0 (normal spawn) or a cell permanently blocked by team figures above.
+        newBoard[row][col] = makeRandom();
+      }
     }
   }
 
