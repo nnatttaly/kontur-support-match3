@@ -1,0 +1,105 @@
+.rotate-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: linear-gradient(135deg, #e0f7fa 0%, #91cbff 50%, #91cbff 100%);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .rotate-overlay {
+    display: flex;
+  }
+}
+
+.rotate-hero {
+  width: 90px;
+  height: auto;
+  flex-shrink: 0;
+}
+
+.rotate-card {
+  background: white;
+  border-radius: 24px;
+  padding: 28px 36px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 340px;
+  width: 100%;
+}
+
+.rotate-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rotate-phone {
+  width: 40px;
+  height: 64px;
+  border: 3px solid #ff8d28;
+  border-radius: 8px;
+  position: relative;
+  animation: rotatePhone 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.rotate-phone::before {
+  content: "";
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff8d28;
+}
+
+.rotate-phone::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 2px;
+  border-radius: 2px;
+  background: #ff8d28;
+}
+
+@keyframes rotatePhone {
+  0%   { transform: rotate(0deg); }
+  30%  { transform: rotate(-90deg); }
+  60%  { transform: rotate(-90deg); }
+  90%  { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.rotate-title {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a2e;
+  text-align: center;
+  margin: 0;
+}
+
+.rotate-subtitle {
+  font-family: "Inter", system-ui, sans-serif;
+  font-size: 14px;
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.rotate-accent {
+  color: #ff8d28;
+}
