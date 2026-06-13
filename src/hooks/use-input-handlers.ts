@@ -83,6 +83,7 @@ export const useInputHandlers = ({
   onGoalCollected,
 }: UseInputHandlersProps) => {
   const [modernProductsSourcePos, setModernProductsSourcePos] = useState<Position | null>(null);
+  const [explosionPositions, setExplosionPositions] = useState<Position[]>([]);
   const isProcessingClick = useRef(false);
   const isProcessingSpecialFigures = useRef(false);
 
@@ -412,6 +413,7 @@ export const useInputHandlers = ({
     newBoard: Board;
     removedFigures: Array<{ position: Position; figure: Figure }>;
     removedGoldenCells: Position[];
+    blastPositions: Position[];
   } => {
     const newBoard = workBoard.map((row) => [...row]);
     const removedFigures: Array<{ position: Position; figure: Figure }> = [];
@@ -474,7 +476,12 @@ export const useInputHandlers = ({
       }
     });
 
-    return { newBoard, removedFigures, removedGoldenCells };
+    const blastPositions = [...clearedPositions].map((key) => {
+      const [r, c] = key.split(",").map(Number);
+      return { row: r, col: c };
+    });
+
+    return { newBoard, removedFigures, removedGoldenCells, blastPositions };
   };
 
   const triggerGoalAnimations = (
@@ -497,7 +504,7 @@ export const useInputHandlers = ({
 
   // Click on a bomb → explode it (BFS chain explosions)
   const explodeBomb = async (bombPos: Position) => {
-    const { newBoard, removedFigures, removedGoldenCells } = collectExplosion(
+    const { newBoard, removedFigures, removedGoldenCells, blastPositions } = collectExplosion(
       board,
       bombPos
     );
@@ -505,11 +512,16 @@ export const useInputHandlers = ({
     triggerGoalAnimations(removedFigures, removedGoldenCells);
     const updatedSpecialCells = updateGoalsAndSpecialCells(removedFigures, removedGoldenCells);
     setMoves((prev) => (prev <= 0 ? 0 : prev - 1));
-    setBoard([...newBoard]);
-    await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
     setIsAnimating(true);
     try {
+      setExplosionPositions(blastPositions);
+      await new Promise((r) => setTimeout(r, 280));
+
+      setBoard([...newBoard]);
+      setExplosionPositions([]);
+      await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+
       let updatedBoard = await applyGravityAndFillStepwise(
         newBoard,
         LEVELS[levelState.currentLevel - 1]
@@ -532,7 +544,7 @@ export const useInputHandlers = ({
     const srcFigure = board[srcPos.row]?.[srcPos.col];
     if (!srcFigure) return;
 
-    const { newBoard, removedFigures, removedGoldenCells } = collectExplosion(
+    const { newBoard, removedFigures, removedGoldenCells, blastPositions } = collectExplosion(
       board,
       bombPos,
       srcPos // don't clear source position — figure is moving there
@@ -545,11 +557,16 @@ export const useInputHandlers = ({
     triggerGoalAnimations(removedFigures, removedGoldenCells);
     const updatedSpecialCells = updateGoalsAndSpecialCells(removedFigures, removedGoldenCells);
     setMoves((prev) => (prev <= 0 ? 0 : prev - 1));
-    setBoard([...newBoard]);
-    await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
     setIsAnimating(true);
     try {
+      setExplosionPositions(blastPositions);
+      await new Promise((r) => setTimeout(r, 280));
+
+      setBoard([...newBoard]);
+      setExplosionPositions([]);
+      await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+
       let updatedBoard = await applyGravityAndFillStepwise(
         newBoard,
         LEVELS[levelState.currentLevel - 1]
@@ -775,5 +792,6 @@ export const useInputHandlers = ({
     handleUseBonus,
     resetSelection,
     modernProductsSourcePos,
+    explosionPositions,
   };
 };

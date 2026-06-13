@@ -18,6 +18,7 @@ type GameFieldProps = {
   activeBonusType?: string;
   matches: Match[];
   specialCells: SpecialCell[];
+  explosionPositions?: Position[];
   onCellClick: (position: Position) => void;
   onDragStart: (position: Position) => void;
   onDragOver: (position: Position) => void;
@@ -73,6 +74,7 @@ export const GameField = ({
   activeBonusType,
   matches,
   specialCells,
+  explosionPositions = [],
   onCellClick,
   onDragStart,
   onDragOver,
@@ -218,6 +220,9 @@ export const GameField = ({
   const isPartOfMatch = (r: number, c: number) =>
     matches.some((m) => m.positions.some((p) => p.row === r && p.col === c));
 
+  const isExplodingCell = (r: number, c: number) =>
+    explosionPositions.some((p) => p.row === r && p.col === c);
+
   const getSpecialCell = (r: number, c: number) =>
     specialCells.find(
       (cell) => cell.row === r && cell.col === c && cell.isActive
@@ -294,6 +299,7 @@ export const GameField = ({
                   modernProductsSourcePos?.col === c
                 }
                 isMatched={isPartOfMatch(r, c)}
+                isExploding={isExplodingCell(r, c)}
                 isBlocked={isBlocked(r, c)}
                 specialCell={getSpecialCell(r, c)}
                 onClick={onCellClick}

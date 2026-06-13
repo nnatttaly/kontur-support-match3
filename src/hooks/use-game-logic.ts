@@ -75,13 +75,14 @@ export const useGameLogic = (onGoalCollected?: (position: Position, figureType: 
     setSpecialCells: setCurrentSpecialCells,
   });
 
-  const { 
-    handleCellClick, 
-    handleDragStart, 
-    handleDragOver, 
-    handleUseBonus, 
+  const {
+    handleCellClick,
+    handleDragStart,
+    handleDragOver,
+    handleUseBonus,
     resetSelection,
     modernProductsSourcePos,
+    explosionPositions,
   } = useInputHandlers({
     levelState,
     gameState: {
@@ -130,8 +131,9 @@ export const useGameLogic = (onGoalCollected?: (position: Position, figureType: 
     specialCells: currentSpecialCells,
     levelState,
     currentLevel: currentLevelWithSpecialCells,
-    isShuffleWarning, // Добавляем в возвращаемое значение
-    hideShuffleWarning, // Функция для скрытия
+    isShuffleWarning,
+    hideShuffleWarning,
+    explosionPositions,
     handleCellClick,
     handleDragStart,
     handleDragOver,

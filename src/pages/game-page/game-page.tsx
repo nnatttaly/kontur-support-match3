@@ -245,6 +245,7 @@ export default function GamePage() {
               activeBonusType={gameLogic.activeBonus?.type}
               matches={gameLogic.matches}
               specialCells={gameLogic.specialCells}
+              explosionPositions={gameLogic.explosionPositions}
               onCellClick={gameLogic.handleCellClick}
               onDragStart={gameLogic.handleDragStart}
               onDragOver={gameLogic.handleDragOver}

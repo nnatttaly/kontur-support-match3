@@ -257,6 +257,54 @@
   filter: drop-shadow(0 0 2px rgba(0, 183, 255, 0.2));
 }
 
+.cell--exploding {
+  animation: cellExplode 280ms ease-out forwards;
+  z-index: 15;
+}
+
+.cell--exploding::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 14px;
+  animation: explodeRing 280ms ease-out forwards;
+  pointer-events: none;
+  z-index: 50;
+}
+
+@keyframes cellExplode {
+  0% {
+    background-color: #ffe566;
+    box-shadow: 0 0 14px rgba(255, 200, 0, 0.9);
+  }
+  45% {
+    background-color: #ff8c00;
+    box-shadow: 0 0 8px rgba(255, 120, 0, 0.6);
+  }
+  100% {
+    background-color: white;
+    box-shadow: none;
+  }
+}
+
+@keyframes explodeRing {
+  0% {
+    background: rgba(255, 240, 100, 0.75);
+    transform: scale(1);
+    opacity: 1;
+  }
+  55% {
+    background: rgba(255, 120, 0, 0.4);
+    transform: scale(1.25);
+    opacity: 0.6;
+  }
+  100% {
+    background: rgba(255, 60, 0, 0);
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
 .figure--bomb {
   animation: bombPulse 1.2s infinite ease-in-out;
   cursor: pointer;

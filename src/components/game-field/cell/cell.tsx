@@ -20,6 +20,7 @@ type CellProps = {
   isSelected: boolean;
   isModernProductsSource: boolean;
   isMatched: boolean;
+  isExploding?: boolean;
   isBlocked: boolean;
   specialCell?: SpecialCell;
   onClick: (position: Position) => void;
@@ -44,6 +45,7 @@ export const Cell: React.FC<CellProps> = ({
   isSelected,
   isModernProductsSource,
   isMatched,
+  isExploding = false,
   isBlocked,
   specialCell,
   onClick,
@@ -159,6 +161,7 @@ export const Cell: React.FC<CellProps> = ({
         isSelected ? "cell--selected" : "",
         isModernProductsSource ? "cell--modern-source" : "",
         isMatched && !isStar ? "cell--matched" : "",
+        isExploding ? "cell--exploding" : "",
         !figure ? "cell--empty" : "",
         specialCell ? `cell--${specialCell.type}` : "",
         isStar ? "cell--star" : "",
