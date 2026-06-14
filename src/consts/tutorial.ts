@@ -2,7 +2,7 @@ import { TutorialStep } from "@components/tutorial/tutorial-data";
 
 export const BOMB_TUTORIAL: TutorialStep[] = [
   {
-    text: "Четыре фигурки в ряд — и появляется бомба! Нажми на неё, чтобы взорвать соседние клетки",
+    text: "Если собрать 4 фигуры и больше — появится огонек! Нажми на него, чтобы взорвать соседние клетки",
     characterPos: "left",
     highlightSelector: ".cell--bomb",
     position: { top: "64%", left: "15%" },
