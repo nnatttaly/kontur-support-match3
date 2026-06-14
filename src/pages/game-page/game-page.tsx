@@ -146,6 +146,7 @@ export default function GamePage() {
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume / 600;
+      audioRef.current.muted = volume === 0;
     }
   }, [volume]);
 
