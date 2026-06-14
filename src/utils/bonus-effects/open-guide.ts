@@ -23,7 +23,8 @@ export const onApplyOpenGuide = (
     const { g, i } =
       unfinished[Math.floor(Math.random() * unfinished.length)];
 
-    const newCollected = Math.min(g.target, g.collected + 3);
+    const increment = 1;
+    const newCollected = Math.min(g.target, g.collected + increment);
 
     next[i] = {
       ...g,

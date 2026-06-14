@@ -20,12 +20,13 @@
   font-size: 15px;
   line-height: 1.5;
   flex-grow: 1;
+  margin-bottom: 10px;
 }
 
 @media (max-width: 470px) {
   .choice-card {
     width: fit-content;
-    padding: 20px;
+    padding: 15px;
   }
   .header-container {
     padding: 20px;
