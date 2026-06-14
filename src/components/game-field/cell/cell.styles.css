@@ -150,6 +150,10 @@
   z-index: 25 !important;
 }
 
+.cell--bonus-incompatible {
+  cursor: not-allowed;
+}
+
 .cell:active {
   transform: scale(0.95);
 }

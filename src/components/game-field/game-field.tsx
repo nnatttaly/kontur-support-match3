@@ -233,6 +233,15 @@ export const GameField = ({
     return !!(f && isBigFigure(f));
   };
 
+  const isBonusIncompatible = (r: number, c: number): boolean => {
+    const f = safeBoard[r][c];
+    if (!f || !activeBonusType) return false;
+    if (activeBonusType === "itSphere" && f.type === "bomb") return true;
+    if (activeBonusType === "dms" && f.type === "star") return true;
+    if (activeBonusType === "modernProducts" && f.type === "diamond") return true;
+    return false;
+  };
+
   const safeDragOver = (pos: Position) => {
     if (isAnimatingRef.current) return;
     onDragOver(pos);
@@ -301,6 +310,7 @@ export const GameField = ({
                 isMatched={isPartOfMatch(r, c)}
                 isExploding={isExplodingCell(r, c)}
                 isBlocked={isBlocked(r, c)}
+                isBonusIncompatible={isBonusIncompatible(r, c)}
                 specialCell={getSpecialCell(r, c)}
                 onClick={onCellClick}
                 onDragStart={onDragStart}

@@ -65,6 +65,7 @@ type UseInputHandlersProps = {
   specialCells?: SpecialCell[];
   setSpecialCells?: (cells: SpecialCell[]) => void;
   onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void;
+  onBonusIncompatibleClick?: (message: string) => void;
 };
 
 export const useInputHandlers = ({
@@ -88,6 +89,7 @@ export const useInputHandlers = ({
   specialCells = [],
   setSpecialCells,
   onGoalCollected,
+  onBonusIncompatibleClick,
 }: UseInputHandlersProps) => {
   const [modernProductsSourcePos, setModernProductsSourcePos] = useState<Position | null>(null);
   const [explosionPositions, setExplosionPositions] = useState<Position[]>([]);
@@ -668,6 +670,23 @@ export const useInputHandlers = ({
 
     try {
       const clickedFigure = board[position.row]?.[position.col];
+
+      if (activeBonus?.isActive) {
+        const incompatibleMessages: Partial<Record<string, string>> = {
+          itSphere: "Бонус не работает с бомбами",
+          dms: "Бонус не работает со звёздами",
+          modernProducts: "Бонус не работает с алмазами",
+        };
+        const isIncompatible =
+          (activeBonus.type === "itSphere" && clickedFigure?.type === "bomb") ||
+          (activeBonus.type === "dms" && clickedFigure?.type === "star") ||
+          (activeBonus.type === "modernProducts" && clickedFigure?.type === "diamond");
+        if (isIncompatible) {
+          onBonusIncompatibleClick?.(incompatibleMessages[activeBonus.type] ?? "");
+          return;
+        }
+      }
+
       if (clickedFigure?.type === "bomb" && !(activeBonus?.isActive)) {
         await explodeBomb(position);
         return;

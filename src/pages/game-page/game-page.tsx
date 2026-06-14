@@ -13,6 +13,7 @@ import {
   GoalAnimation,
   SoundControl
 } from "../../components";
+import { GameToast } from "../../components/game-toast/game-toast";
 import {
   LEVELS,
   LAST_LEVEL,
@@ -52,9 +53,19 @@ export default function GamePage() {
   const [showBombTutorial, setShowBombTutorial] = useState(false);
   const [bombTutorialShown, setBombTutorialShown] = useState(false);
   const [volume, setVolume] = useState(15);
+  const [bonusToast, setBonusToast] = useState<{ message: string; id: number } | null>(null);
+  const bonusToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bonusToastIdRef = useRef(0);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const musicStartedRef = useRef(false);
+
+  const onBonusIncompatibleClick = (message: string) => {
+    if (bonusToastTimerRef.current) clearTimeout(bonusToastTimerRef.current);
+    bonusToastIdRef.current += 1;
+    setBonusToast({ message, id: bonusToastIdRef.current });
+    bonusToastTimerRef.current = setTimeout(() => setBonusToast(null), 2200);
+  };
 
   const onGoalCollected = (
     position: Position,
@@ -81,7 +92,7 @@ export default function GamePage() {
     ]);
   };
 
-  const gameLogic = useGameLogic(onGoalCollected);
+  const gameLogic = useGameLogic(onGoalCollected, onBonusIncompatibleClick);
   const currentLevelId = gameLogic.levelState.currentLevel;
 
   useEffect(() => {
@@ -290,6 +301,7 @@ export default function GamePage() {
           </div>
         </div>
       </div>
+      {bonusToast && <GameToast key={bonusToast.id} message={bonusToast.message} />}
     </div>
   );
 }

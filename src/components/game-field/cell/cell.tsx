@@ -22,6 +22,7 @@ type CellProps = {
   isMatched: boolean;
   isExploding?: boolean;
   isBlocked: boolean;
+  isBonusIncompatible?: boolean;
   specialCell?: SpecialCell;
   onClick: (position: Position) => void;
   onDragStart: (position: Position) => void;
@@ -47,6 +48,7 @@ export const Cell: React.FC<CellProps> = ({
   isMatched,
   isExploding = false,
   isBlocked,
+  isBonusIncompatible = false,
   specialCell,
   onClick,
   onDragStart,
@@ -168,6 +170,7 @@ export const Cell: React.FC<CellProps> = ({
         isDiamond ? "cell--diamond" : "",
         isBomb ? "cell--bomb" : "",
         isBlocked ? "cell--blocked" : "",
+        isBonusIncompatible ? "cell--bonus-incompatible" : "",
       ]
         .filter(Boolean)
         .join(" ")}

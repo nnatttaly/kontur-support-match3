@@ -8,7 +8,10 @@ import { useLevelManagement } from "./use-level-management";
 import { useInputHandlers } from "./use-input-handlers";
 import { Position, FigureType, SpecialCell, Level } from "types";
 
-export const useGameLogic = (onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void) => {
+export const useGameLogic = (
+  onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void,
+  onBonusIncompatibleClick?: (message: string) => void
+) => {
   const { board, setBoard } = useBoardState();
   const gameState = useGameState();
   const [currentSpecialCells, setCurrentSpecialCells] = useState<SpecialCell[]>([]);
@@ -114,6 +117,7 @@ export const useGameLogic = (onGoalCollected?: (position: Position, figureType: 
     specialCells: currentSpecialCells,
     setSpecialCells: setCurrentSpecialCells,
     onGoalCollected,
+    onBonusIncompatibleClick,
   });
 
   return {
