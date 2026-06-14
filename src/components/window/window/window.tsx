@@ -1,5 +1,6 @@
 import { EndTransition } from '../end-transition/end-transition';
 import { FailTransition } from '../fail-transition/fail-transition';
+import { SoundControl } from '@components/sound-control/sound-control';
 import './window.css'
 
 type WindowProps = {
@@ -17,11 +18,19 @@ export const Window = ({
   volume = 50,
   onVolumeChange,
 }: WindowProps) => {
-
   return (
     <div className="lt-overlay">
-      <div className="lt-modal">
-        {!isLastLevel ? <FailTransition onRestart={onRestart} volume={volume} onVolumeChange={onVolumeChange} /> : <EndTransition score={score} onRestart={onRestart} volume={volume} onVolumeChange={onVolumeChange} />}
+      <div className="lt-center-wrapper">
+        <div className="lt-modal">
+          {!isLastLevel
+            ? <FailTransition onRestart={onRestart} />
+            : <EndTransition score={score} onRestart={onRestart} />}
+        </div>
+        <SoundControl
+          volume={volume}
+          onVolumeChange={onVolumeChange ?? (() => {})}
+          containerClassName="lt-sound-control"
+        />
       </div>
     </div>
   );
