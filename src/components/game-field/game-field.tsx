@@ -236,7 +236,7 @@ export const GameField = ({
   const isBonusIncompatible = (r: number, c: number): boolean => {
     const f = safeBoard[r][c];
     if (!f || !activeBonusType) return false;
-    if (activeBonusType === "itSphere" && f.type === "bomb") return true;
+    if (f.type === "bomb" && (activeBonusType === "itSphere" || activeBonusType === "remoteWork" || activeBonusType === "dms")) return true;
     if (activeBonusType === "dms" && f.type === "star") return true;
     if (activeBonusType === "modernProducts" && f.type === "diamond") return true;
     return false;

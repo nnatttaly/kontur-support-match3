@@ -672,17 +672,15 @@ export const useInputHandlers = ({
       const clickedFigure = board[position.row]?.[position.col];
 
       if (activeBonus?.isActive) {
-        const incompatibleMessages: Partial<Record<string, string>> = {
-          itSphere: "Бонус не работает с бомбами",
-          dms: "Бонус не работает со звёздами",
-          modernProducts: "Бонус не работает с алмазами",
-        };
-        const isIncompatible =
-          (activeBonus.type === "itSphere" && clickedFigure?.type === "bomb") ||
-          (activeBonus.type === "dms" && clickedFigure?.type === "star") ||
-          (activeBonus.type === "modernProducts" && clickedFigure?.type === "diamond");
-        if (isIncompatible) {
-          onBonusIncompatibleClick?.(incompatibleMessages[activeBonus.type] ?? "");
+        const figType = clickedFigure?.type;
+        let incompatibleMsg: string | null = null;
+        if (activeBonus.type === "itSphere" && figType === "bomb") incompatibleMsg = "Бонус не работает с бомбами";
+        else if (activeBonus.type === "remoteWork" && figType === "bomb") incompatibleMsg = "Бонус не работает с бомбами";
+        else if (activeBonus.type === "dms" && figType === "star") incompatibleMsg = "Бонус не работает со звёздами";
+        else if (activeBonus.type === "dms" && figType === "bomb") incompatibleMsg = "Бонус не работает с бомбами";
+        else if (activeBonus.type === "modernProducts" && figType === "diamond") incompatibleMsg = "Бонус не работает с алмазами";
+        if (incompatibleMsg) {
+          onBonusIncompatibleClick?.(incompatibleMsg);
           return;
         }
       }
@@ -841,14 +839,9 @@ export const useInputHandlers = ({
     }
 
     if (areAdjacent(gameState.selectedPosition, position)) {
-      const targetFigure = board[position.row]?.[position.col];
       const src = gameState.selectedPosition;
       gameState.setSelectedPosition(null);
-      if (targetFigure?.type === "bomb") {
-        void explodeBombWithSwap(src, position);
-      } else {
-        swapFigures(src, position, gameState.moves, gameState.setMoves, specialCells);
-      }
+      swapFigures(src, position, gameState.moves, gameState.setMoves, specialCells);
     }
   };
 

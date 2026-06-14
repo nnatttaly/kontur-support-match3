@@ -48,6 +48,13 @@ type UseMatchProcessingProps = {
   onGoalCollected?: (position: Position, figureType: FigureType, goalIndex: number) => void;
 };
 
+// Пул пре-загруженных аудио: избегаем new Audio() в момент воспроизведения (iOS)
+const _soundPool = SOUND_PATHS.sounds.map((src) => {
+  const a = new Audio(src);
+  a.preload = "auto";
+  return a;
+});
+
 const normalizeBoard = (inputBoard: Board): Board => {
   const rows = inputBoard.length;
   const cols = inputBoard[0]?.length ?? 0;
@@ -126,15 +133,11 @@ export const useMatchProcessing = ({
   );
 
   const playRandomMatch3Sound = useCallback(() => {
-    const sounds = SOUND_PATHS.sounds;
-    if (!sounds.length) return;
-
-    const sound = sounds[Math.floor(Math.random() * sounds.length)];
-    const audio = new Audio(sound);
+    if (!_soundPool.length) return;
+    const audio = _soundPool[Math.floor(Math.random() * _soundPool.length)];
+    audio.currentTime = 0;
     audio.volume = 0.6;
-    audio.play().catch(() => {
-      // autoplay может быть заблокирован браузером
-    });
+    audio.play().catch(() => {});
   }, []);
 
   const replaceCompletedGoalsForLevel6 = useCallback(
