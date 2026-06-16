@@ -107,9 +107,27 @@ export const useInputHandlers = ({
       setBoard([...nextBoard]);
       await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
 
+      if (level?.id === 5) {
+        const horizontalResult = applyHorizontalGravity(nextBoard);
+        if (horizontalResult.isChanged) {
+          nextBoard = horizontalResult.board;
+          setBoard([...nextBoard]);
+          await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+        }
+      }
+
       nextBoard = fillEmptySlots(nextBoard, level);
       setBoard([...nextBoard]);
       await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+
+      if (level?.id === 5) {
+        const horizontalResult = applyHorizontalGravity(nextBoard);
+        if (horizontalResult.isChanged) {
+          nextBoard = horizontalResult.board;
+          setBoard([...nextBoard]);
+          await new Promise((r) => setTimeout(r, ANIMATION_DURATION));
+        }
+      }
     }
 
     return nextBoard;

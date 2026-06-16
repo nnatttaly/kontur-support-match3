@@ -228,9 +228,20 @@ export const fillEmptySlots = (board: Board, level?: Level): Board => {
       ]
     );
 
+  // На уровне 5: под командой (строки 4-5, столбцы 2-4) клетки не должны заполняться
+  const isUnderTeamOnLevel5 = (row: number, col: number): boolean => {
+    if (level?.id !== 5) return false;
+    return (row === 4 || row === 5) && col >= 2 && col <= 4;
+  };
+
   for (let col = 0; col < BOARD_COLS; col++) {
     for (let row = 0; row < BOARD_ROWS; row++) {
       if (newBoard[row][col] !== null) continue;
+
+      // Пропускаем заполнение клеток под командой на уровне 5
+      if (isUnderTeamOnLevel5(row, col)) {
+        continue;
+      }
 
       // Check if any movable figure above can cascade down to this cell via gravity.
       // A team/teamImage figure in the path blocks gravity completely.
